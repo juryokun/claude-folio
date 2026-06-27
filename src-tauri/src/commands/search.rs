@@ -45,6 +45,7 @@ pub fn search_files(
                 path,
                 is_dir,
                 is_symlink,
+                link_target: None,
                 size,
                 modified,
                 extension,

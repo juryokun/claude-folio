@@ -8,6 +8,7 @@ pub struct FileEntry {
     pub path: String,
     pub is_dir: bool,
     pub is_symlink: bool,
+    pub link_target: Option<String>,
     pub size: u64,
     pub modified: Option<u64>, // Unix timestamp in seconds
     pub extension: Option<String>,
@@ -55,6 +56,13 @@ pub fn list_dir(path: String, show_hidden: bool) -> Result<Vec<FileEntry>, Strin
             let entry_path = entry.path();
             let metadata = entry.metadata().ok()?;
             let is_symlink = metadata.file_type().is_symlink();
+            let link_target = if is_symlink {
+                std::fs::read_link(&entry_path)
+                    .ok()
+                    .map(|t| t.to_string_lossy().to_string())
+            } else {
+                None
+            };
             let is_dir = metadata.is_dir() || (is_symlink && entry_path.is_dir());
             let size = if metadata.is_file() { metadata.len() } else { 0 };
             let modified = metadata.modified().ok().map(system_time_to_unix);
@@ -71,6 +79,7 @@ pub fn list_dir(path: String, show_hidden: bool) -> Result<Vec<FileEntry>, Strin
                 path: entry_path.to_string_lossy().to_string(),
                 is_dir,
                 is_symlink,
+                link_target,
                 size,
                 modified,
                 extension,

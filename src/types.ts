@@ -3,6 +3,7 @@ export interface FileEntry {
   path: string;
   is_dir: boolean;
   is_symlink: boolean;
+  link_target?: string;
   size: number;
   modified?: number; // Unix timestamp seconds
   extension?: string;

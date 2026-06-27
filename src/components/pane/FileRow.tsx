@@ -83,7 +83,12 @@ export const FileRow = React.memo(function FileRow({
     >
       <span className="file-select-indicator">{isSelected ? '✓' : ' '}</span>
       <FileIcon entry={entry} />
-      <span className="file-name">{entry.name}{entry.is_symlink ? ' →' : ''}</span>
+      <span className="file-name">
+        {entry.name}
+        {entry.is_symlink && (
+          <span className="file-symlink-target"> → {entry.link_target ?? '?'}</span>
+        )}
+      </span>
       <span className="file-size" style={{ width: colSizeWidth }}>
         {entry.is_dir ? <><span className="file-size-value">—</span><span className="file-size-unit" /></> : (() => {
           const s = formatSize(entry.size, sizeUnit);
