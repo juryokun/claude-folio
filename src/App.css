@@ -50,6 +50,30 @@ body {
   flex-shrink: 0;
 }
 
+.tab-nav-buttons {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab-nav-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  width: 32px;
+  height: 100%;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tab-nav-btn:hover:not(:disabled) { background: var(--bg-hover); color: var(--text); }
+.tab-nav-btn:disabled { opacity: 0.3; cursor: default; }
+
 .tab-item {
   display: flex;
   align-items: center;
