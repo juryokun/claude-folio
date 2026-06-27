@@ -20,6 +20,7 @@ function SortIndicator({ active, desc }: { active: boolean; desc: boolean }) {
 interface ContextMenuState {
   x: number;
   y: number;
+  kind: 'entry' | 'blank';
   entryIndex: number;
 }
 
@@ -113,8 +114,8 @@ export function FilePane({ tabId }: Props) {
     }
   };
 
-  const ctxEntry = ctxMenu != null ? entries[ctxMenu.entryIndex] ?? null : null;
-  const ctxMenuItems = ctxEntry ? [
+  const ctxEntry = ctxMenu?.kind === 'entry' ? entries[ctxMenu.entryIndex] ?? null : null;
+  const ctxMenuItems = ctxMenu == null ? [] : ctxMenu.kind === 'entry' && ctxEntry ? [
     { label: '名前を変更', icon: '✏️', shortcut: 'r', action: fileOps.handleRename },
     { label: 'ゴミ箱に移動', icon: '🗑️', shortcut: 'dd', action: fileOps.handleDelete },
     { kind: 'sep' as const },
@@ -124,6 +125,11 @@ export function FilePane({ tabId }: Props) {
     { kind: 'sep' as const },
     { label: 'パスをコピー', icon: '🔗', shortcut: 'yp', action: fileOps.handleCopyPath },
     { label: 'ファイル名をコピー', icon: '📎', shortcut: 'yn', action: fileOps.handleCopyName },
+  ] : ctxMenu.kind === 'blank' ? [
+    { label: 'ペースト', icon: '📌', shortcut: 'p', action: fileOps.handlePaste, disabled: !clipboard },
+    { kind: 'sep' as const },
+    { label: '新規ファイル', icon: '📄', shortcut: 'A', action: fileOps.handleNewFile },
+    { label: '新規フォルダ', icon: '📁', shortcut: 'a', action: fileOps.handleNewDir },
   ] : [];
 
   if (pane.loading) {
@@ -171,6 +177,11 @@ export function FilePane({ tabId }: Props) {
       className="file-pane"
       ref={parentRef}
       style={{ overflow: 'auto', flex: 1, minHeight: 0 }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
+        setCtxMenu({ x: e.clientX, y: e.clientY, kind: 'blank', entryIndex: -1 });
+      }}
     >
       <div
         style={{ height: `${virtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}
@@ -201,9 +212,10 @@ export function FilePane({ tabId }: Props) {
               }}
               onContextMenu={(e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
                 setCursor(tabId, vItem.index);
-                setCtxMenu({ x: e.clientX, y: e.clientY, entryIndex: vItem.index });
+                setCtxMenu({ x: e.clientX, y: e.clientY, kind: 'entry', entryIndex: vItem.index });
               }}
               style={{
                 position: 'absolute',
