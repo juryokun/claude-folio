@@ -68,6 +68,7 @@ const en = {
       reloadConfig: 'Reload config file',
       clearStorage: 'Clear LocalStorage and restart',
       lang: 'Switch display language (ja / en)',
+      installCli: 'Install folio CLI to /usr/local/bin/folio',
     },
     err: {
       notFound: 'Not found: {{target}}',
@@ -80,6 +81,7 @@ const en = {
       configCreated: '✅ Config file created: {{path}}',
       configExists: 'ℹ️ Config file already exists: ~/.config/folio/config.toml',
       langChanged: '🌐 Language switched to {{lang}}',
+      cliInstalled: '✅ Installed: /usr/local/bin/folio',
     },
   },
   confirmModal: {

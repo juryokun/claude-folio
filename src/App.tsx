@@ -52,12 +52,13 @@ export default function App() {
   const keymap = useConfigStore((s) => s.keymap);
   const loadBookmarks = useBookmarkStore((s) => s.loadBookmarks);
 
-  // Resolve real home dir and navigate there on startup
+  // Resolve real home dir, then navigate to startup path arg (or home)
   useEffect(() => {
-    getHomeDir().then((home) => {
+    getHomeDir().then(async (home) => {
       (window as any).__macFilerUsername = home.split('/').pop();
       setHomeDir(home);
-      navigateTo(home);
+      const startupPath = await tauriApi.getStartupPath().catch(() => null);
+      navigateTo(startupPath ?? home);
     });
 
     loadConfig();
@@ -65,6 +66,13 @@ export default function App() {
     tauriApi.suppressDsStore().catch(() => {});
     tauriApi.check7zipInstalled().then(useUiStore.getState().setHas7zip).catch(() => {});
     tauriApi.checkZoxideInstalled().then(useUiStore.getState().setHasZoxide).catch(() => {});
+
+    // When a second CLI launch targets this already-running instance, open a new tab.
+    const unlisten = listen<string | null>('folio:open-tab', (event) => {
+      const path = event.payload;
+      openTab(path ?? undefined);
+    });
+    return () => { unlisten.then((fn) => fn()); };
   }, []);
 
   // Load directory when active tab path changes

@@ -103,6 +103,12 @@ export const tauriApi = {
   saveLanguage: (language: string) =>
     invoke<void>('save_language', { language }),
 
+  getStartupPath: () =>
+    invoke<string | null>('get_startup_path'),
+
+  installCli: () =>
+    invoke<void>('install_cli'),
+
   startNativeDrag: (paths: string[], label: string): Promise<void> => {
     // Build a simple PNG drag image via canvas
     const canvas = document.createElement('canvas');

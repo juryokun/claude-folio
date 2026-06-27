@@ -30,6 +30,7 @@ export function CommandPalette() {
     { name: 'reload-config',  desc: t('commandPalette.cmd.reloadConfig') },
     { name: 'clear-storage',  desc: t('commandPalette.cmd.clearStorage') },
     { name: 'lang',           args: '<ja|en>',   desc: t('commandPalette.cmd.lang') },
+    { name: 'install-cli',    desc: t('commandPalette.cmd.installCli') },
   ];
 
   const { showCommandPalette, setShowCommandPalette, setVimMode, has7zip, setLanguage } =
@@ -177,6 +178,16 @@ export function CommandPalette() {
           location.reload();
           return;
         }
+        case 'install-cli': {
+          try {
+            await tauriApi.installCli();
+            close();
+            showStatusMessage(t('commandPalette.msg.cliInstalled'));
+          } catch (e) {
+            setError(String(e));
+          }
+          return;
+        }
         case 'lang': {
           const lang = args[0] as 'ja' | 'en';
           if (lang !== 'ja' && lang !== 'en') {
@@ -255,7 +266,7 @@ export function CommandPalette() {
         )}
         {error && <div className="command-error">{error}</div>}
         <div className="command-help">
-          {t('commandPalette.help')} :lang
+          {t('commandPalette.help')} :lang :install-cli
         </div>
       </div>
     </div>

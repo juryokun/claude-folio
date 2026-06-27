@@ -68,6 +68,7 @@ const ja = {
       reloadConfig: '設定ファイルを再読み込み',
       clearStorage: 'LocalStorage をクリアしてアプリを再起動',
       lang: '表示言語を切り替える (ja / en)',
+      installCli: 'folio CLI を /usr/local/bin/folio にインストール',
     },
     err: {
       notFound: '見つかりません: {{target}}',
@@ -80,6 +81,7 @@ const ja = {
       configCreated: '✅ 設定ファイルを作成しました: {{path}}',
       configExists: 'ℹ️ 設定ファイルはすでに存在します: ~/.config/folio/config.toml',
       langChanged: '🌐 言語を {{lang}} に切り替えました',
+      cliInstalled: '✅ インストールしました: /usr/local/bin/folio',
     },
   },
   confirmModal: {
