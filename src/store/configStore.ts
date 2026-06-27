@@ -57,11 +57,13 @@ export const useConfigStore = create<ConfigStore>((set) => ({
         sizeUnit: (raw.appearance?.size_unit ?? 'binary') as 'binary' | 'decimal',
       };
       const keymap = buildKeymap(raw.keymap ?? {});
+      const { useUiStore } = await import('./uiStore');
       const editorCommand = raw.editor?.command ?? '';
-      if (editorCommand) {
-        const { useUiStore } = await import('./uiStore');
-        useUiStore.getState().setEditorCommand(editorCommand);
-      }
+      if (editorCommand) useUiStore.getState().setEditorCommand(editorCommand);
+      const terminalApp = raw.terminal?.app ?? '';
+      if (terminalApp) useUiStore.getState().setTerminalApp(terminalApp);
+      const terminalCommand = raw.terminal?.command ?? '';
+      if (terminalCommand) useUiStore.getState().setTerminalCommand(terminalCommand);
       set({ appearance, keymap, loaded: true });
     } catch {
       set({ loaded: true }); // use defaults on error

@@ -109,9 +109,6 @@ export function CommandPalette() {
           }
           break;
         }
-        case 'settings':
-          useUiStore.getState().setShowSettings(true);
-          break;
         default:
           setError(`不明なコマンド: ${command}`);
           return;
@@ -139,7 +136,7 @@ export function CommandPalette() {
         />
         {error && <div className="command-error">{error}</div>}
         <div className="command-help">
-          :q :tabnew [path] :cd [path/keyword] :bm [label] :zip [name] :unzip :settings
+          :q :tabnew [path] :cd [path/keyword] :bm [label] :zip [name] :unzip
         </div>
       </div>
     </div>

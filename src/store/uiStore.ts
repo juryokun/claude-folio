@@ -1,12 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { VimMode, TerminalEmulator } from '../types';
+import type { VimMode } from '../types';
 
 interface UiStore {
   vimMode: VimMode;
   showHidden: boolean;
   showHelp: boolean;
-  showSettings: boolean;
   showRename: boolean;
   showNewDir: boolean;
   showConfirm: boolean;
@@ -16,19 +15,23 @@ interface UiStore {
   renameTarget: string | null;
   has7zip: boolean;
   hasZoxide: boolean;
-  terminalEmulator: TerminalEmulator;
+  terminalApp: string;
+  terminalCommand: string;
   googleDrivePaths: string[];
   sidebarWidth: number;
   columnWidths: { size: number; date: number };
   statusMessage: string | null;
   editorCommand: string;
+  showSidebar: boolean;
 
   setVimMode: (mode: VimMode) => void;
   setEditorCommand: (cmd: string) => void;
+  setTerminalApp: (app: string) => void;
+  setTerminalCommand: (cmd: string) => void;
+  toggleSidebar: () => void;
   showStatusMessage: (msg: string, durationMs?: number) => void;
   toggleHidden: () => void;
   setShowHelp: (v: boolean) => void;
-  setShowSettings: (v: boolean) => void;
   setShowRename: (v: boolean, target?: string) => void;
   setShowNewDir: (v: boolean) => void;
   showConfirmDialog: (message: string, onConfirm: () => void) => void;
@@ -36,7 +39,6 @@ interface UiStore {
   setShowCommandPalette: (v: boolean) => void;
   setHas7zip: (v: boolean) => void;
   setHasZoxide: (v: boolean) => void;
-  setTerminalEmulator: (v: TerminalEmulator) => void;
   setGoogleDrivePaths: (paths: string[]) => void;
   setSidebarWidth: (w: number) => void;
   setColumnWidths: (w: Partial<{ size: number; date: number }>) => void;
@@ -48,7 +50,6 @@ export const useUiStore = create<UiStore>()(
       vimMode: 'NORMAL',
       showHidden: false,
       showHelp: false,
-      showSettings: false,
       showRename: false,
       showNewDir: false,
       showConfirm: false,
@@ -58,22 +59,26 @@ export const useUiStore = create<UiStore>()(
       renameTarget: null,
       has7zip: false,
       hasZoxide: false,
-      terminalEmulator: 'terminal',
+      terminalApp: '',
+      terminalCommand: '',
       googleDrivePaths: [],
       sidebarWidth: 220,
       columnWidths: { size: 70, date: 90 },
       statusMessage: null,
       editorCommand: '',
+      showSidebar: true,
 
       setVimMode: (mode) => set({ vimMode: mode }),
       setEditorCommand: (cmd) => set({ editorCommand: cmd }),
+      setTerminalApp: (app) => set({ terminalApp: app }),
+      setTerminalCommand: (cmd) => set({ terminalCommand: cmd }),
+      toggleSidebar: () => set((s) => ({ showSidebar: !s.showSidebar })),
       showStatusMessage: (msg, durationMs = 2000) => {
         set({ statusMessage: msg });
         setTimeout(() => set({ statusMessage: null }), durationMs);
       },
       toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
       setShowHelp: (v) => set({ showHelp: v }),
-      setShowSettings: (v) => set({ showSettings: v }),
       setShowRename: (v, target) => set({ showRename: v, renameTarget: target ?? null }),
       setShowNewDir: (v) => set({ showNewDir: v }),
       showConfirmDialog: (message, onConfirm) =>
@@ -82,7 +87,6 @@ export const useUiStore = create<UiStore>()(
       setShowCommandPalette: (v) => set({ showCommandPalette: v }),
       setHas7zip: (v) => set({ has7zip: v }),
       setHasZoxide: (v) => set({ hasZoxide: v }),
-      setTerminalEmulator: (v) => set({ terminalEmulator: v }),
       setGoogleDrivePaths: (paths) => set({ googleDrivePaths: paths }),
       setSidebarWidth: (w) => set({ sidebarWidth: w }),
       setColumnWidths: (w) => set((s) => ({ columnWidths: { ...s.columnWidths, ...w } })),
@@ -91,7 +95,7 @@ export const useUiStore = create<UiStore>()(
       name: 'mac-filer-ui',
       partialize: (s) => ({
         showHidden: s.showHidden,
-        terminalEmulator: s.terminalEmulator,
+        showSidebar: s.showSidebar,
         sidebarWidth: s.sidebarWidth,
         columnWidths: s.columnWidths,
       }),

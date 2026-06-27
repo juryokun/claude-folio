@@ -3,11 +3,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppearanceConfig {
-    /// strftime-like: %Y %m %d %H %M %S
+    #[serde(default = "default_date_format")]
     pub date_format: String,
-    /// "binary" (KiB/MiB) or "decimal" (KB/MB)
+    #[serde(default = "default_size_unit")]
     pub size_unit: String,
 }
+
+fn default_date_format() -> String { "%Y/%m/%d".to_string() }
+fn default_size_unit() -> String { "binary".to_string() }
 
 impl Default for AppearanceConfig {
     fn default() -> Self {
@@ -20,7 +23,19 @@ impl Default for AppearanceConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EditorConfig {
-    /// Shell command used to open files with `e`. e.g. "code", "nvim", "emacs"
+    #[serde(default)]
+    pub command: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TerminalConfig {
+    /// macOS app name passed to `open -a`. e.g. "Terminal", "iTerm", "Warp", "Ghostty"
+    #[serde(default)]
+    pub app: String,
+    /// Direct command for terminals that don't support `open -a <dir>`.
+    /// The working directory path is appended as the last argument.
+    /// e.g. "alacritty --working-directory", "kitty --directory"
+    #[serde(default)]
     pub command: String,
 }
 
@@ -30,6 +45,8 @@ pub struct AppConfig {
     pub appearance: AppearanceConfig,
     #[serde(default)]
     pub editor: EditorConfig,
+    #[serde(default)]
+    pub terminal: TerminalConfig,
     /// action_name -> list of key sequences ("j", "d d", "s n" …)
     #[serde(default)]
     pub keymap: HashMap<String, Vec<String>>,
@@ -88,6 +105,19 @@ size_unit = "binary"
 # Leave empty to fall back to the OS default app (same as `o`).
 # Examples: "code", "nvim", "emacs", "subl"
 command = ""
+
+[terminal]
+# Option A: macOS app name passed to `open -a <app> <dir>`.
+# Works for Terminal.app, iTerm, Warp, Ghostty.
+# Leave empty to use Terminal.app (default).
+# Examples: "iTerm", "Warp", "Ghostty"
+app = ""
+
+# Option B: Direct command for terminals that don't support `open -a <dir>`
+# (e.g. Alacritty, kitty). The directory path is appended as the last argument.
+# When `command` is set it takes priority over `app`.
+# Examples: "alacritty --working-directory", "kitty --directory"
+# command = "alacritty --working-directory"
 
 [keymap]
 # Override default keybindings.

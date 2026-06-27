@@ -34,8 +34,8 @@ export const tauriApi = {
   openWithEditor: (path: string, editorCmd: string) =>
     invoke<void>('open_with_editor', { path, editorCmd }),
 
-  openTerminalAt: (path: string, emulator: string) =>
-    invoke<void>('open_terminal_at', { path, emulator }),
+  openTerminalAt: (path: string, app: string, command: string) =>
+    invoke<void>('open_terminal_at', { path, app, command }),
 
   detectGoogleDrive: () =>
     invoke<string[]>('detect_google_drive'),
@@ -65,7 +65,7 @@ export const tauriApi = {
     invoke<void>('extract_7zip', { archive, dest }),
 
   loadConfig: () =>
-    invoke<{ appearance?: { date_format?: string; size_unit?: string }; editor?: { command?: string }; keymap?: Record<string, string[]> }>('load_config'),
+    invoke<{ appearance?: { date_format?: string; size_unit?: string }; editor?: { command?: string }; terminal?: { app?: string; command?: string }; keymap?: Record<string, string[]> }>('load_config'),
 
   initConfig: () =>
     invoke<string>('init_config'),

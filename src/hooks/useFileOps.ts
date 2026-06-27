@@ -10,7 +10,7 @@ export function useFileOps() {
   const { activeTab, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
     useFileStore();
-  const { showHidden, terminalEmulator, setShowRename, setShowNewDir, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage } =
+  const { showHidden, terminalApp, terminalCommand, setShowRename, setShowNewDir, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage } =
     useUiStore();
   const { addBookmark } = useBookmarkStore();
 
@@ -117,9 +117,13 @@ export function useFileOps() {
       tauriApi.openFile(cursorEntry.path).catch(console.error);
     } else {
       // o on a directory (or no selection) → open terminal
-      tauriApi.openTerminalAt(currentPath, terminalEmulator).catch(console.error);
+      tauriApi.openTerminalAt(currentPath, terminalApp, terminalCommand).catch(console.error);
     }
-  }, [cursorEntry, currentPath, terminalEmulator]);
+  }, [cursorEntry, currentPath, terminalApp, terminalCommand]);
+
+  const handleOpenTerminalHere = useCallback(() => {
+    tauriApi.openTerminalAt(currentPath, terminalApp, terminalCommand).catch(console.error);
+  }, [currentPath, terminalApp, terminalCommand]);
 
   const handleOpenEditor = useCallback(() => {
     if (!cursorEntry || cursorEntry.is_dir) return;
@@ -176,6 +180,7 @@ export function useFileOps() {
     handleCopyPath,
     handleCopyName,
     handleOpenTerminal,
+    handleOpenTerminalHere,
     handleOpenEditor,
     handleRename,
     handleNewDir,

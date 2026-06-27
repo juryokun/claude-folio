@@ -9,7 +9,6 @@ import { RenameModal } from './components/modals/RenameModal';
 import { NewDirModal } from './components/modals/NewDirModal';
 import { ConfirmModal } from './components/modals/ConfirmModal';
 import { CommandPalette } from './components/modals/CommandPalette';
-import { SettingsModal } from './components/settings/SettingsModal';
 import { KeybindingsHelp } from './components/help/KeybindingsHelp';
 import { useTabStore } from './store/tabStore';
 import { useFileStore } from './store/fileStore';
@@ -35,7 +34,7 @@ export default function App() {
     useTabStore();
   const { loadDir, setCursor, getPane, filteredEntries, setSort } = useFileStore();
   const {
-    showHidden, toggleHidden, setShowHelp, setShowSettings, setVimMode,
+    showHidden, toggleHidden, setShowHelp, setVimMode, toggleSidebar, showSidebar,
   } = useUiStore();
 
   const fileOps = useFileOps();
@@ -123,8 +122,14 @@ export default function App() {
         case 'open_terminal':
           ops.handleOpenTerminal();
           break;
+        case 'open_terminal_here':
+          ops.handleOpenTerminalHere();
+          break;
         case 'open_editor':
           ops.handleOpenEditor();
+          break;
+        case 'toggle_sidebar':
+          toggleSidebar();
           break;
         case 'rename':
           ops.handleRename();
@@ -192,19 +197,18 @@ export default function App() {
       if (e.key === 'Escape' && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
         setVimMode('NORMAL');
         setShowHelp(false);
-        setShowSettings(false);
         useFileStore.getState().setClipboard(null);
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [setVimMode, setShowHelp, setShowSettings]);
+  }, [setVimMode, setShowHelp]);
 
   return (
     <div className="app">
       <TabBar />
       <div className="main-area">
-        <Sidebar />
+        {showSidebar && <Sidebar />}
         <div className="content-area">
           <PathBar />
           <div className="file-area">
@@ -227,7 +231,6 @@ export default function App() {
       <NewDirModal />
       <ConfirmModal />
       <CommandPalette />
-      <SettingsModal />
       <KeybindingsHelp />
     </div>
   );

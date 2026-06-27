@@ -15,7 +15,9 @@ export type VimAction =
   | 'copy_path'
   | 'copy_name'
   | 'open_terminal'
+  | 'open_terminal_here'
   | 'open_editor'
+  | 'toggle_sidebar'
   | 'rename'
   | 'new_dir'
   | 'new_tab'
@@ -63,7 +65,9 @@ export const NORMAL_KEYMAP: KeyBinding[] = [
   { keys: ['y', 'p'],   action: 'copy_path' },
   { keys: ['y', 'n'],   action: 'copy_name' },
   { keys: ['o'],         action: 'open_terminal' },
+  { keys: ['T'],         action: 'open_terminal_here' },
   { keys: ['e'],         action: 'open_editor' },
+  { keys: ['\\'],        action: 'toggle_sidebar' },
   { keys: ['r'],         action: 'rename' },
   { keys: ['a'],         action: 'new_dir' },
   { keys: ['t'],         action: 'new_tab' },
@@ -105,7 +109,9 @@ export const KEYBINDING_DOCS: Array<{ keys: string; description: string }> = [
   { keys: 'r',               description: 'リネーム' },
   { keys: 'a',               description: '新規ディレクトリ作成' },
   { keys: 'o',               description: 'ファイルを実行 / ディレクトリはターミナルを開く' },
+  { keys: 'T',               description: 'カレントディレクトリをターミナルで開く' },
   { keys: 'e',               description: 'エディタでファイルを開く' },
+  { keys: '\\',              description: 'サイドバーの表示切替' },
   { keys: 't',               description: '新規タブ' },
   { keys: '] / [',           description: '次/前のタブ' },
   { keys: '.',               description: '隠しファイルの表示切替' },
