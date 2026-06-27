@@ -12,7 +12,7 @@ export function CommandPalette() {
     useUiStore();
   const { activeTab, navigateTo, openTab, closeTab, activeTabId } = useTabStore();
   const { loadDir } = useFileStore();
-  const { showHidden } = useUiStore();
+  const { showHidden, showStatusMessage } = useUiStore();
   const { addBookmark } = useBookmarkStore();
 
   const [input, setInput] = useState('');
@@ -109,6 +109,21 @@ export function CommandPalette() {
           }
           break;
         }
+        case 'init-config': {
+          try {
+            const configPath = await tauriApi.initConfig();
+            close();
+            showStatusMessage(`✅ 設定ファイルを作成しました: ${configPath}`);
+          } catch (e) {
+            if (String(e) === 'exists') {
+              close();
+              showStatusMessage('ℹ️ 設定ファイルはすでに存在します: ~/.config/mac-filer/config.toml', 4000);
+            } else {
+              setError(String(e));
+            }
+          }
+          return;
+        }
         default:
           setError(`不明なコマンド: ${command}`);
           return;
@@ -136,7 +151,7 @@ export function CommandPalette() {
         />
         {error && <div className="command-error">{error}</div>}
         <div className="command-help">
-          :q :tabnew [path] :cd [path/keyword] :bm [label] :zip [name] :unzip
+          :q :tabnew [path] :cd [path/keyword] :bm [label] :zip [name] :unzip :init-config
         </div>
       </div>
     </div>
