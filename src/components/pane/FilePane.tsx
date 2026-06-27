@@ -138,10 +138,12 @@ export function FilePane({ tabId }: Props) {
     { kind: 'sep' as const },
     {
       label: 'ターミナルで開く', icon: '🖥️', shortcut: 'T',
+      disabled: !ctxEntry.is_dir,
       action: () => tauriApi.openTerminalAt(ctxTargetDir, terminalApp, terminalCommand).catch(console.error),
     },
     {
       label: 'ブックマークに追加', icon: '🔖', shortcut: 'B',
+      disabled: !ctxEntry.is_dir,
       action: () => {
         const label = path.basename(ctxTargetDir) || ctxTargetDir;
         addBookmark(label, ctxTargetDir).then(() =>
