@@ -128,6 +128,10 @@ export function FilePane({ tabId }: Props) {
     { kind: 'sep' as const },
     { label: 'ターミナルで開く', icon: '🖥️', shortcut: 'T', action: fileOps.handleOpenTerminalHere },
     { label: 'ブックマークに追加', icon: '🔖', shortcut: 'B', action: fileOps.handleAddBookmark },
+    { kind: 'sep' as const },
+    { label: 'アプリを指定して開く', icon: '🚀', shortcut: 'O', action: fileOps.handleOpenWith, dim: true },
+    { label: 'エディタで開く', icon: '📝', shortcut: 'e', action: fileOps.handleOpenEditor, dim: true },
+    { label: 'コマンドパレット', icon: '⌨️', shortcut: ':', action: fileOps.handleEnterCommand, dim: true },
   ] : ctxMenu.kind === 'blank' ? [
     { label: 'ペースト', icon: '📌', shortcut: 'p', action: fileOps.handlePaste, disabled: !clipboard },
     { kind: 'sep' as const },

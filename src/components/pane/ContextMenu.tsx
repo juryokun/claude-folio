@@ -6,6 +6,7 @@ interface MenuItem {
   shortcut?: string;
   action: () => void;
   disabled?: boolean;
+  dim?: boolean;
 }
 
 interface Separator {
@@ -60,7 +61,7 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
         return (
           <button
             key={i}
-            className="context-menu-item"
+            className={`context-menu-item${item.dim ? ' context-menu-item--dim' : ''}`}
             disabled={item.disabled}
             onClick={() => { onClose(); item.action(); }}
           >

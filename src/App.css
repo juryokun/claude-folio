@@ -630,6 +630,16 @@ kbd {
   cursor: not-allowed;
 }
 
+.context-menu-item--dim {
+  color: var(--text-dim);
+}
+.context-menu-item--dim .context-menu-shortcut {
+  color: #4a4a4a;
+}
+.context-menu-item--dim:not(:disabled):hover {
+  color: #fff;
+}
+
 .context-menu-icon {
   font-size: 13px;
   width: 18px;
