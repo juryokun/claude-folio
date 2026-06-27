@@ -178,5 +178,17 @@ describe('configStore 統合テスト', () => {
       await useConfigStore.getState().load();
       expect(mockSetLanguage).toHaveBeenCalledWith('ja');
     });
+
+    it('language が未指定の場合は "ja" でフォールバックして setLanguage が呼ばれる', async () => {
+      mockLoadConfig.mockResolvedValue({});
+      await useConfigStore.getState().load();
+      expect(mockSetLanguage).toHaveBeenCalledWith('ja');
+    });
+
+    it('language = "en" が明示されていれば "en" で setLanguage が呼ばれる', async () => {
+      mockLoadConfig.mockResolvedValue({ language: 'en' });
+      await useConfigStore.getState().load();
+      expect(mockSetLanguage).toHaveBeenCalledWith('en');
+    });
   });
 });

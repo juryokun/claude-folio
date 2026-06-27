@@ -205,6 +205,71 @@ describe('fileStore 統合テスト', () => {
     });
   });
 
+  // ── setSort 後のカーソルリセット ───────────────────────────────────────────
+
+  describe('setSort → カーソルリセット', () => {
+    beforeEach(async () => {
+      mockListDir.mockResolvedValue([entry('a.txt'), entry('b.txt'), entry('c.txt')]);
+      await useFileStore.getState().loadDir(TAB, '/test', false);
+    });
+
+    it('setSort を呼ぶとカーソルが 0 にリセットされる', () => {
+      useFileStore.getState().setCursor(TAB, 2);
+      useFileStore.getState().setSort(TAB, 'name', true);
+      expect(useFileStore.getState().getPane(TAB).cursor).toBe(0);
+    });
+
+    it('同じソートキーで降順→昇順に変更してもカーソルがリセットされる', () => {
+      useFileStore.getState().setCursor(TAB, 1);
+      useFileStore.getState().setSort(TAB, 'name', true);
+      useFileStore.getState().setCursor(TAB, 2);
+      useFileStore.getState().setSort(TAB, 'name', false);
+      expect(useFileStore.getState().getPane(TAB).cursor).toBe(0);
+    });
+  });
+
+  // ── フィルタ + ソートの組み合わせ ─────────────────────────────────────────
+
+  describe('setFilter + setSort の組み合わせ', () => {
+    beforeEach(async () => {
+      mockListDir.mockResolvedValue([
+        entry('c.json', false, 3000),
+        entry('a.txt',  false, 1000),
+        entry('b.json', false, 2000),
+      ]);
+      await useFileStore.getState().loadDir(TAB, '/test', false);
+    });
+
+    it('フィルタ後にソートが正しく効く', () => {
+      useFileStore.getState().setFilter(TAB, 'json');
+      useFileStore.getState().setSort(TAB, 'name', false);
+      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      expect(names).toEqual(['b.json', 'c.json']);
+    });
+
+    it('フィルタ後に降順ソートが効く', () => {
+      useFileStore.getState().setFilter(TAB, 'json');
+      useFileStore.getState().setSort(TAB, 'name', true);
+      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      expect(names).toEqual(['c.json', 'b.json']);
+    });
+
+    it('フィルタ後に時刻ソートが効く', () => {
+      useFileStore.getState().setFilter(TAB, 'json');
+      useFileStore.getState().setSort(TAB, 'time', false);
+      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      expect(names).toEqual(['b.json', 'c.json']);
+    });
+
+    it('フィルタをクリアするとソート済み全件が返る', () => {
+      useFileStore.getState().setFilter(TAB, 'json');
+      useFileStore.getState().setSort(TAB, 'name', false);
+      useFileStore.getState().setFilter(TAB, '');
+      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      expect(names).toEqual(['a.txt', 'b.json', 'c.json']);
+    });
+  });
+
   // ── preserveCursor モード ──────────────────────────────────────────────────
 
   describe('loadDir with preserveCursor=true', () => {
@@ -227,6 +292,39 @@ describe('fileStore 統合テスト', () => {
       mockListDir.mockResolvedValue([entry('a.txt')]);
       await useFileStore.getState().loadDir(TAB, '/test', false, true);
 
+      expect(useFileStore.getState().getPane(TAB).cursor).toBe(0);
+    });
+  });
+
+  // ── setPendingFocusName ────────────────────────────────────────────────────
+
+  describe('setPendingFocusName', () => {
+    it('loadDir 後にカーソルが指定エントリ名の位置に移動する', async () => {
+      useFileStore.getState().setPendingFocusName(TAB, 'c.txt');
+      mockListDir.mockResolvedValue([entry('a.txt'), entry('b.txt'), entry('c.txt')]);
+      await useFileStore.getState().loadDir(TAB, '/test', false);
+      expect(useFileStore.getState().getPane(TAB).cursor).toBe(2);
+    });
+
+    it('loadDir 後に pendingFocusName が null にリセットされる', async () => {
+      useFileStore.getState().setPendingFocusName(TAB, 'b.txt');
+      mockListDir.mockResolvedValue([entry('a.txt'), entry('b.txt')]);
+      await useFileStore.getState().loadDir(TAB, '/test', false);
+      expect(useFileStore.getState().getPane(TAB).pendingFocusName).toBeNull();
+    });
+
+    it('存在しない名前を指定した場合はカーソルが 0 になる', async () => {
+      useFileStore.getState().setPendingFocusName(TAB, 'ghost.txt');
+      mockListDir.mockResolvedValue([entry('a.txt'), entry('b.txt')]);
+      await useFileStore.getState().loadDir(TAB, '/test', false);
+      expect(useFileStore.getState().getPane(TAB).cursor).toBe(0);
+    });
+
+    it('pendingFocusName を null にセットすると無効化される', async () => {
+      useFileStore.getState().setPendingFocusName(TAB, 'b.txt');
+      useFileStore.getState().setPendingFocusName(TAB, null);
+      mockListDir.mockResolvedValue([entry('a.txt'), entry('b.txt'), entry('c.txt')]);
+      await useFileStore.getState().loadDir(TAB, '/test', false);
       expect(useFileStore.getState().getPane(TAB).cursor).toBe(0);
     });
   });
