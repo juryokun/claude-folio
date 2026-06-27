@@ -8,6 +8,7 @@ interface UiStore {
   showHelp: boolean;
   showRename: boolean;
   showNewDir: boolean;
+  showNewFile: boolean;
   showConfirm: boolean;
   confirmMessage: string;
   confirmCallback: (() => void) | null;
@@ -36,6 +37,7 @@ interface UiStore {
   setShowHelp: (v: boolean) => void;
   setShowRename: (v: boolean, target?: string) => void;
   setShowNewDir: (v: boolean) => void;
+  setShowNewFile: (v: boolean) => void;
   showConfirmDialog: (message: string, onConfirm: () => void) => void;
   closeConfirm: () => void;
   setShowCommandPalette: (v: boolean) => void;
@@ -55,6 +57,7 @@ export const useUiStore = create<UiStore>()(
       showHelp: false,
       showRename: false,
       showNewDir: false,
+      showNewFile: false,
       showConfirm: false,
       confirmMessage: '',
       confirmCallback: null,
@@ -86,6 +89,7 @@ export const useUiStore = create<UiStore>()(
       setShowHelp: (v) => set({ showHelp: v }),
       setShowRename: (v, target) => set({ showRename: v, renameTarget: target ?? null }),
       setShowNewDir: (v) => set({ showNewDir: v }),
+      setShowNewFile: (v) => set({ showNewFile: v }),
       showConfirmDialog: (message, onConfirm) =>
         set({ showConfirm: true, confirmMessage: message, confirmCallback: onConfirm }),
       closeConfirm: () => set({ showConfirm: false, confirmMessage: '', confirmCallback: null }),

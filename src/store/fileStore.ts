@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { FileEntry, ClipboardState } from '../types';
 import { tauriApi, isTauri } from '../lib/tauri';
+import { useTabStore } from './tabStore';
 
 export type SortKey = 'name' | 'time';
 
@@ -106,13 +107,32 @@ export const useFileStore = create<FileStore>((set, get) => ({
       });
 
     } catch (e) {
+      const errStr = String(e);
+      // If the directory was deleted, navigate up to the nearest existing parent
+      if (errStr.includes('does not exist') || errStr.includes('No such file')) {
+        const { activeTab, navigateTo } = useTabStore.getState();
+        if (activeTab().id === tabId) {
+          const parts = path.split('/').filter(Boolean);
+          while (parts.length > 0) {
+            parts.pop();
+            const parent = '/' + parts.join('/') || '/';
+            try {
+              await tauriApi.listDir(parent, false);
+              navigateTo(parent);
+              return;
+            } catch { /* keep going up */ }
+          }
+          navigateTo('/');
+        }
+        return;
+      }
       set((s) => ({
         panes: {
           ...s.panes,
           [tabId]: {
             ...(s.panes[tabId] ?? defaultPane()),
             loading: false,
-            error: String(e),
+            error: errStr,
           },
         },
       }));

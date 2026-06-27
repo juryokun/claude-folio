@@ -8,6 +8,7 @@ import { StatusBar } from './components/pane/StatusBar';
 import { SearchBar } from './components/search/SearchBar';
 import { RenameModal } from './components/modals/RenameModal';
 import { NewDirModal } from './components/modals/NewDirModal';
+import { NewFileModal } from './components/modals/NewFileModal';
 import { ConfirmModal } from './components/modals/ConfirmModal';
 import { CommandPalette } from './components/modals/CommandPalette';
 import { OpenWithModal } from './components/modals/OpenWithModal';
@@ -167,6 +168,9 @@ export default function App() {
         case 'new_dir':
           ops.handleNewDir();
           break;
+        case 'new_file':
+          ops.handleNewFile();
+          break;
         case 'new_tab':
           openTab();
           break;
@@ -266,6 +270,7 @@ export default function App() {
 
       <RenameModal />
       <NewDirModal />
+      <NewFileModal />
       <ConfirmModal />
       <CommandPalette />
       <OpenWithModal />

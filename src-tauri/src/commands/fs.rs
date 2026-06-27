@@ -141,6 +141,19 @@ pub fn create_dir(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn create_file(path: String) -> Result<(), String> {
+    if let Some(parent) = std::path::Path::new(&path).parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    std::fs::OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(&path)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn detect_google_drive() -> Vec<String> {
     let mut paths = Vec::new();
 

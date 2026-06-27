@@ -19,6 +19,9 @@ export const tauriApi = {
   createDir: (path: string) =>
     invoke<void>('create_dir', { path }),
 
+  createFile: (path: string) =>
+    invoke<void>('create_file', { path }),
+
   moveToTrash: (paths: string[]) =>
     invoke<void>('move_to_trash', { paths }),
 

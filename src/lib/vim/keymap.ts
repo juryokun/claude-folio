@@ -21,6 +21,7 @@ export type VimAction =
   | 'toggle_sidebar'
   | 'rename'
   | 'new_dir'
+  | 'new_file'
   | 'new_tab'
   | 'close_tab'
   | 'next_tab'
@@ -75,6 +76,7 @@ export const NORMAL_KEYMAP: KeyBinding[] = [
   { keys: ['r'],         action: 'rename' },
   { keys: ['R'],         action: 'reload' },
   { keys: ['a'],         action: 'new_dir' },
+  { keys: ['A'],         action: 'new_file' },
   { keys: ['t'],         action: 'new_tab' },
   { keys: [']'],         action: 'next_tab' },
   { keys: ['['],         action: 'prev_tab' },
@@ -115,6 +117,7 @@ export const KEYBINDING_DOCS: Array<{ keys: string; description: string }> = [
   { keys: 'r',               description: 'リネーム' },
   { keys: 'R',               description: 'ディレクトリを再読み込み' },
   { keys: 'a',               description: '新規ディレクトリ作成' },
+  { keys: 'A',               description: '新規ファイル作成' },
   { keys: 'o',               description: 'ファイルを実行 / ディレクトリはターミナルを開く' },
   { keys: 'T',               description: 'カレントディレクトリをターミナルで開く' },
   { keys: 'O',               description: 'アプリを指定してファイルを開く' },

@@ -10,7 +10,7 @@ export function useFileOps() {
   const { activeTab, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
     useFileStore();
-  const { showHidden, terminalApp, terminalCommand, setShowRename, setShowNewDir, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage, setShowOpenWith } =
+  const { showHidden, terminalApp, terminalCommand, setShowRename, setShowNewDir, setShowNewFile, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage, setShowOpenWith } =
     useUiStore();
   const { addBookmark } = useBookmarkStore();
 
@@ -150,6 +150,10 @@ export function useFileOps() {
     setShowNewDir(true);
   }, [setShowNewDir]);
 
+  const handleNewFile = useCallback(() => {
+    setShowNewFile(true);
+  }, [setShowNewFile]);
+
   const handleToggleSelect = useCallback(() => {
     if (!cursorEntry) return;
     toggleSelect(tabId, cursorEntry.path);
@@ -190,6 +194,7 @@ export function useFileOps() {
     handleOpenEditor,
     handleRename,
     handleNewDir,
+    handleNewFile,
     handleToggleSelect,
     handleEnterSearch,
     handleEnterCommand,
