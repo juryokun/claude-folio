@@ -7,7 +7,7 @@ import { useUiStore } from '../store/uiStore';
 
 export function useFileOps() {
   const { activeTab, navigateTo } = useTabStore();
-  const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect } =
+  const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
     useFileStore();
   const { showHidden, terminalEmulator, setShowRename, setShowCommandPalette, setVimMode } =
     useUiStore();
@@ -41,8 +41,12 @@ export function useFileOps() {
 
   const handleNavigateUp = useCallback(() => {
     const parent = path.dirname(currentPath);
-    if (parent !== currentPath) navigateTo(parent);
-  }, [currentPath, navigateTo]);
+    if (parent !== currentPath) {
+      const childName = path.basename(currentPath);
+      setPendingFocusName(tabId, childName);
+      navigateTo(parent);
+    }
+  }, [currentPath, tabId, navigateTo, setPendingFocusName]);
 
   const handleDelete = useCallback(async () => {
     const targets = getTargetPaths();

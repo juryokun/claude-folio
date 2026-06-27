@@ -9,6 +9,7 @@ interface PaneState {
   cursor: number;
   selected: Set<string>; // selected paths
   filterQuery: string;
+  pendingFocusName: string | null; // entry name to focus after next load
 }
 
 interface FileStore {
@@ -17,6 +18,7 @@ interface FileStore {
 
   getPane: (tabId: string) => PaneState;
   loadDir: (tabId: string, path: string, showHidden: boolean) => Promise<void>;
+  setPendingFocusName: (tabId: string, name: string | null) => void;
   setCursor: (tabId: string, index: number) => void;
   toggleSelect: (tabId: string, path: string) => void;
   clearSelection: (tabId: string) => void;
@@ -32,6 +34,7 @@ const defaultPane = (): PaneState => ({
   cursor: 0,
   selected: new Set(),
   filterQuery: '',
+  pendingFocusName: null,
 });
 
 export const useFileStore = create<FileStore>((set, get) => ({
@@ -50,20 +53,28 @@ export const useFileStore = create<FileStore>((set, get) => ({
     }));
     try {
       const entries = await tauriApi.listDir(path, showHidden);
-      set((s) => ({
-        panes: {
-          ...s.panes,
-          [tabId]: {
-            ...(s.panes[tabId] ?? defaultPane()),
-            entries,
-            loading: false,
-            error: null,
-            cursor: 0,
-            selected: new Set(),
-            filterQuery: '',
+      set((s) => {
+        const pane = s.panes[tabId] ?? defaultPane();
+        const focusName = pane.pendingFocusName;
+        const cursor = focusName
+          ? Math.max(0, entries.findIndex((e) => e.name === focusName))
+          : 0;
+        return {
+          panes: {
+            ...s.panes,
+            [tabId]: {
+              ...pane,
+              entries,
+              loading: false,
+              error: null,
+              cursor,
+              selected: new Set(),
+              filterQuery: '',
+              pendingFocusName: null,
+            },
           },
-        },
-      }));
+        };
+      });
       // Keep zoxide in sync (fire and forget)
       tauriApi.zoxideAdd(path).catch(() => {});
     } catch (e) {
@@ -112,6 +123,13 @@ export const useFileStore = create<FileStore>((set, get) => ({
       return {
         panes: { ...s.panes, [tabId]: { ...pane, filterQuery: query, cursor: 0 } },
       };
+    });
+  },
+
+  setPendingFocusName: (tabId, name) => {
+    set((s) => {
+      const pane = s.panes[tabId] ?? defaultPane();
+      return { panes: { ...s.panes, [tabId]: { ...pane, pendingFocusName: name } } };
     });
   },
 

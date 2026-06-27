@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { TabBar } from './components/tabs/TabBar';
 import { Sidebar } from './components/sidebar/Sidebar';
 import { FilePane } from './components/pane/FilePane';
@@ -36,6 +36,8 @@ export default function App() {
   } = useUiStore();
 
   const fileOps = useFileOps();
+  const fileOpsRef = useRef(fileOps);
+  fileOpsRef.current = fileOps;
 
   // Resolve real home dir and navigate there on startup
   useEffect(() => {
@@ -58,6 +60,7 @@ export default function App() {
 
   const handleVimAction = useCallback(
     (action: VimAction) => {
+      const ops = fileOpsRef.current;
       const tab = activeTab();
       const pane = getPane(tab.id);
       const entries = filteredEntries(tab.id);
@@ -77,46 +80,47 @@ export default function App() {
           setCursor(tab.id, maxIdx);
           break;
         case 'navigate_up':
-          fileOps.handleNavigateUp();
+          ops.handleNavigateUp();
           break;
         case 'navigate_into':
-          fileOps.handleNavigateInto();
+        case 'open_selected':
+          ops.handleNavigateInto();
           break;
         case 'toggle_select':
-          fileOps.handleToggleSelect();
+          ops.handleToggleSelect();
           break;
         case 'delete_selected':
-          fileOps.handleDelete();
+          ops.handleDelete();
           break;
         case 'cut_selected':
-          fileOps.handleCut();
+          ops.handleCut();
           break;
         case 'yank_selected':
-          fileOps.handleYank();
+          ops.handleYank();
           break;
         case 'paste':
-          fileOps.handlePaste();
+          ops.handlePaste();
           break;
         case 'enter_search':
-          fileOps.handleEnterSearch();
+          ops.handleEnterSearch();
           break;
         case 'enter_command':
-          fileOps.handleEnterCommand();
+          ops.handleEnterCommand();
           break;
         case 'copy_path':
-          fileOps.handleCopyPath();
+          ops.handleCopyPath();
           break;
         case 'copy_name':
-          fileOps.handleCopyName();
+          ops.handleCopyName();
           break;
         case 'open_terminal':
-          fileOps.handleOpenTerminal();
+          ops.handleOpenTerminal();
           break;
         case 'rename':
-          fileOps.handleRename();
+          ops.handleRename();
           break;
         case 'new_dir':
-          fileOps.handleNewDir();
+          ops.handleNewDir();
           break;
         case 'new_tab':
           openTab();
@@ -138,9 +142,6 @@ export default function App() {
           break;
         case 'show_help':
           setShowHelp(true);
-          break;
-        case 'open_selected':
-          fileOps.handleNavigateInto();
           break;
       }
     },
