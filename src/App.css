@@ -286,7 +286,7 @@ body {
   color: var(--text-dim);
 }
 .file-pane.error { color: #f48771; }
-.empty-dir { padding: 16px; color: var(--text-dim); text-align: center; }
+.empty-dir { padding: 16px; color: var(--text-dim); text-align: left; }
 
 /* File list header */
 .file-list-header {
