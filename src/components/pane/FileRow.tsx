@@ -16,14 +16,15 @@ interface Props {
   dragPaths: string[];
 }
 
-function formatSize(bytes: number, unit: 'binary' | 'decimal'): string {
-  if (bytes === 0) return '—';
+function formatSize(bytes: number, unit: 'binary' | 'decimal'): { value: string; unit: string } | null {
+  if (bytes === 0) return null;
   const base = unit === 'binary' ? 1024 : 1000;
   const units = unit === 'binary'
     ? ['B', 'KiB', 'MiB', 'GiB', 'TiB']
     : ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.min(Math.floor(Math.log(bytes) / Math.log(base)), units.length - 1);
-  return i === 0 ? `${bytes} B` : `${(bytes / Math.pow(base, i)).toFixed(1)} ${units[i]}`;
+  const value = i === 0 ? String(bytes) : (bytes / Math.pow(base, i)).toFixed(1);
+  return { value, unit: units[i] };
 }
 
 /** Minimal strftime-like formatter: %Y %m %d %H %M %S */
@@ -83,7 +84,12 @@ export const FileRow = React.memo(function FileRow({
       <span className="file-select-indicator">{isSelected ? '✓' : ' '}</span>
       <FileIcon entry={entry} />
       <span className="file-name">{entry.name}{entry.is_symlink ? ' →' : ''}</span>
-      <span className="file-size" style={{ width: colSizeWidth }}>{entry.is_dir ? '—' : formatSize(entry.size, sizeUnit)}</span>
+      <span className="file-size" style={{ width: colSizeWidth }}>
+        {entry.is_dir ? <><span className="file-size-value">—</span><span className="file-size-unit" /></> : (() => {
+          const s = formatSize(entry.size, sizeUnit);
+          return s ? <><span className="file-size-value">{s.value}</span><span className="file-size-unit">{s.unit}</span></> : <><span className="file-size-value">0</span><span className="file-size-unit">B</span></>;
+        })()}
+      </span>
       <span className="file-date" style={{ width: colDateWidth }}>{formatDate(entry.modified, dateFormat)}</span>
     </div>
   );

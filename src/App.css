@@ -356,8 +356,10 @@ body {
 .file-select-indicator { width: 14px; color: var(--text-accent); font-size: 11px; }
 .file-icon { width: 20px; text-align: center; font-size: 14px; }
 .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-size { text-align: right; color: var(--text-dim); font-size: 11px; flex-shrink: 0; overflow: hidden; }
-.file-date { text-align: right; color: var(--text-dim); font-size: 11px; flex-shrink: 0; overflow: hidden; }
+.file-size { display: flex; align-items: center; color: var(--text-dim); font-size: 11px; flex-shrink: 0; overflow: hidden; font-family: monospace; }
+.file-size-value { text-align: right; min-width: 4.5em; }
+.file-size-unit { text-align: left; padding-left: 0.3em; min-width: 3em; }
+.file-date { text-align: left; color: var(--text-dim); font-size: 11px; flex-shrink: 0; overflow: hidden; font-family: monospace; }
 
 /* Search bar */
 .search-bar {

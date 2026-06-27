@@ -22,8 +22,9 @@ const COMMANDS: CommandDef[] = [
   { name: 'filter',        args: '<ext>',     desc: 'ファイルを拡張子でフィルタ' },
   { name: 'zip',           args: '[name]',    desc: '選択ファイルを ZIP 圧縮 (7zip)' },
   { name: 'unzip',         desc: '選択アーカイブを展開 (7zip)' },
-  { name: 'init-config',   desc: '設定ファイルを初期作成' },
-  { name: 'reload-config', desc: '設定ファイルを再読み込み' },
+  { name: 'init-config',    desc: '設定ファイルを初期作成' },
+  { name: 'reload-config',  desc: '設定ファイルを再読み込み' },
+  { name: 'clear-storage',  desc: 'LocalStorage をクリアしてアプリを再起動' },
 ];
 
 export function CommandPalette() {
@@ -167,6 +168,11 @@ export function CommandPalette() {
           }
           break;
         }
+        case 'clear-storage': {
+          localStorage.clear();
+          location.reload();
+          return;
+        }
         case 'reload-config': {
           try {
             await loadConfig();
@@ -234,7 +240,7 @@ export function CommandPalette() {
         )}
         {error && <div className="command-error">{error}</div>}
         <div className="command-help">
-          :q :tabnew :cd :bm :filter :zip :unzip :init-config :reload-config
+          :q :tabnew :cd :bm :filter :zip :unzip :init-config :reload-config :clear-storage
         </div>
       </div>
     </div>

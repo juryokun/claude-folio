@@ -78,7 +78,7 @@ export const useUiStore = create<UiStore>()(
       terminalCommand: '',
       googleDrivePaths: [],
       sidebarWidth: 220,
-      columnWidths: { size: 70, date: 90 },
+      columnWidths: { size: 90, date: 140 },
       statusMessage: null,
       editorCommand: '',
       showSidebar: true,

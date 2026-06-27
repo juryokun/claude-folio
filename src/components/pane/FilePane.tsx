@@ -202,7 +202,7 @@ export function FilePane({ tabId }: Props) {
           onClick={() => handleSortClick('time')}
           style={{ width: columnWidths.date }}
         >
-          更新日 <SortIndicator active={pane.sortKey === 'time'} desc={pane.sortDesc} />
+          更新日時 <SortIndicator active={pane.sortKey === 'time'} desc={pane.sortDesc} />
           <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'date')} />
         </span>
       </div>
