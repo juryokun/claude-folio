@@ -6,6 +6,7 @@ import { PathBar } from './components/pane/PathBar';
 import { StatusBar } from './components/pane/StatusBar';
 import { SearchBar } from './components/search/SearchBar';
 import { RenameModal } from './components/modals/RenameModal';
+import { NewDirModal } from './components/modals/NewDirModal';
 import { CommandPalette } from './components/modals/CommandPalette';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { KeybindingsHelp } from './components/help/KeybindingsHelp';
@@ -188,6 +189,7 @@ export default function App() {
       </div>
 
       <RenameModal />
+      <NewDirModal />
       <CommandPalette />
       <SettingsModal />
       <KeybindingsHelp />

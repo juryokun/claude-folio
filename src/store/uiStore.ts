@@ -8,6 +8,7 @@ interface UiStore {
   showHelp: boolean;
   showSettings: boolean;
   showRename: boolean;
+  showNewDir: boolean;
   showCommandPalette: boolean;
   renameTarget: string | null;
   has7zip: boolean;
@@ -21,6 +22,7 @@ interface UiStore {
   setShowHelp: (v: boolean) => void;
   setShowSettings: (v: boolean) => void;
   setShowRename: (v: boolean, target?: string) => void;
+  setShowNewDir: (v: boolean) => void;
   setShowCommandPalette: (v: boolean) => void;
   setHas7zip: (v: boolean) => void;
   setHasZoxide: (v: boolean) => void;
@@ -37,6 +39,7 @@ export const useUiStore = create<UiStore>()(
       showHelp: false,
       showSettings: false,
       showRename: false,
+      showNewDir: false,
       showCommandPalette: false,
       renameTarget: null,
       has7zip: false,
@@ -50,6 +53,7 @@ export const useUiStore = create<UiStore>()(
       setShowHelp: (v) => set({ showHelp: v }),
       setShowSettings: (v) => set({ showSettings: v }),
       setShowRename: (v, target) => set({ showRename: v, renameTarget: target ?? null }),
+      setShowNewDir: (v) => set({ showNewDir: v }),
       setShowCommandPalette: (v) => set({ showCommandPalette: v }),
       setHas7zip: (v) => set({ has7zip: v }),
       setHasZoxide: (v) => set({ hasZoxide: v }),

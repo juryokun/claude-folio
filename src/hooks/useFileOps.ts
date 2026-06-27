@@ -9,7 +9,7 @@ export function useFileOps() {
   const { activeTab, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
     useFileStore();
-  const { showHidden, terminalEmulator, setShowRename, setShowCommandPalette, setVimMode } =
+  const { showHidden, terminalEmulator, setShowRename, setShowNewDir, setShowCommandPalette, setVimMode } =
     useUiStore();
 
   const tab = activeTab();
@@ -108,16 +108,9 @@ export function useFileOps() {
     setShowRename(true, cursorEntry.path);
   }, [cursorEntry, setShowRename]);
 
-  const handleNewDir = useCallback(async () => {
-    const name = prompt('新規フォルダ名:');
-    if (!name) return;
-    try {
-      await tauriApi.createDir(`${currentPath}/${name}`);
-      reload();
-    } catch (e) {
-      alert(`フォルダ作成に失敗しました: ${e}`);
-    }
-  }, [currentPath, reload]);
+  const handleNewDir = useCallback(() => {
+    setShowNewDir(true);
+  }, [setShowNewDir]);
 
   const handleToggleSelect = useCallback(() => {
     if (!cursorEntry) return;
