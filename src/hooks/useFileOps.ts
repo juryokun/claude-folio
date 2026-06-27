@@ -35,7 +35,7 @@ export function useFileOps() {
   }, [tabId, currentPath, showHidden, loadDir]);
 
   const handleNavigateInto = useCallback(() => {
-    // l / Enter / ArrowRight — directories only; files are ignored
+    // l / Enter — directories only; files are ignored
     if (!cursorEntry || !cursorEntry.is_dir) return;
     navigateTo(cursorEntry.path);
   }, [cursorEntry, navigateTo]);
@@ -129,8 +129,9 @@ export function useFileOps() {
   }, [getTargetPaths, showStatusMessage]);
 
   const handleOpenTerminal = useCallback(() => {
-    if (cursorEntry && !cursorEntry.is_dir) {
-      // o on a file → open with OS default app
+    const isApp = cursorEntry?.is_dir && cursorEntry.name.endsWith('.app');
+    if (cursorEntry && (!cursorEntry.is_dir || isApp)) {
+      // o on a file or .app bundle → open with OS default app
       tauriApi.openFile(cursorEntry.path).catch(console.error);
     } else {
       // o on a directory (or no selection) → open terminal
