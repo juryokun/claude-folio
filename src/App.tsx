@@ -12,6 +12,7 @@ import { NewFileModal } from './components/modals/NewFileModal';
 import { ConfirmModal } from './components/modals/ConfirmModal';
 import { CommandPalette } from './components/modals/CommandPalette';
 import { OpenWithModal } from './components/modals/OpenWithModal';
+import { PreviewPanel } from './components/preview/PreviewPanel';
 import { KeybindingsHelp } from './components/help/KeybindingsHelp';
 import { useTabStore } from './store/tabStore';
 import { useFileStore } from './store/fileStore';
@@ -39,6 +40,7 @@ export default function App() {
   const { loadDir, setCursor, getPane, filteredEntries, setSort } = useFileStore();
   const {
     showHidden, toggleHidden, setShowHelp, setVimMode, toggleSidebar, showSidebar,
+    showPreview, togglePreview,
   } = useUiStore();
 
   const fileOps = useFileOps();
@@ -78,16 +80,24 @@ export default function App() {
   useEffect(() => {
     tauriApi.watchDir(currentTabPath).catch(() => {});
 
-    const unlisten = listen('mac-filer:dir-changed', () => {
+    let cancelled = false;
+    let unlistenFn: (() => void) | null = null;
+
+    listen('mac-filer:dir-changed', () => {
+      if (cancelled) return;
       if (reloadTimerRef.current) clearTimeout(reloadTimerRef.current);
       reloadTimerRef.current = setTimeout(() => {
         const tab = useTabStore.getState().activeTab();
         loadDir(tab.id, tab.path, showHiddenRef.current, true);
       }, 300);
+    }).then((fn) => {
+      if (cancelled) { fn(); return; }
+      unlistenFn = fn;
     });
 
     return () => {
-      unlisten.then((fn) => fn());
+      cancelled = true;
+      unlistenFn?.();
       if (reloadTimerRef.current) clearTimeout(reloadTimerRef.current);
     };
   }, [currentTabPath]);
@@ -207,6 +217,9 @@ export default function App() {
         case 'open_bookmark_picker':
           window.dispatchEvent(new CustomEvent('mac-filer:focus-bookmarks'));
           break;
+        case 'toggle_preview':
+          togglePreview();
+          break;
         case 'sort_name':
           setSort(activeTabId, 'name', false);
           break;
@@ -266,6 +279,7 @@ export default function App() {
           <SearchBar />
           <StatusBar />
         </div>
+        {showPreview && <PreviewPanel />}
       </div>
 
       <RenameModal />

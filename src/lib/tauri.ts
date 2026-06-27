@@ -22,6 +22,9 @@ export const tauriApi = {
   createFile: (path: string) =>
     invoke<void>('create_file', { path }),
 
+  readTextFile: (path: string, maxBytes = 262144) =>
+    invoke<string>('read_text_file', { path, maxBytes }),
+
   moveToTrash: (paths: string[]) =>
     invoke<void>('move_to_trash', { paths }),
 

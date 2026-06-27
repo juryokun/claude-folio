@@ -190,3 +190,23 @@ pub fn detect_google_drive() -> Vec<String> {
 fn dirs_home() -> Option<PathBuf> {
     std::env::var("HOME").ok().map(PathBuf::from)
 }
+
+/// Read the first `max_bytes` of a text file. Returns an error if the file
+/// cannot be read as UTF-8 or if it exceeds the byte limit check indication.
+#[tauri::command]
+pub fn read_text_file(path: String, max_bytes: usize) -> Result<String, String> {
+    use std::io::Read;
+    let mut file = std::fs::File::open(&path).map_err(|e| e.to_string())?;
+    let mut buf = vec![0u8; max_bytes + 1];
+    let n = file.read(&mut buf).map_err(|e| e.to_string())?;
+    buf.truncate(n);
+    let truncated = n > max_bytes;
+    if truncated { buf.truncate(max_bytes); }
+    match String::from_utf8(buf) {
+        Ok(mut s) => {
+            if truncated { s.push_str("\n\n[...省略...]"); }
+            Ok(s)
+        }
+        Err(_) => Err("binary".to_string()),
+    }
+}

@@ -26,6 +26,8 @@ interface UiStore {
   statusMessage: string | null;
   editorCommand: string;
   showSidebar: boolean;
+  showPreview: boolean;
+  previewWidth: number;
 
   setVimMode: (mode: VimMode) => void;
   setEditorCommand: (cmd: string) => void;
@@ -47,6 +49,8 @@ interface UiStore {
   setGoogleDrivePaths: (paths: string[]) => void;
   setSidebarWidth: (w: number) => void;
   setColumnWidths: (w: Partial<{ size: number; date: number }>) => void;
+  togglePreview: () => void;
+  setPreviewWidth: (w: number) => void;
 }
 
 export const useUiStore = create<UiStore>()(
@@ -75,6 +79,8 @@ export const useUiStore = create<UiStore>()(
       statusMessage: null,
       editorCommand: '',
       showSidebar: true,
+      showPreview: false,
+      previewWidth: 320,
 
       setVimMode: (mode) => set({ vimMode: mode }),
       setEditorCommand: (cmd) => set({ editorCommand: cmd }),
@@ -100,6 +106,8 @@ export const useUiStore = create<UiStore>()(
       setGoogleDrivePaths: (paths) => set({ googleDrivePaths: paths }),
       setSidebarWidth: (w) => set({ sidebarWidth: w }),
       setColumnWidths: (w) => set((s) => ({ columnWidths: { ...s.columnWidths, ...w } })),
+      togglePreview: () => set((s) => ({ showPreview: !s.showPreview })),
+      setPreviewWidth: (w) => set({ previewWidth: w }),
     }),
     {
       name: 'mac-filer-ui',
@@ -108,6 +116,8 @@ export const useUiStore = create<UiStore>()(
         showSidebar: s.showSidebar,
         sidebarWidth: s.sidebarWidth,
         columnWidths: s.columnWidths,
+        showPreview: s.showPreview,
+        previewWidth: s.previewWidth,
       }),
     }
   )
