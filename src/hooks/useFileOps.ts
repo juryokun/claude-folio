@@ -9,7 +9,7 @@ export function useFileOps() {
   const { activeTab, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
     useFileStore();
-  const { showHidden, terminalEmulator, setShowRename, setShowNewDir, showConfirmDialog, setShowCommandPalette, setVimMode } =
+  const { showHidden, terminalEmulator, setShowRename, setShowNewDir, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage } =
     useUiStore();
 
   const tab = activeTab();
@@ -57,51 +57,60 @@ export function useFileOps() {
         try {
           await tauriApi.moveToTrash(targets);
           reload();
+          showStatusMessage(`🗑️ ${targets.length}件をゴミ箱に移動しました`);
         } catch (e) {
           console.error('削除に失敗しました:', e);
         }
       }
     );
-  }, [getTargetPaths, showConfirmDialog, reload]);
+  }, [getTargetPaths, showConfirmDialog, reload, showStatusMessage]);
 
   const handleCut = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
     setClipboard({ paths: targets, mode: 'cut' });
-  }, [getTargetPaths, setClipboard]);
+    showStatusMessage(`✂️ ${targets.length}件を切り取り`);
+  }, [getTargetPaths, setClipboard, showStatusMessage]);
 
   const handleYank = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
     setClipboard({ paths: targets, mode: 'copy' });
-  }, [getTargetPaths, setClipboard]);
+    showStatusMessage(`📋 ${targets.length}件をコピー`);
+  }, [getTargetPaths, setClipboard, showStatusMessage]);
 
   const handlePaste = useCallback(async () => {
     if (!clipboard) return;
     try {
       if (clipboard.mode === 'copy') {
         await tauriApi.copyFiles(clipboard.paths, currentPath);
+        showStatusMessage(`✅ ${clipboard.paths.length}件をペーストしました`);
       } else {
         await tauriApi.moveFiles(clipboard.paths, currentPath);
         setClipboard(null);
+        showStatusMessage(`✅ ${clipboard.paths.length}件を移動しました`);
       }
       reload();
     } catch (e) {
       console.error('ペーストに失敗しました:', e);
     }
-  }, [clipboard, currentPath, setClipboard, reload]);
+  }, [clipboard, currentPath, setClipboard, reload, showStatusMessage]);
 
   const handleCopyPath = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
-    tauriApi.copyPathToClipboard(targets).catch(console.error);
-  }, [getTargetPaths]);
+    tauriApi.copyPathToClipboard(targets)
+      .then(() => showStatusMessage('📋 パスをクリップボードにコピーしました'))
+      .catch(console.error);
+  }, [getTargetPaths, showStatusMessage]);
 
   const handleCopyName = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
-    tauriApi.copyNameToClipboard(targets).catch(console.error);
-  }, [getTargetPaths]);
+    tauriApi.copyNameToClipboard(targets)
+      .then(() => showStatusMessage('📋 ファイル名をクリップボードにコピーしました'))
+      .catch(console.error);
+  }, [getTargetPaths, showStatusMessage]);
 
   const handleOpenTerminal = useCallback(() => {
     tauriApi.openTerminalAt(currentPath, terminalEmulator).catch(console.error);

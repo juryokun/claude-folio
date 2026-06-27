@@ -19,8 +19,10 @@ interface UiStore {
   terminalEmulator: TerminalEmulator;
   googleDrivePaths: string[];
   sidebarWidth: number;
+  statusMessage: string | null;
 
   setVimMode: (mode: VimMode) => void;
+  showStatusMessage: (msg: string, durationMs?: number) => void;
   toggleHidden: () => void;
   setShowHelp: (v: boolean) => void;
   setShowSettings: (v: boolean) => void;
@@ -55,8 +57,13 @@ export const useUiStore = create<UiStore>()(
       terminalEmulator: 'terminal',
       googleDrivePaths: [],
       sidebarWidth: 220,
+      statusMessage: null,
 
       setVimMode: (mode) => set({ vimMode: mode }),
+      showStatusMessage: (msg, durationMs = 2000) => {
+        set({ statusMessage: msg });
+        setTimeout(() => set({ statusMessage: null }), durationMs);
+      },
       toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
       setShowHelp: (v) => set({ showHelp: v }),
       setShowSettings: (v) => set({ showSettings: v }),

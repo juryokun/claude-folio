@@ -5,7 +5,7 @@ import { useUiStore } from '../../store/uiStore';
 export function StatusBar() {
   const { activeTab } = useTabStore();
   const { getPane, filteredEntries, clipboard } = useFileStore();
-  const { vimMode, showHidden } = useUiStore();
+  const { vimMode, showHidden, statusMessage } = useUiStore();
 
   const tab = activeTab();
   const pane = getPane(tab.id);
@@ -32,6 +32,9 @@ export function StatusBar() {
       )}
       {showHidden && (
         <span className="status-hidden">隠しファイル表示中</span>
+      )}
+      {statusMessage && (
+        <span className="status-message">{statusMessage}</span>
       )}
     </div>
   );

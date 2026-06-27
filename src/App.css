@@ -265,6 +265,7 @@ body {
 .status-filter { color: #dcdcaa; }
 .status-clipboard { color: #9cdcfe; }
 .status-hidden { color: var(--text-dim); }
+.status-message { color: #4ec9b0; margin-left: auto; }
 
 /* Modals */
 .modal-overlay {
