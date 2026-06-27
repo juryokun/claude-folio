@@ -72,4 +72,52 @@ describe('NORMAL_KEYMAP', () => {
     }
     expect(duplicates).toEqual([]);
   });
+
+  describe('o prefix group', () => {
+    it('oo → open_default', () => {
+      const kb = NORMAL_KEYMAP.find((b) => b.keys.join('') === 'oo');
+      expect(kb?.action).toBe('open_default');
+    });
+    it('oe → open_editor', () => {
+      const kb = NORMAL_KEYMAP.find((b) => b.keys.join('') === 'oe');
+      expect(kb?.action).toBe('open_editor');
+    });
+    it('ow → open_with_app', () => {
+      const kb = NORMAL_KEYMAP.find((b) => b.keys.join('') === 'ow');
+      expect(kb?.action).toBe('open_with_app');
+    });
+    it('oq → quick_look', () => {
+      const kb = NORMAL_KEYMAP.find((b) => b.keys.join('') === 'oq');
+      expect(kb?.action).toBe('quick_look');
+    });
+    it('standalone o has no binding', () => {
+      const kb = NORMAL_KEYMAP.find((b) => b.keys.length === 1 && b.keys[0] === 'o');
+      expect(kb).toBeUndefined();
+    });
+  });
+
+  describe('n prefix group', () => {
+    it('nd → new_dir', () => {
+      const kb = NORMAL_KEYMAP.find((b) => b.keys.join('') === 'nd');
+      expect(kb?.action).toBe('new_dir');
+    });
+    it('nf → new_file', () => {
+      const kb = NORMAL_KEYMAP.find((b) => b.keys.join('') === 'nf');
+      expect(kb?.action).toBe('new_file');
+    });
+    it('standalone n has no binding', () => {
+      const kb = NORMAL_KEYMAP.find((b) => b.keys.length === 1 && b.keys[0] === 'n');
+      expect(kb).toBeUndefined();
+    });
+  });
+
+  it('T → open_terminal_here', () => {
+    const kb = NORMAL_KEYMAP.find((b) => b.keys.length === 1 && b.keys[0] === 'T');
+    expect(kb?.action).toBe('open_terminal_here');
+  });
+
+  it('open_terminal action is not in NORMAL_KEYMAP', () => {
+    const kb = NORMAL_KEYMAP.find((b) => b.action === 'open_terminal' as string);
+    expect(kb).toBeUndefined();
+  });
 });
