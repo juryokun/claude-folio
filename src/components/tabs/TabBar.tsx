@@ -3,11 +3,12 @@ import { useFileOps } from '../../hooks/useFileOps';
 import path from 'path-browserify';
 
 export function TabBar() {
-  const { tabs, activeTabId, setActiveTab, closeTab, openTab, goBack, activeTab } = useTabStore();
+  const { tabs, activeTabId, setActiveTab, closeTab, openTab, goBack, goForward, activeTab } = useTabStore();
   const fileOps = useFileOps();
 
   const tab = activeTab();
   const canGoBack = tab.historyIndex > 0;
+  const canGoForward = tab.historyIndex < tab.history.length - 1;
   const isRoot = tab.path === '/' || path.dirname(tab.path) === tab.path;
 
   return (
@@ -21,6 +22,15 @@ export function TabBar() {
           aria-label="戻る"
         >
           ‹
+        </button>
+        <button
+          className="tab-nav-btn"
+          onClick={() => goForward()}
+          disabled={!canGoForward}
+          title="進む (L)"
+          aria-label="進む"
+        >
+          ›
         </button>
         <button
           className="tab-nav-btn"
