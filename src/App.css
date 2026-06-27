@@ -121,12 +121,20 @@ body {
   min-width: 0;
 }
 
-.sidebar-item.bookmark > span {
+.sidebar-item > span,
+.sidebar-item:not(.bookmark) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+}
+
+.sidebar-item.bookmark > span {
   flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .sidebar-item:hover { background: var(--bg-hover); }
