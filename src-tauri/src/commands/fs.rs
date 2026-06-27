@@ -107,10 +107,12 @@ pub fn copy_files(sources: Vec<String>, dest: String) -> Result<(), String> {
         let file_name = src_path
             .file_name()
             .ok_or_else(|| format!("Invalid source path: {}", src))?;
-        let target = unique_dest(&dest_path.join(file_name));
         if src_path.is_dir() {
+            // Directories merge into the destination (no rename)
+            let target = dest_path.join(file_name);
             copy_dir_recursive(&src_path, &target)?;
         } else {
+            let target = unique_dest(&dest_path.join(file_name));
             std::fs::copy(&src_path, &target).map_err(|e| e.to_string())?;
         }
     }
@@ -121,11 +123,14 @@ fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<(), String> {
     std::fs::create_dir_all(dest).map_err(|e| e.to_string())?;
     for entry in std::fs::read_dir(src).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
-        let target = dest.join(entry.file_name());
-        if entry.path().is_dir() {
-            copy_dir_recursive(&entry.path(), &target)?;
+        let entry_path = entry.path();
+        if entry_path.is_dir() {
+            // Subdirectories always merge
+            copy_dir_recursive(&entry_path, &dest.join(entry.file_name()))?;
         } else {
-            std::fs::copy(entry.path(), &target).map_err(|e| e.to_string())?;
+            // Files get unique names if a conflict exists
+            let target = unique_dest(&dest.join(entry.file_name()));
+            std::fs::copy(&entry_path, &target).map_err(|e| e.to_string())?;
         }
     }
     Ok(())
