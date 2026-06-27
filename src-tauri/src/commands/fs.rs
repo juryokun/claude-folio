@@ -13,6 +13,18 @@ pub struct FileEntry {
     pub extension: Option<String>,
 }
 
+pub fn expand_tilde(path: &str) -> String {
+    if path == "~" {
+        return std::env::var("HOME").unwrap_or_else(|_| path.to_string());
+    }
+    if let Some(rest) = path.strip_prefix("~/") {
+        if let Ok(home) = std::env::var("HOME") {
+            return format!("{}/{}", home, rest);
+        }
+    }
+    path.to_string()
+}
+
 fn system_time_to_unix(t: SystemTime) -> u64 {
     t.duration_since(SystemTime::UNIX_EPOCH)
         .map(|d| d.as_secs())
@@ -21,6 +33,7 @@ fn system_time_to_unix(t: SystemTime) -> u64 {
 
 #[tauri::command]
 pub fn list_dir(path: String, show_hidden: bool) -> Result<Vec<FileEntry>, String> {
+    let path = expand_tilde(&path);
     let dir = Path::new(&path);
     if !dir.exists() {
         return Err(format!("Path does not exist: {}", path));

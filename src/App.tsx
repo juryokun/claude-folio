@@ -15,7 +15,7 @@ import { OpenWithModal } from './components/modals/OpenWithModal';
 import { CopyConflictModal } from './components/modals/CopyConflictModal';
 import { PreviewPanel } from './components/preview/PreviewPanel';
 import { KeybindingsHelp } from './components/help/KeybindingsHelp';
-import { useTabStore } from './store/tabStore';
+import { useTabStore, setHomeDir } from './store/tabStore';
 import { useFileStore } from './store/fileStore';
 import { useUiStore } from './store/uiStore';
 import { useConfigStore } from './store/configStore';
@@ -56,6 +56,7 @@ export default function App() {
   useEffect(() => {
     getHomeDir().then((home) => {
       (window as any).__macFilerUsername = home.split('/').pop();
+      setHomeDir(home);
       navigateTo(home);
     });
 

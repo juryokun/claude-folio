@@ -497,6 +497,31 @@ body {
 .command-error { color: #f48771; font-size: 12px; margin-top: 6px; }
 .command-help { color: var(--text-dim); font-size: 11px; margin-top: 8px; }
 
+.command-completions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.command-completion-item {
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.command-completion-item.active {
+  background: var(--selection-bg);
+  color: var(--text-primary);
+}
+.command-completion-args { color: var(--text-accent); }
+.command-completion-desc { font-family: sans-serif; }
+
 /* Help modal */
 .help-modal { max-height: 80vh; overflow-y: auto; max-width: 500px; }
 .keybinding-table { width: 100%; border-collapse: collapse; }

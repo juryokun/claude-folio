@@ -2,9 +2,20 @@ import { create } from 'zustand';
 import type { Tab } from '../types';
 import { tauriApi } from '../lib/tauri';
 
-// Use the HOME environment variable available via Tauri's shell context,
-// falling back to a safe default. Will be updated by App.tsx on mount.
-const HOME = '/Users';
+// Resolved home directory. Updated by App.tsx on mount via setHomeDir().
+let resolvedHome = '/Users';
+
+export function setHomeDir(home: string) {
+  resolvedHome = home;
+}
+
+function expandTilde(p: string): string {
+  if (p === '~') return resolvedHome;
+  if (p.startsWith('~/')) return resolvedHome + p.slice(1);
+  return p;
+}
+
+const HOME = resolvedHome;
 
 function makeTab(path: string): Tab {
   return {
@@ -77,12 +88,13 @@ export const useTabStore = create<TabStore>((set, get) => ({
   },
 
   navigateTo: (path) => {
-    tauriApi.zoxideAdd(path).catch(() => {});
+    const resolved = expandTilde(path);
+    tauriApi.zoxideAdd(resolved).catch(() => {});
     set((s) => ({
       tabs: s.tabs.map((t) => {
         if (t.id !== s.activeTabId) return t;
-        const newHistory = t.history.slice(0, t.historyIndex + 1).concat(path);
-        return { ...t, path, history: newHistory, historyIndex: newHistory.length - 1 };
+        const newHistory = t.history.slice(0, t.historyIndex + 1).concat(resolved);
+        return { ...t, path: resolved, history: newHistory, historyIndex: newHistory.length - 1 };
       }),
     }));
   },
