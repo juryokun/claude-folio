@@ -73,6 +73,12 @@ export function useVimKeys(onAction: (action: VimAction) => void) {
       // Ignore modifier-only keys and browser shortcuts (except what we handle)
       if (e.ctrlKey || e.metaKey || e.altKey) return;
 
+      // Escape clears the key buffer but is handled by App.tsx
+      if (e.key === 'Escape') {
+        clearBuffer();
+        return;
+      }
+
       const key = e.key;
 
       // Prevent default for keys we handle
