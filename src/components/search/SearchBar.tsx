@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTabStore } from '../../store/tabStore';
 import { useFileStore } from '../../store/fileStore';
 import { useUiStore } from '../../store/uiStore';
+import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 
 export function SearchBar() {
   const { activeTab } = useTabStore();
@@ -11,6 +12,7 @@ export function SearchBar() {
   const tab = activeTab();
   const pane = getPane(tab.id);
   const inputRef = useRef<HTMLInputElement>(null);
+  const ime = useImeAwareEnter(() => setVimMode('NORMAL'));
 
   useEffect(() => {
     if (vimMode === 'SEARCH') {
@@ -41,12 +43,11 @@ export function SearchBar() {
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
+        {...ime.handlers}
         onKeyDown={(e) => {
+          ime.handlers.onKeyDown(e);
           if (e.key === 'Escape') {
             setFilter(tab.id, '');
-            setVimMode('NORMAL');
-          }
-          if (e.key === 'Enter') {
             setVimMode('NORMAL');
           }
           if ((e.key === 'j' || e.key === 'k') && e.ctrlKey) {
