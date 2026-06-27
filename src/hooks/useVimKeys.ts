@@ -63,6 +63,7 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
         if (e.key === 'x') { e.preventDefault(); onAction('cut_selected'); clearBuffer(); return; }
         if (e.key === 'v') { e.preventDefault(); onAction('paste'); clearBuffer(); return; }
         if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); onAction('delete_selected'); clearBuffer(); return; }
+        if (e.key === 'w') { e.preventDefault(); onAction('close_tab'); clearBuffer(); return; }
       }
 
       // ArrowLeft → navigate to parent
