@@ -3,19 +3,26 @@ import { useTranslation } from 'react-i18next';
 import { useTabStore } from '../../store/tabStore';
 import { useBookmarkStore } from '../../store/bookmarkStore';
 import { useUiStore } from '../../store/uiStore';
+import { useConfigStore, type FavoriteKey } from '../../store/configStore';
 import { tauriApi } from '../../lib/tauri';
 
-const FAVORITES = [
-  { key: 'sidebar.home' as const, path: () => `/Users/${getUsername()}` },
-  { key: 'sidebar.desktop' as const, path: () => `/Users/${getUsername()}/Desktop` },
-  { key: 'sidebar.documents' as const, path: () => `/Users/${getUsername()}/Documents` },
-  { key: 'sidebar.downloads' as const, path: () => `/Users/${getUsername()}/Downloads` },
-  { key: 'sidebar.applications' as const, path: () => '/Applications' },
-];
-
 function getUsername(): string {
-  // Best effort: parse HOME env or use a placeholder
   return (window as any).__macFilerUsername ?? 'user';
+}
+
+function favoritePath(key: FavoriteKey): string {
+  const home = `/Users/${getUsername()}`;
+  switch (key) {
+    case 'home':         return home;
+    case 'desktop':      return `${home}/Desktop`;
+    case 'documents':    return `${home}/Documents`;
+    case 'downloads':    return `${home}/Downloads`;
+    case 'pictures':     return `${home}/Pictures`;
+    case 'music':        return `${home}/Music`;
+    case 'movies':       return `${home}/Movies`;
+    case 'public':       return `${home}/Public`;
+    case 'applications': return '/Applications';
+  }
 }
 
 export function Sidebar() {
@@ -23,6 +30,7 @@ export function Sidebar() {
   const { navigateTo, activeTab } = useTabStore();
   const { bookmarks, addBookmark, removeBookmark } = useBookmarkStore();
   const { googleDrivePaths, setGoogleDrivePaths, sidebarWidth, setSidebarWidth } = useUiStore();
+  const favorites = useConfigStore((s) => s.favorites);
 
   const startResize = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -68,15 +76,15 @@ export function Sidebar() {
       <div className="sidebar-resizer" onMouseDown={startResize} />
       <section className="sidebar-section">
         <div className="sidebar-section-title">{t('sidebar.favorites')}</div>
-        {FAVORITES.map((fav) => {
-          const p = fav.path();
+        {favorites.map((key) => {
+          const p = favoritePath(key);
           return (
             <div
-              key={p}
+              key={key}
               className={`sidebar-item${currentPath === p ? ' active' : ''}`}
               onClick={() => navigateTo(p)}
             >
-              {t(fav.key)}
+              {t(`sidebar.${key}`)}
             </div>
           );
         })}

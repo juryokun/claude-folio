@@ -39,6 +39,31 @@ pub struct TerminalConfig {
     pub command: String,
 }
 
+fn default_favorites() -> Vec<String> {
+    vec![
+        "home".to_string(),
+        "desktop".to_string(),
+        "documents".to_string(),
+        "downloads".to_string(),
+        "pictures".to_string(),
+        "music".to_string(),
+        "movies".to_string(),
+        "applications".to_string(),
+    ]
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SidebarConfig {
+    #[serde(default = "default_favorites")]
+    pub favorites: Vec<String>,
+}
+
+impl Default for SidebarConfig {
+    fn default() -> Self {
+        Self { favorites: default_favorites() }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppConfig {
     #[serde(default)]
@@ -50,6 +75,8 @@ pub struct AppConfig {
     /// action_name -> list of key sequences ("j", "d d", "s n" …)
     #[serde(default)]
     pub keymap: HashMap<String, Vec<String>>,
+    #[serde(default)]
+    pub sidebar: SidebarConfig,
     /// UI display language: "ja" or "en"
     #[serde(default = "default_language")]
     pub language: String,

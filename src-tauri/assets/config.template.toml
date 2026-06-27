@@ -6,6 +6,24 @@
 language = "en"
 
 # -------------------------
+# Sidebar
+# -------------------------
+[sidebar]
+
+# Items shown in the Favorites section.
+# Available values: home, desktop, documents, downloads, pictures, music, movies, applications, public
+favorites = [
+  "home",
+  "desktop",
+  "documents",
+  "downloads",
+  "pictures",
+  "music",
+  "movies",
+  "applications",
+]
+
+# -------------------------
 # Appearance
 # -------------------------
 [appearance]

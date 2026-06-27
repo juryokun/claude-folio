@@ -95,7 +95,7 @@ export const tauriApi = {
     invoke<void>('save_bookmarks', { bookmarks }),
 
   loadConfig: () =>
-    invoke<{ appearance?: { date_format?: string; size_unit?: string }; editor?: { command?: string }; terminal?: { app?: string; command?: string }; keymap?: Record<string, string[]>; language?: string }>('load_config'),
+    invoke<{ appearance?: { date_format?: string; size_unit?: string }; editor?: { command?: string }; terminal?: { app?: string; command?: string }; keymap?: Record<string, string[]>; sidebar?: { favorites?: string[] }; language?: string }>('load_config'),
 
   initConfig: () =>
     invoke<string>('init_config'),
