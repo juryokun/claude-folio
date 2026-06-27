@@ -15,12 +15,16 @@ pub struct FileEntry {
 }
 
 pub fn expand_tilde(path: &str) -> String {
+    expand_tilde_with_home(path, std::env::var("HOME").ok().as_deref())
+}
+
+fn expand_tilde_with_home(path: &str, home: Option<&str>) -> String {
     if path == "~" {
-        return std::env::var("HOME").unwrap_or_else(|_| path.to_string());
+        return home.map(|h| h.to_string()).unwrap_or_else(|| path.to_string());
     }
     if let Some(rest) = path.strip_prefix("~/") {
-        if let Ok(home) = std::env::var("HOME") {
-            return format!("{}/{}", home, rest);
+        if let Some(h) = home {
+            return format!("{}/{}", h, rest);
         }
     }
     path.to_string()
@@ -268,5 +272,274 @@ pub fn read_text_file(path: String, max_bytes: usize) -> Result<String, String> 
             Ok(s)
         }
         Err(_) => Err("binary".to_string()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    // ── expand_tilde ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn expand_tilde_plain_path_unchanged() {
+        assert_eq!(expand_tilde_with_home("/usr/local/bin", Some("/home/user")), "/usr/local/bin");
+    }
+
+    #[test]
+    fn expand_tilde_alone_expands_to_home() {
+        assert_eq!(expand_tilde_with_home("~", Some("/home/user")), "/home/user");
+    }
+
+    #[test]
+    fn expand_tilde_prefix_expands() {
+        assert_eq!(expand_tilde_with_home("~/docs", Some("/home/user")), "/home/user/docs");
+    }
+
+    #[test]
+    fn expand_tilde_alone_no_home_returns_tilde() {
+        assert_eq!(expand_tilde_with_home("~", None), "~");
+    }
+
+    #[test]
+    fn expand_tilde_prefix_no_home_unchanged() {
+        assert_eq!(expand_tilde_with_home("~/docs", None), "~/docs");
+    }
+
+    // ── unique_dest ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn unique_dest_no_conflict_returns_base() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("file.txt");
+        assert_eq!(unique_dest(&path), path);
+    }
+
+    #[test]
+    fn unique_dest_one_conflict_appends_1() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("file.txt");
+        fs::write(&path, b"").unwrap();
+        assert_eq!(unique_dest(&path), dir.path().join("file_1.txt"));
+    }
+
+    #[test]
+    fn unique_dest_multiple_conflicts_increments() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("file.txt");
+        fs::write(&path, b"").unwrap();
+        fs::write(dir.path().join("file_1.txt"), b"").unwrap();
+        assert_eq!(unique_dest(&path), dir.path().join("file_2.txt"));
+    }
+
+    #[test]
+    fn unique_dest_no_extension() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("readme");
+        fs::write(&path, b"").unwrap();
+        assert_eq!(unique_dest(&path), dir.path().join("readme_1"));
+    }
+
+    // ── check_copy_conflicts ─────────────────────────────────────────────────
+
+    #[test]
+    fn check_copy_conflicts_no_sources() {
+        let dir = TempDir::new().unwrap();
+        let conflicts = check_copy_conflicts(vec![], dir.path().to_string_lossy().to_string());
+        assert!(conflicts.is_empty());
+    }
+
+    #[test]
+    fn check_copy_conflicts_none_exist() {
+        let src_dir = TempDir::new().unwrap();
+        let dest_dir = TempDir::new().unwrap();
+        let src = src_dir.path().join("foo.txt");
+        fs::write(&src, b"").unwrap();
+        let conflicts = check_copy_conflicts(
+            vec![src.to_string_lossy().to_string()],
+            dest_dir.path().to_string_lossy().to_string(),
+        );
+        assert!(conflicts.is_empty());
+    }
+
+    #[test]
+    fn check_copy_conflicts_detects_existing() {
+        let src_dir = TempDir::new().unwrap();
+        let dest_dir = TempDir::new().unwrap();
+        let src = src_dir.path().join("foo.txt");
+        fs::write(&src, b"").unwrap();
+        fs::write(dest_dir.path().join("foo.txt"), b"").unwrap();
+        let conflicts = check_copy_conflicts(
+            vec![src.to_string_lossy().to_string()],
+            dest_dir.path().to_string_lossy().to_string(),
+        );
+        assert_eq!(conflicts, vec!["foo.txt"]);
+    }
+
+    // ── list_dir ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn list_dir_returns_entries() {
+        let dir = TempDir::new().unwrap();
+        fs::write(dir.path().join("a.txt"), b"").unwrap();
+        fs::create_dir(dir.path().join("sub")).unwrap();
+        let entries = list_dir(dir.path().to_string_lossy().to_string(), true).unwrap();
+        assert_eq!(entries.len(), 2);
+    }
+
+    #[test]
+    fn list_dir_dirs_sorted_first() {
+        let dir = TempDir::new().unwrap();
+        fs::write(dir.path().join("z.txt"), b"").unwrap();
+        fs::create_dir(dir.path().join("aaa")).unwrap();
+        let entries = list_dir(dir.path().to_string_lossy().to_string(), true).unwrap();
+        assert!(entries[0].is_dir);
+        assert!(!entries[1].is_dir);
+    }
+
+    #[test]
+    fn list_dir_hides_dotfiles_by_default() {
+        let dir = TempDir::new().unwrap();
+        fs::write(dir.path().join("visible.txt"), b"").unwrap();
+        fs::write(dir.path().join(".hidden"), b"").unwrap();
+        let entries = list_dir(dir.path().to_string_lossy().to_string(), false).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "visible.txt");
+    }
+
+    #[test]
+    fn list_dir_shows_dotfiles_when_requested() {
+        let dir = TempDir::new().unwrap();
+        fs::write(dir.path().join("visible.txt"), b"").unwrap();
+        fs::write(dir.path().join(".hidden"), b"").unwrap();
+        let entries = list_dir(dir.path().to_string_lossy().to_string(), true).unwrap();
+        assert_eq!(entries.len(), 2);
+    }
+
+    #[test]
+    fn list_dir_nonexistent_returns_error() {
+        let result = list_dir("/nonexistent/path/xyz".to_string(), false);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn list_dir_file_path_returns_error() {
+        let dir = TempDir::new().unwrap();
+        let file = dir.path().join("f.txt");
+        fs::write(&file, b"").unwrap();
+        let result = list_dir(file.to_string_lossy().to_string(), false);
+        assert!(result.is_err());
+    }
+
+    // ── create_file / create_dir ──────────────────────────────────────────────
+
+    #[test]
+    fn create_file_success() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("new.txt");
+        assert!(create_file(path.to_string_lossy().to_string()).is_ok());
+        assert!(path.exists());
+    }
+
+    #[test]
+    fn create_file_already_exists_returns_error() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("existing.txt");
+        fs::write(&path, b"").unwrap();
+        assert!(create_file(path.to_string_lossy().to_string()).is_err());
+    }
+
+    #[test]
+    fn create_dir_success() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("newdir");
+        assert!(create_dir(path.to_string_lossy().to_string()).is_ok());
+        assert!(path.is_dir());
+    }
+
+    #[test]
+    fn create_dir_nested_creates_all() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("a/b/c");
+        assert!(create_dir(path.to_string_lossy().to_string()).is_ok());
+        assert!(path.is_dir());
+    }
+
+    // ── rename_file ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn rename_file_success() {
+        let dir = TempDir::new().unwrap();
+        let from = dir.path().join("old.txt");
+        let to = dir.path().join("new.txt");
+        fs::write(&from, b"data").unwrap();
+        assert!(rename_file(from.to_string_lossy().to_string(), to.to_string_lossy().to_string()).is_ok());
+        assert!(!from.exists());
+        assert!(to.exists());
+    }
+
+    // ── copy_files ───────────────────────────────────────────────────────────
+
+    #[test]
+    fn copy_files_overwrite_strategy() {
+        let src_dir = TempDir::new().unwrap();
+        let dest_dir = TempDir::new().unwrap();
+        let src = src_dir.path().join("file.txt");
+        fs::write(&src, b"new").unwrap();
+        fs::write(dest_dir.path().join("file.txt"), b"old").unwrap();
+        copy_files(
+            vec![src.to_string_lossy().to_string()],
+            dest_dir.path().to_string_lossy().to_string(),
+            "overwrite".to_string(),
+        ).unwrap();
+        assert_eq!(fs::read(dest_dir.path().join("file.txt")).unwrap(), b"new");
+    }
+
+    #[test]
+    fn copy_files_rename_strategy_avoids_conflict() {
+        let src_dir = TempDir::new().unwrap();
+        let dest_dir = TempDir::new().unwrap();
+        let src = src_dir.path().join("file.txt");
+        fs::write(&src, b"new").unwrap();
+        fs::write(dest_dir.path().join("file.txt"), b"old").unwrap();
+        copy_files(
+            vec![src.to_string_lossy().to_string()],
+            dest_dir.path().to_string_lossy().to_string(),
+            "rename".to_string(),
+        ).unwrap();
+        assert!(dest_dir.path().join("file.txt").exists());
+        assert!(dest_dir.path().join("file_1.txt").exists());
+    }
+
+    // ── read_text_file ───────────────────────────────────────────────────────
+
+    #[test]
+    fn read_text_file_success() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("text.txt");
+        fs::write(&path, b"hello world").unwrap();
+        let content = read_text_file(path.to_string_lossy().to_string(), 1024).unwrap();
+        assert_eq!(content, "hello world");
+    }
+
+    #[test]
+    fn read_text_file_binary_returns_error() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("bin.bin");
+        fs::write(&path, &[0xFF, 0xFE, 0x00, 0x01]).unwrap();
+        let result = read_text_file(path.to_string_lossy().to_string(), 1024);
+        assert_eq!(result.unwrap_err(), "binary");
+    }
+
+    #[test]
+    fn read_text_file_truncated_appends_marker() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("long.txt");
+        fs::write(&path, b"abcdefghij").unwrap();
+        let content = read_text_file(path.to_string_lossy().to_string(), 5).unwrap();
+        assert!(content.starts_with("abcde"));
+        assert!(content.contains("[...省略...]"));
     }
 }

@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { tauriApi } from '../lib/tauri';
-import type { KeyBinding, VimAction } from '../lib/vim/keymap';
+import type { KeyBinding } from '../lib/vim/keymap';
 import { NORMAL_KEYMAP } from '../lib/vim/keymap';
+import { buildKeymap } from '../lib/vim/keymapUtils';
 
 export interface AppearanceConfig {
   dateFormat: string;  // e.g. "%Y/%m/%d"
@@ -30,29 +31,6 @@ const DEFAULT_APPEARANCE: AppearanceConfig = {
   sizeUnit: 'binary',
 };
 
-/** Parse "d d" → ['d','d'], "j" → ['j'] */
-function parseSequence(seq: string): string[] {
-  return seq.trim().split(/\s+/);
-}
-
-/** Merge config keymap overrides into the default keymap */
-function buildKeymap(overrides: Record<string, string[]>): KeyBinding[] {
-  if (!overrides || Object.keys(overrides).length === 0) return NORMAL_KEYMAP;
-
-  // Start from defaults, drop any actions that are being overridden
-  const actionsOverridden = new Set(Object.keys(overrides) as VimAction[]);
-  const base = NORMAL_KEYMAP.filter((kb) => !actionsOverridden.has(kb.action));
-
-  // Add the new bindings from config
-  const additions: KeyBinding[] = [];
-  for (const [action, sequences] of Object.entries(overrides)) {
-    for (const seq of sequences) {
-      additions.push({ keys: parseSequence(seq), action: action as VimAction });
-    }
-  }
-
-  return [...base, ...additions];
-}
 
 export const useConfigStore = create<ConfigStore>((set) => ({
   appearance: DEFAULT_APPEARANCE,
