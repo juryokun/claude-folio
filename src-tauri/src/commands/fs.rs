@@ -80,6 +80,25 @@ pub fn rename_file(from: String, to: String) -> Result<(), String> {
     std::fs::rename(&from, &to).map_err(|e| e.to_string())
 }
 
+/// Build a non-conflicting destination path by appending `_N` (N = 1, 2, …)
+/// before the extension when `base` already exists.
+fn unique_dest(base: &Path) -> PathBuf {
+    if !base.exists() {
+        return base.to_path_buf();
+    }
+    let stem = base.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+    let ext = base.extension().map(|e| format!(".{}", e.to_string_lossy())).unwrap_or_default();
+    let parent = base.parent().unwrap_or(Path::new("."));
+    let mut n = 1u32;
+    loop {
+        let candidate = parent.join(format!("{stem}_{n}{ext}"));
+        if !candidate.exists() {
+            return candidate;
+        }
+        n += 1;
+    }
+}
+
 #[tauri::command]
 pub fn copy_files(sources: Vec<String>, dest: String) -> Result<(), String> {
     let dest_path = PathBuf::from(&dest);
@@ -88,7 +107,7 @@ pub fn copy_files(sources: Vec<String>, dest: String) -> Result<(), String> {
         let file_name = src_path
             .file_name()
             .ok_or_else(|| format!("Invalid source path: {}", src))?;
-        let target = dest_path.join(file_name);
+        let target = unique_dest(&dest_path.join(file_name));
         if src_path.is_dir() {
             copy_dir_recursive(&src_path, &target)?;
         } else {
