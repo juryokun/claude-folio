@@ -63,13 +63,13 @@ export function Sidebar() {
       {googleDrivePaths.length > 0 && (
         <section className="sidebar-section">
           <div className="sidebar-section-title">クラウド</div>
-          {googleDrivePaths.map((p) => (
+          {googleDrivePaths.map((p, i) => (
             <div
               key={p}
               className={`sidebar-item${currentPath === p ? ' active' : ''}`}
               onClick={() => navigateTo(p)}
             >
-              ☁️ Google Drive
+              ☁️ Google Drive{googleDrivePaths.length > 1 ? ` (${i + 1})` : ''}
             </div>
           ))}
         </section>

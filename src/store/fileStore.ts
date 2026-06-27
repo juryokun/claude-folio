@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { FileEntry, ClipboardState } from '../types';
-import { tauriApi } from '../lib/tauri';
+import { tauriApi, isTauri } from '../lib/tauri';
 
 interface PaneState {
   entries: FileEntry[];
@@ -41,6 +41,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
   getPane: (tabId) => get().panes[tabId] ?? defaultPane(),
 
   loadDir: async (tabId, path, showHidden) => {
+    if (!isTauri()) return;
     set((s) => ({
       panes: {
         ...s.panes,
@@ -56,6 +57,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
             ...(s.panes[tabId] ?? defaultPane()),
             entries,
             loading: false,
+            error: null,
             cursor: 0,
             selected: new Set(),
             filterQuery: '',

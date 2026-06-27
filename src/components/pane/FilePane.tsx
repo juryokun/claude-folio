@@ -81,7 +81,7 @@ export function FilePane({ tabId }: Props) {
     <div
       className={`file-pane${isActive ? ' active' : ''}`}
       ref={parentRef}
-      style={{ overflow: 'auto', height: '100%' }}
+      style={{ overflow: 'auto', flex: 1, minHeight: 0 }}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >

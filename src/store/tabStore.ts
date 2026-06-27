@@ -1,11 +1,9 @@
 import { create } from 'zustand';
 import type { Tab } from '../types';
 
-const HOME = typeof window !== 'undefined'
-  ? (window as any).__TAURI_INTERNALS__
-    ? '/Users'
-    : '/Users'
-  : '/Users';
+// Use the HOME environment variable available via Tauri's shell context,
+// falling back to a safe default. Will be updated by App.tsx on mount.
+const HOME = '/Users';
 
 function makeTab(path: string): Tab {
   return {

@@ -37,12 +37,11 @@ export default function App() {
 
   const fileOps = useFileOps();
 
+  // Resolve real home dir and navigate there on startup
   useEffect(() => {
     getHomeDir().then((home) => {
       (window as any).__macFilerUsername = home.split('/').pop();
-      if (useTabStore.getState().activeTab().path === '/Users') {
-        navigateTo(home);
-      }
+      navigateTo(home);
     });
 
     tauriApi.suppressDsStore().catch(() => {});
@@ -51,19 +50,11 @@ export default function App() {
   }, []);
 
   // Load directory when active tab path changes
+  const currentTabPath = activeTab().path;
+  const currentTabId = activeTab().id;
   useEffect(() => {
-    const tab = activeTab();
-    loadDir(tab.id, tab.path, showHidden);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab().path, activeTab().id]);
-
-  // Reload all tabs when showHidden changes
-  useEffect(() => {
-    tabs.forEach((tab) => {
-      loadDir(tab.id, tab.path, showHidden);
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showHidden]);
+    loadDir(currentTabId, currentTabPath, showHidden);
+  }, [currentTabId, currentTabPath, showHidden]);
 
   const handleVimAction = useCallback(
     (action: VimAction) => {
@@ -184,7 +175,7 @@ export default function App() {
               <div
                 key={t.id}
                 className="tab-content"
-                style={{ display: t.id === activeTabId ? 'flex' : 'none', flex: 1 }}
+                style={{ display: t.id === activeTabId ? 'flex' : 'none', flex: 1, minHeight: 0, overflow: 'hidden' }}
               >
                 <FilePane tabId={t.id} />
               </div>

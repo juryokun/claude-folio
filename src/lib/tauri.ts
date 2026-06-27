@@ -1,5 +1,7 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 import type { FileEntry } from '../types';
+
+export { isTauri };
 
 export const tauriApi = {
   listDir: (path: string, showHidden: boolean) =>

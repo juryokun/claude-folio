@@ -144,27 +144,30 @@ pub fn create_dir(path: String) -> Result<(), String> {
 pub fn detect_google_drive() -> Vec<String> {
     let mut paths = Vec::new();
 
-    // Check ~/Library/CloudStorage/GoogleDrive-*/
     if let Some(home) = dirs_home() {
+        // Modern: ~/Library/CloudStorage/GoogleDrive-*/My Drive
         let cloud_storage = home.join("Library/CloudStorage");
         if let Ok(entries) = std::fs::read_dir(&cloud_storage) {
             for entry in entries.filter_map(|e| e.ok()) {
                 let name = entry.file_name().to_string_lossy().to_string();
                 if name.starts_with("GoogleDrive-") {
                     let my_drive = entry.path().join("My Drive");
-                    if my_drive.exists() {
-                        paths.push(my_drive.to_string_lossy().to_string());
-                    } else {
-                        paths.push(entry.path().to_string_lossy().to_string());
-                    }
+                    let target = if my_drive.exists() { my_drive } else { entry.path() };
+                    // Resolve symlinks to get canonical path before deduplicating
+                    let canonical = std::fs::canonicalize(&target).unwrap_or(target);
+                    paths.push(canonical.to_string_lossy().to_string());
                 }
             }
         }
 
-        // Legacy mount point
+        // Legacy: ~/Google Drive — only add if its canonical path isn't already listed
         let legacy = home.join("Google Drive");
         if legacy.exists() {
-            paths.push(legacy.to_string_lossy().to_string());
+            let canonical = std::fs::canonicalize(&legacy).unwrap_or(legacy);
+            let s = canonical.to_string_lossy().to_string();
+            if !paths.contains(&s) {
+                paths.push(s);
+            }
         }
     }
 

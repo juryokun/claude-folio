@@ -189,7 +189,8 @@ body {
 
 /* File pane */
 .file-pane {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   outline: none;
 }
 .file-pane.loading, .file-pane.error {
