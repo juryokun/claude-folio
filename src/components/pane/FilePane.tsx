@@ -1,9 +1,11 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { FileRow } from './FileRow';
+import { ContextMenu } from './ContextMenu';
 import { useTabStore } from '../../store/tabStore';
 import { useFileStore, type SortKey } from '../../store/fileStore';
 import { useUiStore } from '../../store/uiStore';
+import { useFileOps } from '../../hooks/useFileOps';
 import { tauriApi } from '../../lib/tauri';
 
 interface Props {
@@ -15,10 +17,18 @@ function SortIndicator({ active, desc }: { active: boolean; desc: boolean }) {
   return <span className="sort-indicator active">{desc ? '↓' : '↑'}</span>;
 }
 
+interface ContextMenuState {
+  x: number;
+  y: number;
+  entryIndex: number;
+}
+
 export function FilePane({ tabId }: Props) {
   const { tabs, activeTabId, navigateTo } = useTabStore();
-  const { getPane, filteredEntries, setCursor, loadDir, setSort } = useFileStore();
+  const { getPane, filteredEntries, setCursor, loadDir, setSort, clipboard } = useFileStore();
   const { showHidden, columnWidths, setColumnWidths } = useUiStore();
+  const fileOps = useFileOps();
+  const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
 
   const startColResize = useCallback((e: React.MouseEvent, col: 'size' | 'date') => {
     e.preventDefault();
@@ -103,6 +113,19 @@ export function FilePane({ tabId }: Props) {
     }
   };
 
+  const ctxEntry = ctxMenu != null ? entries[ctxMenu.entryIndex] ?? null : null;
+  const ctxMenuItems = ctxEntry ? [
+    { label: '名前を変更', icon: '✏️', shortcut: 'r', action: fileOps.handleRename },
+    { label: 'ゴミ箱に移動', icon: '🗑️', shortcut: 'dd', action: fileOps.handleDelete },
+    { kind: 'sep' as const },
+    { label: 'コピー', icon: '📋', shortcut: 'yy', action: fileOps.handleYank },
+    { label: '切り取り', icon: '✂️', shortcut: 'xx', action: fileOps.handleCut },
+    { label: 'ペースト', icon: '📌', shortcut: 'p', action: fileOps.handlePaste, disabled: !clipboard },
+    { kind: 'sep' as const },
+    { label: 'パスをコピー', icon: '🔗', shortcut: 'yp', action: fileOps.handleCopyPath },
+    { label: 'ファイル名をコピー', icon: '📎', shortcut: 'yn', action: fileOps.handleCopyName },
+  ] : [];
+
   if (pane.loading) {
     return <div className="file-pane loading">読み込み中...</div>;
   }
@@ -176,6 +199,12 @@ export function FilePane({ tabId }: Props) {
                 if (entry.is_dir) navigateTo(entry.path);
                 else tauriApi.openFile(entry.path).catch(console.error);
               }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
+                setCursor(tabId, vItem.index);
+                setCtxMenu({ x: e.clientX, y: e.clientY, entryIndex: vItem.index });
+              }}
               style={{
                 position: 'absolute',
                 top: `${vItem.start}px`,
@@ -189,6 +218,14 @@ export function FilePane({ tabId }: Props) {
         <div className="empty-dir">（空のフォルダ）</div>
       )}
     </div>
+    {ctxMenu && ctxMenuItems.length > 0 && (
+      <ContextMenu
+        x={ctxMenu.x}
+        y={ctxMenu.y}
+        items={ctxMenuItems}
+        onClose={() => setCtxMenu(null)}
+      />
+    )}
     </div>
   );
 }

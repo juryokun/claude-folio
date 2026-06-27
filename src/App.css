@@ -558,6 +558,69 @@ kbd {
   border-top: 1px solid var(--border);
 }
 
+/* ContextMenu */
+.context-menu {
+  position: fixed;
+  z-index: 9999;
+  background: var(--surface-3, #fff);
+  border: 0.5px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 5px;
+  min-width: 220px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  outline: none;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  cursor: default;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.context-menu-item:not(:disabled):hover {
+  background: var(--bg-accent, rgba(59, 130, 246, 0.1));
+  color: var(--text-accent, #2563eb);
+}
+
+.context-menu-item:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.context-menu-icon {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.context-menu-label {
+  flex: 1;
+}
+
+.context-menu-shortcut {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+}
+
+.context-menu-sep {
+  height: 0.5px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
 /* PreviewPanel */
 .preview-panel {
   display: flex;

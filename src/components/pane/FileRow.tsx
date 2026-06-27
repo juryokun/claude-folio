@@ -9,6 +9,7 @@ interface Props {
   isSelected: boolean;
   onClick: () => void;
   onDoubleClick: () => void;
+  onContextMenu: (e: React.MouseEvent) => void;
   style?: React.CSSProperties;
   colSizeWidth: number;
   colDateWidth: number;
@@ -57,7 +58,7 @@ function FileIcon({ entry }: { entry: FileEntry }) {
 }
 
 export const FileRow = React.memo(function FileRow({
-  entry, isCursor, isSelected, onClick, onDoubleClick, style, colSizeWidth, colDateWidth, dragPaths,
+  entry, isCursor, isSelected, onClick, onDoubleClick, onContextMenu, style, colSizeWidth, colDateWidth, dragPaths,
 }: Props) {
   const { dateFormat, sizeUnit } = useConfigStore((s) => s.appearance);
   return (
@@ -66,6 +67,7 @@ export const FileRow = React.memo(function FileRow({
       style={style}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
+      onContextMenu={onContextMenu}
       draggable
       onDragStart={(e) => {
         // HTML5 data for internal drops within this app
