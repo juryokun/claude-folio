@@ -14,10 +14,11 @@ export type VimAction =
   | 'enter_command'
   | 'copy_path'
   | 'copy_name'
-  | 'open_terminal'
+  | 'open_default'
   | 'open_terminal_here'
   | 'open_with_app'
   | 'open_editor'
+  | 'quick_look'
   | 'toggle_sidebar'
   | 'rename'
   | 'new_dir'
@@ -69,15 +70,16 @@ export const NORMAL_KEYMAP: KeyBinding[] = [
   { keys: [':'],         action: 'enter_command' },
   { keys: ['y', 'p'],   action: 'copy_path' },
   { keys: ['y', 'n'],   action: 'copy_name' },
-  { keys: ['o'],         action: 'open_terminal' },
+  { keys: ['o', 'o'],   action: 'open_default' },
+  { keys: ['o', 'e'],   action: 'open_editor' },
+  { keys: ['o', 'w'],   action: 'open_with_app' },
+  { keys: ['o', 'q'],   action: 'quick_look' },
   { keys: ['T'],         action: 'open_terminal_here' },
-  { keys: ['O'],         action: 'open_with_app' },
-  { keys: ['e'],         action: 'open_editor' },
   { keys: ['\\'],        action: 'toggle_sidebar' },
   { keys: ['r'],         action: 'rename' },
   { keys: ['R'],         action: 'reload' },
-  { keys: ['a'],         action: 'new_dir' },
-  { keys: ['A'],         action: 'new_file' },
+  { keys: ['n', 'd'],   action: 'new_dir' },
+  { keys: ['n', 'f'],   action: 'new_file' },
   { keys: ['t'],         action: 'new_tab' },
   { keys: [']'],         action: 'next_tab' },
   { keys: ['['],         action: 'prev_tab' },
@@ -118,12 +120,13 @@ export const KEYBINDING_DOCS: Array<{ keys: string; description: string }> = [
   { keys: ':',               description: 'コマンドパレット' },
   { keys: 'r',               description: 'リネーム' },
   { keys: 'R',               description: 'ディレクトリを再読み込み' },
-  { keys: 'a',               description: '新規ディレクトリ作成' },
-  { keys: 'A',               description: '新規ファイル作成' },
-  { keys: 'o',               description: 'ファイルを実行 / ディレクトリはターミナルを開く' },
+  { keys: 'nd',              description: '新規ディレクトリ作成' },
+  { keys: 'nf',              description: '新規ファイル作成' },
+  { keys: 'oo',              description: 'デフォルトアプリで開く' },
+  { keys: 'oe',              description: 'エディタで開く' },
+  { keys: 'ow',              description: 'アプリを指定して開く' },
+  { keys: 'oq',              description: 'クイックルック' },
   { keys: 'T',               description: 'カレントディレクトリをターミナルで開く' },
-  { keys: 'O',               description: 'アプリを指定してファイルを開く' },
-  { keys: 'e',               description: 'エディタでファイルを開く' },
   { keys: '\\',              description: 'サイドバーの表示切替' },
   { keys: 't',               description: '新規タブ' },
   { keys: '] / [',           description: '次/前のタブ' },

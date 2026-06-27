@@ -55,6 +55,9 @@ export const tauriApi = {
   openTerminalAt: (path: string, app: string, command: string) =>
     invoke<void>('open_terminal_at', { path, app, command }),
 
+  quickLook: (path: string) =>
+    invoke<void>('quick_look', { path }),
+
   detectGoogleDrive: () =>
     invoke<string[]>('detect_google_drive'),
 

@@ -128,20 +128,19 @@ export function useFileOps() {
       .catch(console.error);
   }, [getTargetPaths, showStatusMessage]);
 
-  const handleOpenTerminal = useCallback(() => {
-    const isApp = cursorEntry?.is_dir && cursorEntry.name.endsWith('.app');
-    if (cursorEntry && (!cursorEntry.is_dir || isApp)) {
-      // o on a file or .app bundle → open with OS default app
-      tauriApi.openFile(cursorEntry.path).catch(console.error);
-    } else {
-      // o on a directory (or no selection) → open terminal
-      tauriApi.openTerminalAt(currentPath, terminalApp, terminalCommand).catch(console.error);
-    }
-  }, [cursorEntry, currentPath, terminalApp, terminalCommand]);
+  const handleOpenDefault = useCallback(() => {
+    if (!cursorEntry) return;
+    tauriApi.openFile(cursorEntry.path).catch(console.error);
+  }, [cursorEntry]);
 
   const handleOpenTerminalHere = useCallback(() => {
     tauriApi.openTerminalAt(currentPath, terminalApp, terminalCommand).catch(console.error);
   }, [currentPath, terminalApp, terminalCommand]);
+
+  const handleQuickLook = useCallback(() => {
+    if (!cursorEntry) return;
+    tauriApi.quickLook(cursorEntry.path).catch(console.error);
+  }, [cursorEntry]);
 
   const handleOpenEditor = useCallback(() => {
     if (!cursorEntry || cursorEntry.is_dir) return;
@@ -206,8 +205,9 @@ export function useFileOps() {
     handlePaste,
     handleCopyPath,
     handleCopyName,
-    handleOpenTerminal,
+    handleOpenDefault,
     handleOpenTerminalHere,
+    handleQuickLook,
     handleOpenWith,
     handleOpenEditor,
     handleRename,

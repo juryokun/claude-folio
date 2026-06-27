@@ -1,3 +1,14 @@
+/// Open a file with Quick Look (macOS `qlmanage -p`).
+#[tauri::command]
+pub fn quick_look(path: String) -> Result<(), String> {
+    std::process::Command::new("qlmanage")
+        .arg("-p")
+        .arg(&path)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /// Open a file with the default application (macOS `open` command).
 #[tauri::command]
 pub fn open_file(path: String) -> Result<(), String> {

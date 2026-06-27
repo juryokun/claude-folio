@@ -168,8 +168,11 @@ export default function App() {
         case 'copy_name':
           ops.handleCopyName();
           break;
-        case 'open_terminal':
-          ops.handleOpenTerminal();
+        case 'open_default':
+          ops.handleOpenDefault();
+          break;
+        case 'quick_look':
+          ops.handleQuickLook();
           break;
         case 'open_terminal_here':
           ops.handleOpenTerminalHere();

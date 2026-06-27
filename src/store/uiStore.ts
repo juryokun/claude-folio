@@ -32,8 +32,10 @@ interface UiStore {
   previewWidth: number;
   copyConflict: { conflicts: string[]; onResolve: (strategy: 'overwrite' | 'rename') => void } | null;
   language: Language;
+  pendingKey: string | null;
 
   setVimMode: (mode: VimMode) => void;
+  setPendingKey: (key: string | null) => void;
   setLanguage: (lang: Language) => void;
   setEditorCommand: (cmd: string) => void;
   setTerminalApp: (app: string) => void;
@@ -64,6 +66,7 @@ export const useUiStore = create<UiStore>()(
   persist(
     (set) => ({
       vimMode: 'NORMAL',
+      pendingKey: null,
       showHidden: false,
       showHelp: false,
       showRename: false,
@@ -92,6 +95,7 @@ export const useUiStore = create<UiStore>()(
       language: 'en' as Language,
 
       setVimMode: (mode) => set({ vimMode: mode }),
+      setPendingKey: (key) => set({ pendingKey: key }),
       setLanguage: (lang) => { setLanguage(lang); set({ language: lang }); tauriApi.saveLanguage(lang).catch(console.error); },
       setEditorCommand: (cmd) => set({ editorCommand: cmd }),
       setTerminalApp: (app) => set({ terminalApp: app }),

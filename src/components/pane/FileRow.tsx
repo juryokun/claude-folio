@@ -2,6 +2,7 @@ import React from 'react';
 import type { FileEntry } from '../../types';
 import { isTauri, tauriApi } from '../../lib/tauri';
 import { useConfigStore } from '../../store/configStore';
+import { useUiStore } from '../../store/uiStore';
 
 interface Props {
   entry: FileEntry;
@@ -62,6 +63,7 @@ export const FileRow = React.memo(function FileRow({
   entry, isCursor, isSelected, onClick, onDoubleClick, onContextMenu, style, colSizeWidth, colDateWidth, dragPaths,
 }: Props) {
   const { dateFormat, sizeUnit } = useConfigStore((s) => s.appearance);
+  const pendingKey = useUiStore((s) => isCursor ? s.pendingKey : null);
   return (
     <div
       className={`file-row${isCursor ? ' cursor' : ''}${isSelected ? ' selected' : ''}`}
@@ -96,6 +98,7 @@ export const FileRow = React.memo(function FileRow({
         })()}
       </span>
       <span className="file-date" style={{ width: colDateWidth }}>{formatDate(entry.modified, dateFormat)}</span>
+      {pendingKey && <span className="file-prefix-badge">{pendingKey} ▸</span>}
     </div>
   );
 });

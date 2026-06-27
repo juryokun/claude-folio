@@ -6,16 +6,18 @@ const SEQUENCE_TIMEOUT = 500;
 
 export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBinding[]) {
   const vimMode = useUiStore((s) => s.vimMode);
+  const setPendingKey = useUiStore((s) => s.setPendingKey);
   const bufferRef = useRef<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearBuffer = useCallback(() => {
     bufferRef.current = [];
+    setPendingKey(null);
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-  }, []);
+  }, [setPendingKey]);
 
   const tryMatch = useCallback(
     (buffer: string[]) => {
@@ -35,6 +37,7 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
       if (!hasPrefix) {
         clearBuffer();
       } else {
+        setPendingKey(buffer[0]);
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(clearBuffer, SEQUENCE_TIMEOUT);
       }
