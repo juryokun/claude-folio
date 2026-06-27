@@ -1,10 +1,12 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
+import path from 'path-browserify';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { FileRow } from './FileRow';
 import { ContextMenu } from './ContextMenu';
 import { useTabStore } from '../../store/tabStore';
 import { useFileStore, type SortKey } from '../../store/fileStore';
 import { useUiStore } from '../../store/uiStore';
+import { useBookmarkStore } from '../../store/bookmarkStore';
 import { useFileOps } from '../../hooks/useFileOps';
 import { tauriApi } from '../../lib/tauri';
 
@@ -29,6 +31,8 @@ export function FilePane({ tabId }: Props) {
   const { getPane, filteredEntries, setCursor, loadDir, setSort, clipboard } = useFileStore();
   const { showHidden, columnWidths, setColumnWidths } = useUiStore();
   const fileOps = useFileOps();
+  const { terminalApp, terminalCommand, showStatusMessage } = useUiStore();
+  const { addBookmark } = useBookmarkStore();
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
 
   const startColResize = useCallback((e: React.MouseEvent, col: 'size' | 'date') => {
@@ -115,6 +119,12 @@ export function FilePane({ tabId }: Props) {
   };
 
   const ctxEntry = ctxMenu?.kind === 'entry' ? entries[ctxMenu.entryIndex] ?? null : null;
+
+  // For terminal/bookmark: dirs use the entry itself, files use the parent dir
+  const ctxTargetDir = ctxEntry
+    ? ctxEntry.is_dir ? ctxEntry.path : path.dirname(ctxEntry.path)
+    : tab.path;
+
   const ctxMenuItems = ctxMenu == null ? [] : ctxMenu.kind === 'entry' && ctxEntry ? [
     { label: '名前を変更', icon: '✏️', shortcut: 'r', action: fileOps.handleRename },
     { label: 'ゴミ箱に移動', icon: '🗑️', shortcut: 'dd', action: fileOps.handleDelete },
@@ -126,8 +136,19 @@ export function FilePane({ tabId }: Props) {
     { label: 'パスをコピー', icon: '🔗', shortcut: 'yp', action: fileOps.handleCopyPath },
     { label: 'ファイル名をコピー', icon: '📎', shortcut: 'yn', action: fileOps.handleCopyName },
     { kind: 'sep' as const },
-    { label: 'ターミナルで開く', icon: '🖥️', shortcut: 'T', action: fileOps.handleOpenTerminalHere },
-    { label: 'ブックマークに追加', icon: '🔖', shortcut: 'B', action: fileOps.handleAddBookmark },
+    {
+      label: 'ターミナルで開く', icon: '🖥️', shortcut: 'T',
+      action: () => tauriApi.openTerminalAt(ctxTargetDir, terminalApp, terminalCommand).catch(console.error),
+    },
+    {
+      label: 'ブックマークに追加', icon: '🔖', shortcut: 'B',
+      action: () => {
+        const label = path.basename(ctxTargetDir) || ctxTargetDir;
+        addBookmark(label, ctxTargetDir).then(() =>
+          showStatusMessage(`🔖 ブックマークに追加: ${label}`)
+        );
+      },
+    },
     { kind: 'sep' as const },
     { label: 'アプリを指定して開く', icon: '🚀', shortcut: 'O', action: fileOps.handleOpenWith, dim: true },
     { label: 'エディタで開く', icon: '📝', shortcut: 'e', action: fileOps.handleOpenEditor, dim: true },
