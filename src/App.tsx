@@ -56,6 +56,7 @@ export default function App() {
   useEffect(() => {
     getHomeDir().then(async (home) => {
       (window as any).__macFilerUsername = home.split('/').pop();
+      (window as any).__macFilerHome = home;
       setHomeDir(home);
       const startupPath = await tauriApi.getStartupPath().catch(() => null);
       navigateTo(startupPath ?? home);

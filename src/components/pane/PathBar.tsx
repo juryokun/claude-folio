@@ -3,7 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { useTabStore } from '../../store/tabStore';
 import { useUiStore } from '../../store/uiStore';
 import { useBookmarkStore } from '../../store/bookmarkStore';
+import { useConfigStore } from '../../store/configStore';
+import { favoritePath } from '../../lib/favorites';
 import { tauriApi } from '../../lib/tauri';
+
+interface PickerItem {
+  id: string;
+  label: string;
+  path: string;
+  isFavorite?: boolean;
+}
 
 type PathBarMode = 'path' | 'zoxide' | 'bookmark';
 
@@ -12,6 +21,7 @@ export function PathBar() {
   const { activeTab, navigateTo } = useTabStore();
   const { setVimMode, hasZoxide } = useUiStore();
   const { bookmarks } = useBookmarkStore();
+  const favorites = useConfigStore((s) => s.favorites);
   const tab = activeTab();
   const currentPath = tab.path;
 
@@ -24,14 +34,30 @@ export function PathBar() {
   const composingRef = useRef(false);
   const imeEndedAtRef = useRef(0);
 
-  // Bookmark suggestions filtered by input
+  // Combined picker items: Favorites first, then Bookmarks
+  const allPickerItems = useMemo((): PickerItem[] => {
+    const home = (window as any).__macFilerHome ?? `/Users/${(window as any).__macFilerUsername ?? 'user'}`;
+    const favItems: PickerItem[] = favorites.map((key) => ({
+      id: `fav:${key}`,
+      label: t(`sidebar.${key}`),
+      path: favoritePath(key, home),
+      isFavorite: true,
+    }));
+    const bmItems: PickerItem[] = bookmarks.map((b) => ({
+      id: `bm:${b.id}`,
+      label: b.label,
+      path: b.path,
+    }));
+    return [...favItems, ...bmItems];
+  }, [favorites, bookmarks, t]);
+
   const bookmarkSuggestions = useMemo(() => {
     if (mode !== 'bookmark') return [];
     const q = inputValue.toLowerCase();
-    return bookmarks.filter(
-      (b) => !q || b.label.toLowerCase().includes(q) || b.path.toLowerCase().includes(q)
+    return allPickerItems.filter(
+      (item) => !q || item.label.toLowerCase().includes(q) || item.path.toLowerCase().includes(q)
     );
-  }, [mode, inputValue, bookmarks]);
+  }, [mode, inputValue, allPickerItems]);
 
   // Exposed for Ctrl+L / z / b keys
   useEffect(() => {
@@ -53,7 +79,7 @@ export function PathBar() {
     setInputValue(initialValue);
     setEditing(true);
     setSuggestions([]);
-    setSuggestionIndex(m === 'bookmark' ? (bookmarks.length > 0 ? 0 : -1) : -1);
+    setSuggestionIndex(m === 'bookmark' ? (allPickerItems.length > 0 ? 0 : -1) : -1);
     setTimeout(() => {
       if (initialValue) inputRef.current?.select();
       else inputRef.current?.focus();
@@ -74,10 +100,10 @@ export function PathBar() {
   };
 
   const commitBookmark = (index: number) => {
-    const bm = bookmarkSuggestions[index];
-    if (!bm) return;
+    const item = bookmarkSuggestions[index];
+    if (!item) return;
     close();
-    navigateTo(bm.path);
+    navigateTo(item.path);
   };
 
   const handleInputChange = async (value: string) => {
@@ -189,21 +215,23 @@ export function PathBar() {
               ))}
             </div>
           )}
-          {/* Bookmark suggestions */}
+          {/* Bookmark/Favorites picker */}
           {mode === 'bookmark' && (
             <div className="path-suggestions">
               {bookmarkSuggestions.length === 0 ? (
                 <div className="path-suggestion path-suggestion--empty">
-                  {bookmarks.length === 0 ? t('pathBar.noBookmarks') : t('pathBar.noMatches')}
+                  {t('pathBar.noMatches')}
                 </div>
-              ) : bookmarkSuggestions.map((bm, i) => (
+              ) : bookmarkSuggestions.map((item, i) => (
                 <div
-                  key={bm.id}
+                  key={item.id}
                   className={`path-suggestion path-suggestion--bookmark${i === suggestionIndex ? ' active' : ''}`}
                   onMouseDown={() => commitBookmark(i)}
                 >
-                  <span className="path-suggestion-label">{bm.label}</span>
-                  <span className="path-suggestion-path">{bm.path}</span>
+                  <span className="path-suggestion-label">
+                    {item.isFavorite ? '📁 ' : '🔖 '}{item.label}
+                  </span>
+                  <span className="path-suggestion-path">{item.path}</span>
                 </div>
               ))}
             </div>

@@ -3,26 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { useTabStore } from '../../store/tabStore';
 import { useBookmarkStore } from '../../store/bookmarkStore';
 import { useUiStore } from '../../store/uiStore';
-import { useConfigStore, type FavoriteKey } from '../../store/configStore';
+import { useConfigStore } from '../../store/configStore';
+import { favoritePath } from '../../lib/favorites';
 import { tauriApi } from '../../lib/tauri';
 
 function getUsername(): string {
   return (window as any).__macFilerUsername ?? 'user';
-}
-
-function favoritePath(key: FavoriteKey): string {
-  const home = `/Users/${getUsername()}`;
-  switch (key) {
-    case 'home':         return home;
-    case 'desktop':      return `${home}/Desktop`;
-    case 'documents':    return `${home}/Documents`;
-    case 'downloads':    return `${home}/Downloads`;
-    case 'pictures':     return `${home}/Pictures`;
-    case 'music':        return `${home}/Music`;
-    case 'movies':       return `${home}/Movies`;
-    case 'public':       return `${home}/Public`;
-    case 'applications': return '/Applications';
-  }
 }
 
 export function Sidebar() {
@@ -77,7 +63,8 @@ export function Sidebar() {
       <section className="sidebar-section">
         <div className="sidebar-section-title">{t('sidebar.favorites')}</div>
         {favorites.map((key) => {
-          const p = favoritePath(key);
+          const home = `/Users/${getUsername()}`;
+          const p = favoritePath(key, home);
           return (
             <div
               key={key}
