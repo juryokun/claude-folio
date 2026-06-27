@@ -9,6 +9,9 @@ interface UiStore {
   showSettings: boolean;
   showRename: boolean;
   showNewDir: boolean;
+  showConfirm: boolean;
+  confirmMessage: string;
+  confirmCallback: (() => void) | null;
   showCommandPalette: boolean;
   renameTarget: string | null;
   has7zip: boolean;
@@ -23,6 +26,8 @@ interface UiStore {
   setShowSettings: (v: boolean) => void;
   setShowRename: (v: boolean, target?: string) => void;
   setShowNewDir: (v: boolean) => void;
+  showConfirmDialog: (message: string, onConfirm: () => void) => void;
+  closeConfirm: () => void;
   setShowCommandPalette: (v: boolean) => void;
   setHas7zip: (v: boolean) => void;
   setHasZoxide: (v: boolean) => void;
@@ -40,6 +45,9 @@ export const useUiStore = create<UiStore>()(
       showSettings: false,
       showRename: false,
       showNewDir: false,
+      showConfirm: false,
+      confirmMessage: '',
+      confirmCallback: null,
       showCommandPalette: false,
       renameTarget: null,
       has7zip: false,
@@ -54,6 +62,9 @@ export const useUiStore = create<UiStore>()(
       setShowSettings: (v) => set({ showSettings: v }),
       setShowRename: (v, target) => set({ showRename: v, renameTarget: target ?? null }),
       setShowNewDir: (v) => set({ showNewDir: v }),
+      showConfirmDialog: (message, onConfirm) =>
+        set({ showConfirm: true, confirmMessage: message, confirmCallback: onConfirm }),
+      closeConfirm: () => set({ showConfirm: false, confirmMessage: '', confirmCallback: null }),
       setShowCommandPalette: (v) => set({ showCommandPalette: v }),
       setHas7zip: (v) => set({ has7zip: v }),
       setHasZoxide: (v) => set({ hasZoxide: v }),

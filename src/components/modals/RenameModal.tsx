@@ -37,7 +37,7 @@ export function RenameModal() {
       const tab = activeTab();
       loadDir(tab.id, tab.path, showHidden);
     } catch (e) {
-      alert(`リネームに失敗しました: ${e}`);
+      console.error('リネームに失敗しました:', e);
     }
     setShowRename(false);
   };

@@ -9,7 +9,7 @@ export function useFileOps() {
   const { activeTab, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
     useFileStore();
-  const { showHidden, terminalEmulator, setShowRename, setShowNewDir, setShowCommandPalette, setVimMode } =
+  const { showHidden, terminalEmulator, setShowRename, setShowNewDir, showConfirmDialog, setShowCommandPalette, setVimMode } =
     useUiStore();
 
   const tab = activeTab();
@@ -48,17 +48,21 @@ export function useFileOps() {
     }
   }, [currentPath, tabId, navigateTo, setPendingFocusName]);
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
-    if (!confirm(`${targets.length}件をゴミ箱に移動しますか?`)) return;
-    try {
-      await tauriApi.moveToTrash(targets);
-      reload();
-    } catch (e) {
-      alert(`削除に失敗しました: ${e}`);
-    }
-  }, [getTargetPaths, reload]);
+    showConfirmDialog(
+      `${targets.length}件をゴミ箱に移動しますか?`,
+      async () => {
+        try {
+          await tauriApi.moveToTrash(targets);
+          reload();
+        } catch (e) {
+          console.error('削除に失敗しました:', e);
+        }
+      }
+    );
+  }, [getTargetPaths, showConfirmDialog, reload]);
 
   const handleCut = useCallback(() => {
     const targets = getTargetPaths();
@@ -83,7 +87,7 @@ export function useFileOps() {
       }
       reload();
     } catch (e) {
-      alert(`ペーストに失敗しました: ${e}`);
+      console.error('ペーストに失敗しました:', e);
     }
   }, [clipboard, currentPath, setClipboard, reload]);
 
