@@ -20,6 +20,7 @@ export function PathBar() {
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const composingRef = useRef(false);
+  const imeEndedAtRef = useRef(0);
 
   // Bookmark suggestions filtered by input
   const bookmarkSuggestions = useMemo(() => {
@@ -115,7 +116,7 @@ export function PathBar() {
       setSuggestionIndex(mode === 'bookmark' ? 0 : -1);
       return;
     }
-    if (e.key === 'Enter' && !composingRef.current) {
+    if (e.key === 'Enter' && !composingRef.current && Date.now() - imeEndedAtRef.current >= 50) {
       e.preventDefault();
       if (mode === 'bookmark') {
         commitBookmark(suggestionIndex);
@@ -162,7 +163,7 @@ export function PathBar() {
             spellCheck={false}
             onChange={(e) => handleInputChange(e.target.value)}
             onCompositionStart={() => { composingRef.current = true; }}
-            onCompositionEnd={() => { setTimeout(() => { composingRef.current = false; }, 0); }}
+            onCompositionEnd={() => { composingRef.current = false; imeEndedAtRef.current = Date.now(); }}
             onKeyDown={handleKeyDown}
             onBlur={() => {
               setTimeout(() => {
