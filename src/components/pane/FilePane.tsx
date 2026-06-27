@@ -125,11 +125,17 @@ export function FilePane({ tabId }: Props) {
     { kind: 'sep' as const },
     { label: 'パスをコピー', icon: '🔗', shortcut: 'yp', action: fileOps.handleCopyPath },
     { label: 'ファイル名をコピー', icon: '📎', shortcut: 'yn', action: fileOps.handleCopyName },
+    { kind: 'sep' as const },
+    { label: 'ターミナルで開く', icon: '🖥️', shortcut: 'T', action: fileOps.handleOpenTerminalHere },
+    { label: 'ブックマークに追加', icon: '🔖', shortcut: 'B', action: fileOps.handleAddBookmark },
   ] : ctxMenu.kind === 'blank' ? [
     { label: 'ペースト', icon: '📌', shortcut: 'p', action: fileOps.handlePaste, disabled: !clipboard },
     { kind: 'sep' as const },
     { label: '新規ファイル', icon: '📄', shortcut: 'A', action: fileOps.handleNewFile },
     { label: '新規フォルダ', icon: '📁', shortcut: 'a', action: fileOps.handleNewDir },
+    { kind: 'sep' as const },
+    { label: 'ターミナルで開く', icon: '🖥️', shortcut: 'T', action: fileOps.handleOpenTerminalHere },
+    { label: 'ブックマークに追加', icon: '🔖', shortcut: 'B', action: fileOps.handleAddBookmark },
   ] : [];
 
   if (pane.loading) {
