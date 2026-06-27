@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 import path from 'path-browserify';
 import { useUiStore } from '../../store/uiStore';
@@ -14,21 +15,24 @@ interface CommandDef {
   desc: string;
 }
 
-const COMMANDS: CommandDef[] = [
-  { name: 'q',             desc: 'タブを閉じる' },
-  { name: 'tabnew',        args: '[path]',    desc: '新規タブを開く' },
-  { name: 'cd',            args: '<path|keyword>', desc: 'ディレクトリを移動 (zoxide 対応)' },
-  { name: 'bm',            args: '[label]',   desc: '現在のディレクトリをブックマーク' },
-  { name: 'filter',        args: '<ext>',     desc: 'ファイルを拡張子でフィルタ' },
-  { name: 'zip',           args: '[name]',    desc: '選択ファイルを ZIP 圧縮 (7zip)' },
-  { name: 'unzip',         desc: '選択アーカイブを展開 (7zip)' },
-  { name: 'init-config',    desc: '設定ファイルを初期作成' },
-  { name: 'reload-config',  desc: '設定ファイルを再読み込み' },
-  { name: 'clear-storage',  desc: 'LocalStorage をクリアしてアプリを再起動' },
-];
-
 export function CommandPalette() {
-  const { showCommandPalette, setShowCommandPalette, setVimMode, has7zip } =
+  const { t } = useTranslation();
+
+  const COMMANDS: CommandDef[] = [
+    { name: 'q',             desc: t('commandPalette.cmd.q') },
+    { name: 'tabnew',        args: '[path]',    desc: t('commandPalette.cmd.tabnew') },
+    { name: 'cd',            args: '<path|keyword>', desc: t('commandPalette.cmd.cd') },
+    { name: 'bm',            args: '[label]',   desc: t('commandPalette.cmd.bm') },
+    { name: 'filter',        args: '<ext>',     desc: t('commandPalette.cmd.filter') },
+    { name: 'zip',           args: '[name]',    desc: t('commandPalette.cmd.zip') },
+    { name: 'unzip',         desc: t('commandPalette.cmd.unzip') },
+    { name: 'init-config',    desc: t('commandPalette.cmd.initConfig') },
+    { name: 'reload-config',  desc: t('commandPalette.cmd.reloadConfig') },
+    { name: 'clear-storage',  desc: t('commandPalette.cmd.clearStorage') },
+    { name: 'lang',           args: '<ja|en>',   desc: t('commandPalette.cmd.lang') },
+  ];
+
+  const { showCommandPalette, setShowCommandPalette, setVimMode, has7zip, setLanguage } =
     useUiStore();
   const { activeTab, navigateTo, openTab, closeTab, activeTabId } = useTabStore();
   const { loadDir } = useFileStore();
@@ -62,7 +66,7 @@ export function CommandPalette() {
   const candidates = useMemo(() => {
     if (hasArgs || !typedCommand) return [];
     return COMMANDS.filter((c) => c.name.startsWith(typedCommand) && c.name !== typedCommand);
-  }, [typedCommand, hasArgs]);
+  }, [typedCommand, hasArgs, COMMANDS]);
 
   if (!showCommandPalette) return null;
 
@@ -122,7 +126,7 @@ export function CommandPalette() {
           } else {
             const results = await tauriApi.zoxideQuery(target);
             if (results.length > 0) navigateTo(results[0]);
-            else setError(`見つかりません: ${target}`);
+            else setError(t('commandPalette.err.notFound', { target }));
           }
           break;
         }
@@ -148,7 +152,7 @@ export function CommandPalette() {
           }
           break;
         case 'zip': {
-          if (!has7zip) { setError('7zipがインストールされていません'); return; }
+          if (!has7zip) { setError(t('commandPalette.err.no7zip')); return; }
           const zipName = (args[0] ?? 'archive') + (args[0]?.endsWith('.zip') ? '' : '.zip');
           const pane = useFileStore.getState().getPane(tab.id);
           const targets = pane.selected.size > 0
@@ -159,7 +163,7 @@ export function CommandPalette() {
           break;
         }
         case 'unzip': {
-          if (!has7zip) { setError('7zipがインストールされていません'); return; }
+          if (!has7zip) { setError(t('commandPalette.err.no7zip')); return; }
           const pane = useFileStore.getState().getPane(tab.id);
           const entry = pane.entries[pane.cursor];
           if (entry) {
@@ -173,11 +177,22 @@ export function CommandPalette() {
           location.reload();
           return;
         }
+        case 'lang': {
+          const lang = args[0] as 'ja' | 'en';
+          if (lang !== 'ja' && lang !== 'en') {
+            setError(t('commandPalette.err.langUsage'));
+            return;
+          }
+          setLanguage(lang);
+          close();
+          showStatusMessage(t('commandPalette.msg.langChanged', { lang }));
+          return;
+        }
         case 'reload-config': {
           try {
             await loadConfig();
             close();
-            showStatusMessage('✅ 設定ファイルを再読み込みしました');
+            showStatusMessage(t('commandPalette.msg.configReloaded'));
           } catch (e) {
             setError(String(e));
           }
@@ -187,11 +202,11 @@ export function CommandPalette() {
           try {
             const configPath = await tauriApi.initConfig();
             close();
-            showStatusMessage(`✅ 設定ファイルを作成しました: ${configPath}`);
+            showStatusMessage(t('commandPalette.msg.configCreated', { path: configPath }));
           } catch (e) {
             if (String(e) === 'exists') {
               close();
-              showStatusMessage('ℹ️ 設定ファイルはすでに存在します: ~/.config/folio/config.toml', 4000);
+              showStatusMessage(t('commandPalette.msg.configExists'), 4000);
             } else {
               setError(String(e));
             }
@@ -199,7 +214,7 @@ export function CommandPalette() {
           return;
         }
         default:
-          setError(`不明なコマンド: ${command}`);
+          setError(t('commandPalette.err.unknown', { command }));
           return;
       }
       close();
@@ -222,7 +237,7 @@ export function CommandPalette() {
             ime.handlers.onKeyDown(e);
             if (e.key === 'Escape') close();
           }}
-          placeholder=":コマンド  (Tab で補完)"
+          placeholder={t('commandPalette.placeholder')}
         />
         {candidates.length > 0 && (
           <div className="command-completions">
@@ -240,7 +255,7 @@ export function CommandPalette() {
         )}
         {error && <div className="command-error">{error}</div>}
         <div className="command-help">
-          :q :tabnew :cd :bm :filter :zip :unzip :init-config :reload-config :clear-storage
+          {t('commandPalette.help')} :lang
         </div>
       </div>
     </div>

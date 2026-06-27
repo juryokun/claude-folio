@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import path from 'path-browserify';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { FileRow } from './FileRow';
@@ -27,6 +28,7 @@ interface ContextMenuState {
 }
 
 export function FilePane({ tabId }: Props) {
+  const { t } = useTranslation();
   const { tabs, activeTabId, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setCursor, loadDir, setSort, clipboard } = useFileStore();
   const { showHidden, columnWidths, setColumnWidths } = useUiStore();
@@ -126,23 +128,23 @@ export function FilePane({ tabId }: Props) {
     : tab.path;
 
   const ctxMenuItems = ctxMenu == null ? [] : ctxMenu.kind === 'entry' && ctxEntry ? [
-    { label: '名前を変更', icon: '✏️', shortcut: 'r', action: fileOps.handleRename },
-    { label: 'ゴミ箱に移動', icon: '🗑️', shortcut: 'dd', action: fileOps.handleDelete },
+    { label: t('filePane.ctx.rename'), icon: '✏️', shortcut: 'r', action: fileOps.handleRename },
+    { label: t('filePane.ctx.delete'), icon: '🗑️', shortcut: 'dd', action: fileOps.handleDelete },
     { kind: 'sep' as const },
-    { label: 'コピー', icon: '📋', shortcut: 'yy', action: fileOps.handleYank },
-    { label: '切り取り', icon: '✂️', shortcut: 'xx', action: fileOps.handleCut },
-    { label: 'ペースト', icon: '📌', shortcut: 'p', action: fileOps.handlePaste, disabled: !clipboard },
+    { label: t('filePane.ctx.copy'), icon: '📋', shortcut: 'yy', action: fileOps.handleYank },
+    { label: t('filePane.ctx.cut'), icon: '✂️', shortcut: 'xx', action: fileOps.handleCut },
+    { label: t('filePane.ctx.paste'), icon: '📌', shortcut: 'p', action: fileOps.handlePaste, disabled: !clipboard },
     { kind: 'sep' as const },
-    { label: 'パスをコピー', icon: '🔗', shortcut: 'yp', action: fileOps.handleCopyPath },
-    { label: 'ファイル名をコピー', icon: '📎', shortcut: 'yn', action: fileOps.handleCopyName },
+    { label: t('filePane.ctx.copyPath'), icon: '🔗', shortcut: 'yp', action: fileOps.handleCopyPath },
+    { label: t('filePane.ctx.copyName'), icon: '📎', shortcut: 'yn', action: fileOps.handleCopyName },
     { kind: 'sep' as const },
     {
-      label: 'ターミナルで開く', icon: '🖥️', shortcut: 'T',
+      label: t('filePane.ctx.openTerminal'), icon: '🖥️', shortcut: 'T',
       disabled: !ctxEntry.is_dir,
       action: () => tauriApi.openTerminalAt(ctxTargetDir, terminalApp, terminalCommand).catch(console.error),
     },
     {
-      label: 'ブックマークに追加', icon: '🔖', shortcut: 'B',
+      label: t('filePane.ctx.addBookmark'), icon: '🔖', shortcut: 'B',
       disabled: !ctxEntry.is_dir,
       action: () => {
         const label = path.basename(ctxTargetDir) || ctxTargetDir;
@@ -152,21 +154,21 @@ export function FilePane({ tabId }: Props) {
       },
     },
     { kind: 'sep' as const },
-    { label: 'アプリを指定して開く', icon: '🚀', shortcut: 'O', action: fileOps.handleOpenWith, dim: true },
-    { label: 'エディタで開く', icon: '📝', shortcut: 'e', action: fileOps.handleOpenEditor, dim: true },
-    { label: 'コマンドパレット', icon: '⌨️', shortcut: ':', action: fileOps.handleEnterCommand, dim: true },
+    { label: t('filePane.ctx.openWith'), icon: '🚀', shortcut: 'O', action: fileOps.handleOpenWith, dim: true },
+    { label: t('filePane.ctx.openEditor'), icon: '📝', shortcut: 'e', action: fileOps.handleOpenEditor, dim: true },
+    { label: t('filePane.ctx.commandPalette'), icon: '⌨️', shortcut: ':', action: fileOps.handleEnterCommand, dim: true },
   ] : ctxMenu.kind === 'blank' ? [
-    { label: 'ペースト', icon: '📌', shortcut: 'p', action: fileOps.handlePaste, disabled: !clipboard },
+    { label: t('filePane.ctx.paste'), icon: '📌', shortcut: 'p', action: fileOps.handlePaste, disabled: !clipboard },
     { kind: 'sep' as const },
-    { label: '新規ファイル', icon: '📄', shortcut: 'A', action: fileOps.handleNewFile },
-    { label: '新規フォルダ', icon: '📁', shortcut: 'a', action: fileOps.handleNewDir },
+    { label: t('filePane.ctx.newFile'), icon: '📄', shortcut: 'A', action: fileOps.handleNewFile },
+    { label: t('filePane.ctx.newFolder'), icon: '📁', shortcut: 'a', action: fileOps.handleNewDir },
     { kind: 'sep' as const },
-    { label: 'ターミナルで開く', icon: '🖥️', shortcut: 'T', action: fileOps.handleOpenTerminalHere },
-    { label: 'ブックマークに追加', icon: '🔖', shortcut: 'B', action: fileOps.handleAddBookmark },
+    { label: t('filePane.ctx.openTerminal'), icon: '🖥️', shortcut: 'T', action: fileOps.handleOpenTerminalHere },
+    { label: t('filePane.ctx.addBookmark'), icon: '🔖', shortcut: 'B', action: fileOps.handleAddBookmark },
   ] : [];
 
   if (pane.loading) {
-    return <div className="file-pane loading">読み込み中...</div>;
+    return <div className="file-pane loading">{t('filePane.loading')}</div>;
   }
   if (pane.error) {
     return <div className="file-pane error">{pane.error}</div>;
@@ -191,10 +193,10 @@ export function FilePane({ tabId }: Props) {
           className="file-name header-col sortable"
           onClick={() => handleSortClick('name')}
         >
-          名前 <SortIndicator active={pane.sortKey === 'name'} desc={pane.sortDesc} />
+          {t('filePane.colName')} <SortIndicator active={pane.sortKey === 'name'} desc={pane.sortDesc} />
         </span>
         <span className="file-size header-col" style={{ width: columnWidths.size }}>
-          サイズ
+          {t('filePane.colSize')}
           <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'size')} />
         </span>
         <span
@@ -202,7 +204,7 @@ export function FilePane({ tabId }: Props) {
           onClick={() => handleSortClick('time')}
           style={{ width: columnWidths.date }}
         >
-          更新日時 <SortIndicator active={pane.sortKey === 'time'} desc={pane.sortDesc} />
+          {t('filePane.colDate')} <SortIndicator active={pane.sortKey === 'time'} desc={pane.sortDesc} />
           <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'date')} />
         </span>
       </div>
@@ -260,7 +262,7 @@ export function FilePane({ tabId }: Props) {
         })}
       </div>
       {entries.length === 0 && !pane.loading && (
-        <div className="empty-dir">（空のフォルダ）</div>
+        <div className="empty-dir">{t('filePane.emptyFolder')}</div>
       )}
     </div>
     {ctxMenu && ctxMenuItems.length > 0 && (

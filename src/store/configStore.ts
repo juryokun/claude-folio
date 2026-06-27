@@ -64,6 +64,8 @@ export const useConfigStore = create<ConfigStore>((set) => ({
       if (terminalApp) useUiStore.getState().setTerminalApp(terminalApp);
       const terminalCommand = raw.terminal?.command ?? '';
       if (terminalCommand) useUiStore.getState().setTerminalCommand(terminalCommand);
+      const language = (raw.language ?? 'ja') as 'ja' | 'en';
+      useUiStore.getState().setLanguage(language);
       set({ appearance, keymap, loaded: true });
     } catch {
       set({ loaded: true }); // use defaults on error

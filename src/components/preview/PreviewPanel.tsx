@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { tauriApi } from '../../lib/tauri';
 import { useUiStore } from '../../store/uiStore';
@@ -54,6 +55,7 @@ function guessLanguage(ext: string): string {
 }
 
 export function PreviewPanel() {
+  const { t } = useTranslation();
   const { previewWidth, setPreviewWidth } = useUiStore();
   const { activeTabId } = useTabStore();
   const { getPane, filteredEntries } = useFileStore();
@@ -149,7 +151,7 @@ export function PreviewPanel() {
       <div className="preview-resizer" onMouseDown={startResize} />
       <div className="preview-content">
         {!entry && (
-          <div className="preview-empty">ファイルを選択してください</div>
+          <div className="preview-empty">{t('previewPanel.noSelection')}</div>
         )}
 
         {entry && (
@@ -165,7 +167,7 @@ export function PreviewPanel() {
 
             <div className="preview-body">
               {preview.kind === 'loading' && (
-                <div className="preview-empty">読み込み中...</div>
+                <div className="preview-empty">{t('previewPanel.loading')}</div>
               )}
 
               {preview.kind === 'image' && (
@@ -174,7 +176,7 @@ export function PreviewPanel() {
                     src={preview.src}
                     alt={entry.name}
                     className="preview-image"
-                    onError={() => setPreview({ kind: 'error', message: '画像を読み込めませんでした' })}
+                    onError={() => setPreview({ kind: 'error', message: t('previewPanel.imageLoadError') })}
                   />
                 </div>
               )}
@@ -202,7 +204,7 @@ export function PreviewPanel() {
               {preview.kind === 'binary' && (
                 <div className="preview-empty">
                   <div className="preview-binary-icon">📄</div>
-                  <div>バイナリファイル</div>
+                  <div>{t('previewPanel.binaryFile')}</div>
                   {entry.size != null && <div className="preview-meta">{formatSize(entry.size)}</div>}
                 </div>
               )}
@@ -210,7 +212,7 @@ export function PreviewPanel() {
               {preview.kind === 'dir' && (
                 <div className="preview-dir">
                   {preview.entries.length === 0 ? (
-                    <div className="preview-dir-empty">空のフォルダ</div>
+                    <div className="preview-dir-empty">{t('previewPanel.emptyFolder')}</div>
                   ) : (
                     <div className="preview-dir-list">
                       {preview.entries.map((e) => (

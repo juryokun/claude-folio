@@ -50,7 +50,12 @@ pub struct AppConfig {
     /// action_name -> list of key sequences ("j", "d d", "s n" …)
     #[serde(default)]
     pub keymap: HashMap<String, Vec<String>>,
+    /// UI display language: "ja" or "en"
+    #[serde(default = "default_language")]
+    pub language: String,
 }
+
+fn default_language() -> String { "en".to_string() }
 
 fn config_path() -> Option<std::path::PathBuf> {
     std::env::var("HOME").ok().map(|h| {
@@ -88,6 +93,25 @@ pub fn init_config() -> Result<String, String> {
     }
     std::fs::write(&path, SAMPLE_CONFIG).map_err(|e| e.to_string())?;
     Ok(path.to_string_lossy().to_string())
+}
+
+/// Persist only the language field to the config file.
+/// Creates the file (without template comments) if it doesn't exist yet.
+#[tauri::command]
+pub fn save_language(language: String) -> Result<(), String> {
+    let path = config_path().ok_or("HOME not set")?;
+    let mut cfg = if path.exists() {
+        let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+        toml::from_str::<AppConfig>(&content).unwrap_or_default()
+    } else {
+        AppConfig::default()
+    };
+    cfg.language = language;
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    }
+    let content = toml::to_string_pretty(&cfg).map_err(|e| e.to_string())?;
+    std::fs::write(&path, content).map_err(|e| e.to_string())
 }
 
 const SAMPLE_CONFIG: &str = include_str!("../../assets/config.template.toml");

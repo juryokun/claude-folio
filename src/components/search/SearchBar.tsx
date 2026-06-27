@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTabStore } from '../../store/tabStore';
 import { useFileStore } from '../../store/fileStore';
 import { useUiStore } from '../../store/uiStore';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 
 export function SearchBar() {
+  const { t } = useTranslation();
   const { activeTab } = useTabStore();
   const { getPane, setFilter, setCursor, filteredEntries } = useFileStore();
   const { vimMode, setVimMode } = useUiStore();
@@ -61,7 +63,7 @@ export function SearchBar() {
             setCursor(tab.id, next);
           }
         }}
-        placeholder="検索..."
+        placeholder={t('searchBar.placeholder')}
       />
     </div>
   );

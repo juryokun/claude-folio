@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTabStore } from '../../store/tabStore';
 import { useUiStore } from '../../store/uiStore';
 import { useBookmarkStore } from '../../store/bookmarkStore';
@@ -7,6 +8,7 @@ import { tauriApi } from '../../lib/tauri';
 type PathBarMode = 'path' | 'zoxide' | 'bookmark';
 
 export function PathBar() {
+  const { t } = useTranslation();
   const { activeTab, navigateTo } = useTabStore();
   const { setVimMode, hasZoxide } = useUiStore();
   const { bookmarks } = useBookmarkStore();
@@ -143,8 +145,8 @@ export function PathBar() {
   const segments = currentPath.split('/').filter(Boolean);
 
   const placeholder =
-    mode === 'bookmark' ? '🔖 ブックマークを検索...' :
-    mode === 'zoxide'   ? 'zoxide で移動先を検索...' :
+    mode === 'bookmark' ? t('pathBar.bookmarkSearch') :
+    mode === 'zoxide'   ? t('pathBar.zoxideSearch') :
     '';
 
   return (
@@ -192,7 +194,7 @@ export function PathBar() {
             <div className="path-suggestions">
               {bookmarkSuggestions.length === 0 ? (
                 <div className="path-suggestion path-suggestion--empty">
-                  {bookmarks.length === 0 ? 'ブックマークがありません (B キーで追加)' : '一致するブックマークがありません'}
+                  {bookmarks.length === 0 ? t('pathBar.noBookmarks') : t('pathBar.noMatches')}
                 </div>
               ) : bookmarkSuggestions.map((bm, i) => (
                 <div
@@ -229,7 +231,7 @@ export function PathBar() {
               </span>
             );
           })}
-          <span className="path-edit-hint">クリックまたはCtrl+Lで編集</span>
+          <span className="path-edit-hint">{t('pathBar.editHint')}</span>
         </div>
       )}
     </div>

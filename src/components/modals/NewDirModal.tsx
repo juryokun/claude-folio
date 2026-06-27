@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 import { tauriApi } from '../../lib/tauri';
 import { useUiStore } from '../../store/uiStore';
@@ -6,6 +7,7 @@ import { useTabStore } from '../../store/tabStore';
 import { useFileStore } from '../../store/fileStore';
 
 export function NewDirModal() {
+  const { t } = useTranslation();
   const { showNewDir, setShowNewDir, showHidden } = useUiStore();
   const { activeTab } = useTabStore();
   const { loadDir } = useFileStore();
@@ -31,7 +33,7 @@ export function NewDirModal() {
       await tauriApi.createDir(`${tab.path}/${trimmed}`);
       loadDir(tab.id, tab.path, showHidden);
     } catch (e) {
-      alert(`フォルダ作成に失敗しました: ${e}`);
+      alert(t('newDirModal.error', { error: e }));
     }
     setShowNewDir(false);
   };
@@ -39,11 +41,11 @@ export function NewDirModal() {
   return (
     <div className="modal-overlay" onClick={() => setShowNewDir(false)}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-title">新規フォルダ</div>
+        <div className="modal-title">{t('newDirModal.title')}</div>
         <input
           ref={inputRef}
           className="modal-input"
-          placeholder="フォルダ名"
+          placeholder={t('newDirModal.placeholder')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           {...ime.handlers}
@@ -53,8 +55,8 @@ export function NewDirModal() {
           }}
         />
         <div className="modal-actions">
-          <button onClick={() => setShowNewDir(false)}>キャンセル</button>
-          <button className="primary" onClick={handleCreate}>作成</button>
+          <button onClick={() => setShowNewDir(false)}>{t('newDirModal.cancel')}</button>
+          <button className="primary" onClick={handleCreate}>{t('newDirModal.create')}</button>
         </div>
       </div>
     </div>

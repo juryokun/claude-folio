@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 import { tauriApi } from '../../lib/tauri';
 import { useUiStore } from '../../store/uiStore';
@@ -6,6 +7,7 @@ import { useTabStore } from '../../store/tabStore';
 import { useFileStore } from '../../store/fileStore';
 
 export function NewFileModal() {
+  const { t } = useTranslation();
   const { showNewFile, setShowNewFile, showHidden, showStatusMessage } = useUiStore();
   const { activeTab } = useTabStore();
   const { loadDir, setPendingFocusName } = useFileStore();
@@ -31,9 +33,9 @@ export function NewFileModal() {
       await tauriApi.createFile(`${tab.path}/${trimmed}`);
       setPendingFocusName(tab.id, trimmed);
       loadDir(tab.id, tab.path, showHidden);
-      showStatusMessage(`✅ ${trimmed} を作成しました`);
+      showStatusMessage(t('newFileModal.success', { name: trimmed }));
     } catch (e) {
-      showStatusMessage(`❌ ファイル作成に失敗しました: ${e}`);
+      showStatusMessage(t('newFileModal.error', { error: e }));
     }
     setShowNewFile(false);
   };
@@ -41,11 +43,11 @@ export function NewFileModal() {
   return (
     <div className="modal-overlay" onClick={() => setShowNewFile(false)}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-title">新規ファイル</div>
+        <div className="modal-title">{t('newFileModal.title')}</div>
         <input
           ref={inputRef}
           className="modal-input"
-          placeholder="ファイル名"
+          placeholder={t('newFileModal.placeholder')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           {...ime.handlers}
@@ -55,8 +57,8 @@ export function NewFileModal() {
           }}
         />
         <div className="modal-actions">
-          <button onClick={() => setShowNewFile(false)}>キャンセル</button>
-          <button className="primary" onClick={handleCreate}>作成</button>
+          <button onClick={() => setShowNewFile(false)}>{t('newFileModal.cancel')}</button>
+          <button className="primary" onClick={handleCreate}>{t('newFileModal.create')}</button>
         </div>
       </div>
     </div>

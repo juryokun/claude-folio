@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import path from 'path-browserify';
 import { tauriApi } from '../../lib/tauri';
 import { useUiStore } from '../../store/uiStore';
@@ -19,6 +20,7 @@ function showCandidates(input: string): boolean {
 }
 
 export function OpenWithModal() {
+  const { t } = useTranslation();
   const { showOpenWith, openWithTarget, setShowOpenWith, showStatusMessage } = useUiStore();
   const [input, setInput] = useState('');
   const [apps, setApps] = useState<string[]>([]);
@@ -61,13 +63,13 @@ export function OpenWithModal() {
     try {
       if (resolveMode(trimmed, apps) === 'app') {
         await tauriApi.openWithApp(openWithTarget, trimmed);
-        showStatusMessage(`${fileName} を ${trimmed} で開きました`);
+        showStatusMessage(t('openWithModal.openSuccess', { file: fileName, app: trimmed }));
       } else {
         await tauriApi.openWithCommand(openWithTarget, trimmed);
-        showStatusMessage(`${fileName} を実行しました`);
+        showStatusMessage(t('openWithModal.executeSuccess', { file: fileName }));
       }
     } catch (e) {
-      showStatusMessage(`エラー: ${e}`);
+      showStatusMessage(t('openWithModal.error', { error: e }));
     }
     setShowOpenWith(false);
   };
@@ -92,15 +94,15 @@ export function OpenWithModal() {
   };
 
   const modeHint = !trimmed
-    ? 'アプリ名またはコマンドを入力してください'
+    ? t('openWithModal.appModeHint')
     : mode === 'app'
-      ? `アプリモード — open -a "${trimmed}" ${fileName}`
-      : `コマンドモード — ${trimmed} <ファイル> として実行`;
+      ? t('openWithModal.appMode', { name: trimmed, file: fileName })
+      : t('openWithModal.commandMode', { command: trimmed });
 
   return (
     <div className="modal-overlay" onClick={() => setShowOpenWith(false)}>
       <div className="modal open-with-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-title">アプリを指定して開く</div>
+        <div className="modal-title">{t('openWithModal.title')}</div>
         <div className="modal-subtitle">{fileName}</div>
 
         <div className="open-with-input-wrap">
@@ -109,7 +111,7 @@ export function OpenWithModal() {
             className="modal-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Preview / zip -r / /usr/bin/tool --flag"
+            placeholder={t('openWithModal.placeholder')}
             {...ime.handlers}
             onKeyDown={handleKeyDown}
           />
@@ -131,8 +133,8 @@ export function OpenWithModal() {
         <div className="open-with-mode-hint">{modeHint}</div>
 
         <div className="modal-actions">
-          <button onClick={() => setShowOpenWith(false)}>キャンセル</button>
-          <button className="primary" onClick={handleOpen} disabled={!trimmed}>開く</button>
+          <button onClick={() => setShowOpenWith(false)}>{t('openWithModal.cancel')}</button>
+          <button className="primary" onClick={handleOpen} disabled={!trimmed}>{t('openWithModal.open')}</button>
         </div>
       </div>
     </div>

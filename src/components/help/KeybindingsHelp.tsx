@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { useUiStore } from '../../store/uiStore';
 import { KEYBINDING_DOCS } from '../../lib/vim/keymap';
 
 export function KeybindingsHelp() {
+  const { t } = useTranslation();
   const { showHelp, setShowHelp } = useUiStore();
 
   if (!showHelp) return null;
@@ -9,7 +11,7 @@ export function KeybindingsHelp() {
   return (
     <div className="modal-overlay" onClick={() => setShowHelp(false)}>
       <div className="modal help-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-title">キーバインド一覧</div>
+        <div className="modal-title">{t('keybindingsHelp.title')}</div>
         <table className="keybinding-table">
           <tbody>
             {KEYBINDING_DOCS.map(({ keys, description }) => (
@@ -21,7 +23,7 @@ export function KeybindingsHelp() {
           </tbody>
         </table>
         <div className="modal-actions">
-          <button className="primary" onClick={() => setShowHelp(false)}>閉じる (Esc)</button>
+          <button className="primary" onClick={() => setShowHelp(false)}>{t('keybindingsHelp.close')}</button>
         </div>
       </div>
     </div>

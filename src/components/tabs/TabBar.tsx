@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { useTabStore } from '../../store/tabStore';
 import { useFileOps } from '../../hooks/useFileOps';
 import path from 'path-browserify';
 
 export function TabBar() {
+  const { t } = useTranslation();
   const { tabs, activeTabId, setActiveTab, closeTab, openTab, goBack, goForward, activeTab } = useTabStore();
   const fileOps = useFileOps();
 
@@ -18,8 +20,8 @@ export function TabBar() {
           className="tab-nav-btn"
           onClick={() => goBack()}
           disabled={!canGoBack}
-          title="戻る (H)"
-          aria-label="戻る"
+          title={t('tabBar.goBack')}
+          aria-label={t('tabBar.goBack')}
         >
           ‹
         </button>
@@ -27,8 +29,8 @@ export function TabBar() {
           className="tab-nav-btn"
           onClick={() => goForward()}
           disabled={!canGoForward}
-          title="進む (L)"
-          aria-label="進む"
+          title={t('tabBar.goForward')}
+          aria-label={t('tabBar.goForward')}
         >
           ›
         </button>
@@ -36,8 +38,8 @@ export function TabBar() {
           className="tab-nav-btn"
           onClick={fileOps.handleNavigateUp}
           disabled={isRoot}
-          title="上の階層へ (h)"
-          aria-label="上の階層へ"
+          title={t('tabBar.navigateUp')}
+          aria-label={t('tabBar.navigateUp')}
         >
           ↑
         </button>

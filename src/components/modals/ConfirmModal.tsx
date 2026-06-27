@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUiStore } from '../../store/uiStore';
 
 export function ConfirmModal() {
+  const { t } = useTranslation();
   const { showConfirm, confirmMessage, confirmCallback, closeConfirm } = useUiStore();
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -26,12 +28,12 @@ export function ConfirmModal() {
           if (e.key === 'Escape') closeConfirm();
         }}
       >
-        <div className="modal-title">確認</div>
+        <div className="modal-title">{t('confirmModal.title')}</div>
         <p style={{ color: 'var(--text)', marginBottom: 8 }}>{confirmMessage}</p>
         <div className="modal-actions">
-          <button onClick={closeConfirm}>キャンセル</button>
+          <button onClick={closeConfirm}>{t('confirmModal.cancel')}</button>
           <button ref={confirmBtnRef} className="primary" onClick={handleConfirm}>
-            OK
+            {t('confirmModal.ok')}
           </button>
         </div>
       </div>

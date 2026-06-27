@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import path from 'path-browserify';
 import { tauriApi } from '../../lib/tauri';
 import { useUiStore } from '../../store/uiStore';
@@ -7,6 +8,7 @@ import { useFileStore } from '../../store/fileStore';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 
 export function RenameModal() {
+  const { t } = useTranslation();
   const { showRename, renameTarget, setShowRename } = useUiStore();
   const { activeTab } = useTabStore();
   const { loadDir } = useFileStore();
@@ -39,7 +41,7 @@ export function RenameModal() {
       const tab = activeTab();
       loadDir(tab.id, tab.path, showHidden);
     } catch (e) {
-      console.error('リネームに失敗しました:', e);
+      console.error(t('renameModal.error', { error: e }));
     }
     setShowRename(false);
   };
@@ -47,7 +49,7 @@ export function RenameModal() {
   return (
     <div className="modal-overlay" onClick={() => setShowRename(false)}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-title">リネーム</div>
+        <div className="modal-title">{t('renameModal.title')}</div>
         <input
           ref={inputRef}
           className="modal-input"
@@ -60,8 +62,8 @@ export function RenameModal() {
           }}
         />
         <div className="modal-actions">
-          <button onClick={() => setShowRename(false)}>キャンセル</button>
-          <button className="primary" onClick={handleRename}>リネーム</button>
+          <button onClick={() => setShowRename(false)}>{t('renameModal.cancel')}</button>
+          <button className="primary" onClick={handleRename}>{t('renameModal.rename')}</button>
         </div>
       </div>
     </div>

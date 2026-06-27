@@ -1,120 +1,123 @@
-# folio 設定ファイル
-# 場所: ~/.config/folio/config.toml
-# 編集後はアプリを再起動すると反映されます。
+# Folio configuration file
+# Location: ~/.config/folio/config.toml
+# Restart the app to apply changes.
+
+# Display language: "en" (English) or "ja" (Japanese)
+language = "en"
 
 # -------------------------
-# 表示設定
+# Appearance
 # -------------------------
 [appearance]
 
-# 「更新日」列の日付フォーマット
-# 使えるトークン: %Y=年 %m=月 %d=日 %H=時 %M=分 %S=秒
+# Date format for the "Modified" column.
+# Tokens: %Y=year %m=month %d=day %H=hour %M=minute %S=second
 date_format = "%Y/%m/%d %H:%M:%S"
 
-# ファイルサイズの単位
-#   "binary"  → KiB / MiB / GiB (1024 ベース)
-#   "decimal" → KB / MB / GB  (1000 ベース)
+# File size unit
+#   "binary"  → KiB / MiB / GiB (1024-based)
+#   "decimal" → KB / MB / GB  (1000-based)
 size_unit = "binary"
 
 # -------------------------
-# エディタ設定
+# Editor
 # -------------------------
 [editor]
 
-# `e` キーでファイルを開くときのコマンド。
-# 空のままにすると OS のデフォルトアプリで開きます（`o` キーと同じ動作）。
-# 例: "code"、"nvim"、"emacs"、"subl"
+# Command used to open files with the `e` key.
+# Leave empty to use the OS default app (same as `o` key).
+# Examples: "code", "nvim", "emacs", "subl"
 command = ""
 
 # -------------------------
-# ターミナル設定
+# Terminal
 # -------------------------
 [terminal]
 
-# 方法 A: `open -a <app> <dir>` で起動するアプリ名。
-# Terminal.app / iTerm / Warp / Ghostty などに対応。
-# 空のままにすると Terminal.app を使用します。
-# 例: "iTerm"、"Warp"、"Ghostty"
+# Option A: App name passed to `open -a <app> <dir>`.
+# Works with Terminal.app, iTerm, Warp, Ghostty, etc.
+# Leave empty to use Terminal.app.
+# Examples: "iTerm", "Warp", "Ghostty"
 app = ""
 
-# 方法 B: `open -a` に対応していないターミナル用の直接コマンド。
-# ディレクトリパスが末尾の引数として渡されます。
-# `command` が設定されている場合は `app` より優先されます。
-# 例:
+# Option B: Direct command for terminals that don't support `open -a`.
+# The directory path is appended as the last argument.
+# Takes precedence over `app` when set.
+# Examples:
 # command = "alacritty --working-directory"
 # command = "kitty --directory"
 
 # -------------------------
-# キーバインド設定
+# Keybindings
 # -------------------------
 [keymap]
-# デフォルトのキーバインドを上書きします。
-# 値はキーシーケンスのリストです。シーケンスはスペース区切りのキー名で指定します。
+# Override default keybindings.
+# Values are lists of key sequences. Sequences are space-separated key names.
 #
-# 例:
-#   cursor_down     = ["j", "ArrowDown"]   # 複数のキーを割り当てる
-#   delete_selected = ["d d"]              # 2 キーシーケンス
+# Examples:
+#   cursor_down     = ["j", "ArrowDown"]   # assign multiple keys
+#   delete_selected = ["d d"]              # 2-key sequence
 #   sort_name       = ["s n"]
 #
-# 利用可能なアクション一覧:
+# Available actions:
 #
-# --- カーソル移動 ---
-#   cursor_down        カーソルを下へ          (デフォルト: j / ↓)
-#   cursor_up          カーソルを上へ          (デフォルト: k / ↑)
-#   cursor_first       先頭へ移動              (デフォルト: g g)
-#   cursor_last        末尾へ移動              (デフォルト: G)
+# --- Cursor ---
+#   cursor_down        Move cursor down          (default: j / ↓)
+#   cursor_up          Move cursor up            (default: k / ↑)
+#   cursor_first       Go to first item          (default: g g)
+#   cursor_last        Go to last item           (default: G)
 #
-# --- ディレクトリ移動 ---
-#   navigate_up        親ディレクトリへ        (デフォルト: h / ←)
-#   navigate_into      ディレクトリに入る      (デフォルト: l / → / Enter)
-#   go_back            前のディレクトリへ戻る  (デフォルト: H)
-#   go_forward         次のディレクトリへ進む  (デフォルト: L)
+# --- Navigation ---
+#   navigate_up        Go to parent directory    (default: h / ←)
+#   navigate_into      Enter directory / open    (default: l / → / Enter)
+#   go_back            Go back in history        (default: H)
+#   go_forward         Go forward in history     (default: L)
 #
-# --- ファイル操作 ---
-#   toggle_select      選択の切り替え          (デフォルト: Space)
-#   delete_selected    ゴミ箱へ移動            (デフォルト: d d)
-#   cut_selected       切り取り                (デフォルト: x x)
-#   yank_selected      コピー                  (デフォルト: y y)
-#   paste              ペースト                (デフォルト: p)
-#   rename             リネーム                (デフォルト: r)
-#   new_dir            新規フォルダ作成        (デフォルト: a)
-#   new_file           新規ファイル作成        (デフォルト: A)
-#   copy_path          パスをコピー            (デフォルト: y p)
-#   copy_name          ファイル名をコピー      (デフォルト: y n)
+# --- File operations ---
+#   toggle_select      Toggle selection          (default: Space)
+#   delete_selected    Move to trash             (default: d d)
+#   cut_selected       Cut                       (default: x x)
+#   yank_selected      Copy                      (default: y y)
+#   paste              Paste                     (default: p)
+#   rename             Rename                    (default: r)
+#   new_dir            Create new folder         (default: a)
+#   new_file           Create new file           (default: A)
+#   copy_path          Copy path to clipboard    (default: y p)
+#   copy_name          Copy filename to clipboard(default: y n)
 #
-# --- 開く ---
-#   open_selected      ファイルを開く          (デフォルト: l / Enter)
-#   open_terminal      ターミナルで開く        (デフォルト: o)
-#   open_terminal_here カレントディレクトリ    (デフォルト: T)
-#   open_with_app      アプリを指定して開く    (デフォルト: O)
-#   open_editor        エディタで開く          (デフォルト: e)
+# --- Open ---
+#   open_selected      Open file                 (default: l / Enter)
+#   open_terminal      Open terminal here        (default: o)
+#   open_terminal_here Open terminal (current)   (default: T)
+#   open_with_app      Open with specific app    (default: O)
+#   open_editor        Open with editor          (default: e)
 #
-# --- 検索・コマンド ---
-#   enter_search       インクリメンタルサーチ  (デフォルト: /)
-#   enter_command      コマンドパレット        (デフォルト: :)
+# --- Search & command ---
+#   enter_search       Incremental search        (default: /)
+#   enter_command      Command palette           (default: :)
 #
-# --- タブ ---
-#   new_tab            新規タブ                (デフォルト: t)
-#   close_tab          タブを閉じる            (デフォルト: q)
-#   next_tab           次のタブ                (デフォルト: ])
-#   prev_tab           前のタブ                (デフォルト: [)
+# --- Tabs ---
+#   new_tab            New tab                   (default: t)
+#   close_tab          Close tab                 (default: q)
+#   next_tab           Next tab                  (default: ])
+#   prev_tab           Previous tab              (default: [)
 #
-# --- 表示 ---
-#   toggle_hidden      隠しファイルの表示切替  (デフォルト: .)
-#   toggle_sidebar     サイドバーの表示切替    (デフォルト: \)
-#   toggle_preview     プレビューパネル切替    (デフォルト: P)
-#   reload             ディレクトリを再読込    (デフォルト: R)
-#   show_help          ヘルプを表示            (デフォルト: ?)
+# --- View ---
+#   toggle_hidden      Toggle hidden files       (default: .)
+#   toggle_sidebar     Toggle sidebar            (default: \)
+#   toggle_preview     Toggle preview panel      (default: P)
+#   reload             Reload directory          (default: R)
+#   show_help          Show help                 (default: ?)
 #
-# --- ブックマーク・移動 ---
-#   add_bookmark       ブックマークに追加      (デフォルト: B)
-#   open_bookmark_picker  ブックマーク検索     (デフォルト: b)
-#   focus_path_bar     パスバーにフォーカス    (デフォルト: Ctrl+L)
-#   focus_zoxide       zoxide 検索             (デフォルト: z)
+# --- Bookmarks & navigation ---
+#   add_bookmark       Add to bookmarks          (default: B)
+#   open_bookmark_picker  Search bookmarks       (default: b)
+#   focus_path_bar     Focus path bar            (default: Ctrl+L)
+#   focus_zoxide       Zoxide search             (default: z)
 #
-# --- ソート ---
-#   sort_name          名前でソート（昇順）    (デフォルト: s n)
-#   sort_name_desc     名前でソート（降順）    (デフォルト: s N)
-#   sort_time          更新日時でソート（昇順）(デフォルト: s t)
-#   sort_time_desc     更新日時でソート（降順）(デフォルト: s T)
-#   sort_reverse       ソート順を逆にする      (デフォルト: s r)
+# --- Sort ---
+#   sort_name          Sort by name (asc)        (default: s n)
+#   sort_name_desc     Sort by name (desc)       (default: s N)
+#   sort_time          Sort by time (asc)        (default: s t)
+#   sort_time_desc     Sort by time (desc)       (default: s T)
+#   sort_reverse       Reverse sort order        (default: s r)

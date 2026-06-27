@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import path from 'path-browserify';
 import { tauriApi } from '../lib/tauri';
 import { useTabStore } from '../store/tabStore';
@@ -7,6 +8,7 @@ import { useUiStore } from '../store/uiStore';
 import { useBookmarkStore } from '../store/bookmarkStore';
 
 export function useFileOps() {
+  const { t } = useTranslation();
   const { activeTab, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
     useFileStore();
@@ -51,12 +53,12 @@ export function useFileOps() {
     const targets = getTargetPaths();
     if (!targets.length) return;
     showConfirmDialog(
-      `${targets.length}件をゴミ箱に移動しますか?`,
+      t('fileOps.confirmDelete', { count: targets.length }),
       async () => {
         try {
           await tauriApi.moveToTrash(targets);
           reload();
-          showStatusMessage(`🗑️ ${targets.length}件をゴミ箱に移動しました`);
+          showStatusMessage(t('fileOps.deleted', { count: targets.length }));
         } catch (e) {
           console.error('削除に失敗しました:', e);
         }
@@ -68,14 +70,14 @@ export function useFileOps() {
     const targets = getTargetPaths();
     if (!targets.length) return;
     setClipboard({ paths: targets, mode: 'cut' });
-    showStatusMessage(`✂️ ${targets.length}件を切り取り`);
+    showStatusMessage(t('fileOps.cut', { count: targets.length }));
   }, [getTargetPaths, setClipboard, showStatusMessage]);
 
   const handleYank = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
     setClipboard({ paths: targets, mode: 'copy' });
-    showStatusMessage(`📋 ${targets.length}件をコピー`);
+    showStatusMessage(t('fileOps.copied', { count: targets.length }));
   }, [getTargetPaths, setClipboard, showStatusMessage]);
 
   const handlePaste = useCallback(async () => {
@@ -84,10 +86,10 @@ export function useFileOps() {
     const doCopy = async (strategy: 'overwrite' | 'rename') => {
       try {
         await tauriApi.copyFiles(clipboard.paths, currentPath, strategy);
-        showStatusMessage(`✅ ${clipboard.paths.length}件をペーストしました`);
+        showStatusMessage(t('fileOps.pasted', { count: clipboard.paths.length }));
         reload();
       } catch (e) {
-        console.error('ペーストに失敗しました:', e);
+        console.error(t('fileOps.pasteError', { error: String(e) }));
       }
     };
 
@@ -102,10 +104,10 @@ export function useFileOps() {
       try {
         await tauriApi.moveFiles(clipboard.paths, currentPath);
         setClipboard(null);
-        showStatusMessage(`✅ ${clipboard.paths.length}件を移動しました`);
+        showStatusMessage(t('fileOps.moved', { count: clipboard.paths.length }));
         reload();
       } catch (e) {
-        console.error('ペーストに失敗しました:', e);
+        console.error(t('fileOps.pasteError', { error: String(e) }));
       }
     }
   }, [clipboard, currentPath, setClipboard, reload, showStatusMessage, showCopyConflict]);
@@ -114,7 +116,7 @@ export function useFileOps() {
     const targets = getTargetPaths();
     if (!targets.length) return;
     tauriApi.copyPathToClipboard(targets)
-      .then(() => showStatusMessage('📋 パスをクリップボードにコピーしました'))
+      .then(() => showStatusMessage(t('fileOps.pathCopied')))
       .catch(console.error);
   }, [getTargetPaths, showStatusMessage]);
 
@@ -122,7 +124,7 @@ export function useFileOps() {
     const targets = getTargetPaths();
     if (!targets.length) return;
     tauriApi.copyNameToClipboard(targets)
-      .then(() => showStatusMessage('📋 ファイル名をクリップボードにコピーしました'))
+      .then(() => showStatusMessage(t('fileOps.nameCopied')))
       .catch(console.error);
   }, [getTargetPaths, showStatusMessage]);
 
@@ -188,7 +190,7 @@ export function useFileOps() {
   const handleAddBookmark = useCallback(async () => {
     const label = path.basename(currentPath) || currentPath;
     await addBookmark(label, currentPath);
-    showStatusMessage(`🔖 ブックマークに追加: ${label}`);
+    showStatusMessage(t('fileOps.bookmarkAdded', { label }));
   }, [currentPath, addBookmark, showStatusMessage]);
 
   return {

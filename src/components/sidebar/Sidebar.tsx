@@ -1,15 +1,16 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTabStore } from '../../store/tabStore';
 import { useBookmarkStore } from '../../store/bookmarkStore';
 import { useUiStore } from '../../store/uiStore';
 import { tauriApi } from '../../lib/tauri';
 
 const FAVORITES = [
-  { label: 'ホーム', path: () => `/Users/${getUsername()}` },
-  { label: 'デスクトップ', path: () => `/Users/${getUsername()}/Desktop` },
-  { label: '書類', path: () => `/Users/${getUsername()}/Documents` },
-  { label: 'ダウンロード', path: () => `/Users/${getUsername()}/Downloads` },
-  { label: 'アプリケーション', path: () => '/Applications' },
+  { key: 'sidebar.home' as const, path: () => `/Users/${getUsername()}` },
+  { key: 'sidebar.desktop' as const, path: () => `/Users/${getUsername()}/Desktop` },
+  { key: 'sidebar.documents' as const, path: () => `/Users/${getUsername()}/Documents` },
+  { key: 'sidebar.downloads' as const, path: () => `/Users/${getUsername()}/Downloads` },
+  { key: 'sidebar.applications' as const, path: () => '/Applications' },
 ];
 
 function getUsername(): string {
@@ -18,6 +19,7 @@ function getUsername(): string {
 }
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const { navigateTo, activeTab } = useTabStore();
   const { bookmarks, addBookmark, removeBookmark } = useBookmarkStore();
   const { googleDrivePaths, setGoogleDrivePaths, sidebarWidth, setSidebarWidth } = useUiStore();
@@ -65,7 +67,7 @@ export function Sidebar() {
     <div className="sidebar" style={{ width: sidebarWidth }}>
       <div className="sidebar-resizer" onMouseDown={startResize} />
       <section className="sidebar-section">
-        <div className="sidebar-section-title">よく使う場所</div>
+        <div className="sidebar-section-title">{t('sidebar.favorites')}</div>
         {FAVORITES.map((fav) => {
           const p = fav.path();
           return (
@@ -74,7 +76,7 @@ export function Sidebar() {
               className={`sidebar-item${currentPath === p ? ' active' : ''}`}
               onClick={() => navigateTo(p)}
             >
-              {fav.label}
+              {t(fav.key)}
             </div>
           );
         })}
@@ -82,7 +84,7 @@ export function Sidebar() {
 
       {googleDrivePaths.length > 0 && (
         <section className="sidebar-section">
-          <div className="sidebar-section-title">クラウド</div>
+          <div className="sidebar-section-title">{t('sidebar.cloud')}</div>
           {googleDrivePaths.map((p, i) => (
             <div
               key={p}
@@ -100,7 +102,7 @@ export function Sidebar() {
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDropOnBookmarks}
       >
-        <div className="sidebar-section-title">ブックマーク</div>
+        <div className="sidebar-section-title">{t('sidebar.bookmarks')}</div>
         {bookmarks.map((bm) => (
           <div key={bm.id} className="sidebar-item bookmark">
             <span
@@ -112,14 +114,14 @@ export function Sidebar() {
             <button
               className="bookmark-remove"
               onClick={() => removeBookmark(bm.id)}
-              title="削除"
+              title={t('sidebar.deleteBookmark')}
             >
               ×
             </button>
           </div>
         ))}
         {bookmarks.length === 0 && (
-          <div className="sidebar-hint">B キーまたは :bm で追加</div>
+          <div className="sidebar-hint">{t('sidebar.addBookmarkHint')}</div>
         )}
       </section>
     </div>

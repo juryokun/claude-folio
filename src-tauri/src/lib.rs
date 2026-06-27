@@ -2,7 +2,7 @@ mod commands;
 
 use commands::{
     bookmarks::{load_bookmarks, save_bookmarks},
-    config::{init_config, load_config},
+    config::{init_config, load_config, save_language},
     clipboard::{copy_name_to_clipboard, copy_path_to_clipboard},
     fs::{check_copy_conflicts, copy_files, create_dir, create_file, detect_google_drive, list_dir, move_files, read_text_file, rename_file},
     search::{check_7zip_installed, compress_7zip, extract_7zip, search_files},
@@ -27,6 +27,7 @@ pub fn run() {
             open_with_editor,
             load_config,
             init_config,
+            save_language,
             list_dir,
             rename_file,
             check_copy_conflicts,

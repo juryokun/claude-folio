@@ -95,10 +95,13 @@ export const tauriApi = {
     invoke<void>('save_bookmarks', { bookmarks }),
 
   loadConfig: () =>
-    invoke<{ appearance?: { date_format?: string; size_unit?: string }; editor?: { command?: string }; terminal?: { app?: string; command?: string }; keymap?: Record<string, string[]> }>('load_config'),
+    invoke<{ appearance?: { date_format?: string; size_unit?: string }; editor?: { command?: string }; terminal?: { app?: string; command?: string }; keymap?: Record<string, string[]>; language?: string }>('load_config'),
 
   initConfig: () =>
     invoke<string>('init_config'),
+
+  saveLanguage: (language: string) =>
+    invoke<void>('save_language', { language }),
 
   startNativeDrag: (paths: string[], label: string): Promise<void> => {
     // Build a simple PNG drag image via canvas
