@@ -32,7 +32,7 @@ async function getHomeDir(): Promise<string> {
 export default function App() {
   const { tabs, activeTab, navigateTo, openTab, closeTab, nextTab, prevTab, activeTabId } =
     useTabStore();
-  const { loadDir, setCursor, getPane, filteredEntries } = useFileStore();
+  const { loadDir, setCursor, getPane, filteredEntries, setClipboard } = useFileStore();
   const {
     showHidden, toggleHidden, setShowHelp, setShowSettings, setVimMode,
   } = useUiStore();
@@ -160,11 +160,12 @@ export default function App() {
         setVimMode('NORMAL');
         setShowHelp(false);
         setShowSettings(false);
+        setClipboard(null);
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [setVimMode, setShowHelp, setShowSettings]);
+  }, [setVimMode, setShowHelp, setShowSettings, setClipboard]);
 
   return (
     <div className="app">
