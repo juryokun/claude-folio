@@ -16,7 +16,7 @@ fn bookmarks_path() -> Option<std::path::PathBuf> {
     std::env::var("HOME").ok().map(|h| {
         std::path::PathBuf::from(h)
             .join(".config")
-            .join("mac-filer")
+            .join("folio")
             .join("bookmarks.toml")
     })
 }
@@ -27,7 +27,7 @@ pub fn load_bookmarks() -> Vec<BookmarkEntry> {
     let Ok(content) = std::fs::read_to_string(&path) else { return vec![] };
     toml::from_str::<BookmarksFile>(&content)
         .unwrap_or_else(|e| {
-            eprintln!("[mac-filer] bookmarks parse error: {e}");
+            eprintln!("[folio] bookmarks parse error: {e}");
             BookmarksFile::default()
         })
         .bookmarks

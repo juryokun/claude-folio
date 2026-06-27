@@ -56,7 +56,7 @@ fn config_path() -> Option<std::path::PathBuf> {
     std::env::var("HOME").ok().map(|h| {
         std::path::PathBuf::from(h)
             .join(".config")
-            .join("mac-filer")
+            .join("folio")
             .join("config.toml")
     })
 }

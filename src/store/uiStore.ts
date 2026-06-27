@@ -116,7 +116,7 @@ export const useUiStore = create<UiStore>()(
       closeCopyConflict: () => set({ copyConflict: null }),
     }),
     {
-      name: 'mac-filer-ui',
+      name: 'folio-ui',
       partialize: (s) => ({
         showHidden: s.showHidden,
         showSidebar: s.showSidebar,

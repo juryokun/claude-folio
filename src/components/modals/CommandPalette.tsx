@@ -185,7 +185,7 @@ export function CommandPalette() {
           } catch (e) {
             if (String(e) === 'exists') {
               close();
-              showStatusMessage('ℹ️ 設定ファイルはすでに存在します: ~/.config/mac-filer/config.toml', 4000);
+              showStatusMessage('ℹ️ 設定ファイルはすでに存在します: ~/.config/folio/config.toml', 4000);
             } else {
               setError(String(e));
             }
