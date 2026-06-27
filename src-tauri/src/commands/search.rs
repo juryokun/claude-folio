@@ -55,13 +55,19 @@ pub fn search_files(
     Ok(results)
 }
 
+const SEVENZIP_CANDIDATES: &[&str] = &[
+    "/opt/homebrew/bin/7z",
+    "/usr/local/bin/7z",
+    "/usr/bin/7z",
+];
+
+fn find_7zip() -> Option<&'static str> {
+    SEVENZIP_CANDIDATES.iter().copied().find(|p| std::path::Path::new(p).exists())
+}
+
 #[tauri::command]
 pub fn check_7zip_installed() -> bool {
-    std::process::Command::new("which")
-        .arg("7z")
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+    find_7zip().is_some()
 }
 
 #[tauri::command]
@@ -70,16 +76,17 @@ pub fn compress_7zip(
     dest: String,
     windows_compat: bool,
 ) -> Result<(), String> {
+    let bin = find_7zip().ok_or("7z が見つかりません")?;
     let mut args = vec!["a".to_string()];
     if windows_compat {
-        // zip format with UTF-8 filenames for Windows compatibility
+        // -tzip: zip format for cross-platform compatibility
+        // -mcp=UTF-8 is Windows-only and causes E_INVALIDARG on macOS — omit it
         args.push("-tzip".to_string());
-        args.push("-mcp=UTF-8".to_string());
     }
     args.push(dest.clone());
     args.extend(paths);
 
-    let output = std::process::Command::new("7z")
+    let output = std::process::Command::new(bin)
         .args(&args)
         .output()
         .map_err(|e| e.to_string())?;
@@ -92,7 +99,8 @@ pub fn compress_7zip(
 
 #[tauri::command]
 pub fn extract_7zip(archive: String, dest: String) -> Result<(), String> {
-    let output = std::process::Command::new("7z")
+    let bin = find_7zip().ok_or("7z が見つかりません")?;
+    let output = std::process::Command::new(bin)
         .args(["x", &archive, &format!("-o{}", dest), "-y"])
         .output()
         .map_err(|e| e.to_string())?;

@@ -1,4 +1,4 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
+import { invoke, isTauri, Channel } from '@tauri-apps/api/core';
 import type { FileEntry } from '../types';
 
 export { isTauri };
@@ -57,4 +57,33 @@ export const tauriApi = {
 
   extract7zip: (archive: string, dest: string) =>
     invoke<void>('extract_7zip', { archive, dest }),
+
+  loadConfig: () =>
+    invoke<{ appearance?: { date_format?: string; size_unit?: string }; keymap?: Record<string, string[]> }>('load_config'),
+
+  initConfig: () =>
+    invoke<string>('init_config'),
+
+  startNativeDrag: (paths: string[], label: string): Promise<void> => {
+    // Build a simple PNG drag image via canvas
+    const canvas = document.createElement('canvas');
+    const scale = window.devicePixelRatio || 1;
+    const w = Math.min(260, label.length * 8 + 32);
+    canvas.width = w * scale;
+    canvas.height = 28 * scale;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = '28px';
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(scale, scale);
+    ctx.fillStyle = 'rgba(30, 30, 30, 0.85)';
+    ctx.roundRect(0, 0, w, 28, 6);
+    ctx.fill();
+    ctx.fillStyle = '#cccccc';
+    ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(paths.length > 1 ? `${paths.length} 個のアイテム` : label, 10, 19);
+    const image = canvas.toDataURL('image/png');
+
+    const onEvent = new Channel();
+    return invoke('plugin:drag|start_drag', { item: paths, image, onEvent });
+  },
 };

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { NORMAL_KEYMAP, type VimAction } from '../lib/vim/keymap';
+import { type KeyBinding, type VimAction } from '../lib/vim/keymap';
 import { useUiStore } from '../store/uiStore';
 
-const SEQUENCE_TIMEOUT = 500; // ms to wait for multi-key sequence
+const SEQUENCE_TIMEOUT = 500;
 
-export function useVimKeys(onAction: (action: VimAction) => void) {
+export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBinding[]) {
   const vimMode = useUiStore((s) => s.vimMode);
   const bufferRef = useRef<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -19,7 +19,7 @@ export function useVimKeys(onAction: (action: VimAction) => void) {
 
   const tryMatch = useCallback(
     (buffer: string[]) => {
-      const exact = NORMAL_KEYMAP.find(
+      const exact = keymap.find(
         (kb) => kb.keys.length === buffer.length && kb.keys.every((k, i) => k === buffer[i])
       );
       if (exact) {
@@ -28,22 +28,18 @@ export function useVimKeys(onAction: (action: VimAction) => void) {
         return;
       }
 
-      // Check if any binding has our buffer as a prefix
-      const hasPrefix = NORMAL_KEYMAP.some(
+      const hasPrefix = keymap.some(
         (kb) => kb.keys.length > buffer.length && kb.keys.every((k, i) => i >= buffer.length || k === buffer[i])
       );
 
       if (!hasPrefix) {
         clearBuffer();
       } else {
-        // Wait for more keys
         if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
-          clearBuffer();
-        }, SEQUENCE_TIMEOUT);
+        timerRef.current = setTimeout(clearBuffer, SEQUENCE_TIMEOUT);
       }
     },
-    [onAction, clearBuffer]
+    [onAction, clearBuffer, keymap]
   );
 
   useEffect(() => {
@@ -51,10 +47,9 @@ export function useVimKeys(onAction: (action: VimAction) => void) {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      // Disable vim keys when user is typing in an input/textarea
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
 
-      // Ctrl+L → focus path bar
+      // Ctrl+L → focus path bar (modifier combo, handled outside keymap)
       if (e.key === 'l' && e.ctrlKey) {
         e.preventDefault();
         onAction('focus_path_bar');
@@ -62,30 +57,25 @@ export function useVimKeys(onAction: (action: VimAction) => void) {
         return;
       }
 
-      // Option+ArrowUp → navigate to parent
-      if (e.key === 'ArrowUp' && e.altKey) {
+      // ArrowLeft → navigate to parent
+      if (e.key === 'ArrowLeft') {
         e.preventDefault();
         onAction('navigate_up');
         clearBuffer();
         return;
       }
 
-      // Ignore modifier-only keys and browser shortcuts (except what we handle)
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Dead'].includes(e.key)) return;
 
-      // Escape clears the key buffer but is handled by App.tsx
       if (e.key === 'Escape') {
         clearBuffer();
         return;
       }
 
       const key = e.key;
-
-      // Prevent default for keys we handle
-      const isHandled = NORMAL_KEYMAP.some((kb) => kb.keys.includes(key));
-      if (isHandled || bufferRef.current.length > 0) {
-        e.preventDefault();
-      }
+      const isHandled = keymap.some((kb) => kb.keys.includes(key));
+      if (isHandled || bufferRef.current.length > 0) e.preventDefault();
 
       bufferRef.current = [...bufferRef.current, key];
       tryMatch([...bufferRef.current]);

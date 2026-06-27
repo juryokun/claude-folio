@@ -1,5 +1,7 @@
 import React from 'react';
 import type { FileEntry } from '../../types';
+import { isTauri, tauriApi } from '../../lib/tauri';
+import { useConfigStore } from '../../store/configStore';
 
 interface Props {
   entry: FileEntry;
@@ -8,20 +10,32 @@ interface Props {
   onClick: () => void;
   onDoubleClick: () => void;
   style?: React.CSSProperties;
+  colSizeWidth: number;
+  colDateWidth: number;
+  dragPaths: string[];
 }
 
-function formatSize(bytes: number): string {
+function formatSize(bytes: number, unit: 'binary' | 'decimal'): string {
   if (bytes === 0) return '—';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
+  const base = unit === 'binary' ? 1024 : 1000;
+  const units = unit === 'binary'
+    ? ['B', 'KiB', 'MiB', 'GiB', 'TiB']
+    : ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(base)), units.length - 1);
+  return i === 0 ? `${bytes} B` : `${(bytes / Math.pow(base, i)).toFixed(1)} ${units[i]}`;
 }
 
-function formatDate(ts?: number): string {
+/** Minimal strftime-like formatter: %Y %m %d %H %M %S */
+function formatDate(ts: number | undefined, fmt: string): string {
   if (!ts) return '—';
-  return new Date(ts * 1000).toLocaleDateString('ja-JP', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-  });
+  const d = new Date(ts * 1000);
+  return fmt
+    .replace('%Y', String(d.getFullYear()))
+    .replace('%m', String(d.getMonth() + 1).padStart(2, '0'))
+    .replace('%d', String(d.getDate()).padStart(2, '0'))
+    .replace('%H', String(d.getHours()).padStart(2, '0'))
+    .replace('%M', String(d.getMinutes()).padStart(2, '0'))
+    .replace('%S', String(d.getSeconds()).padStart(2, '0'));
 }
 
 function FileIcon({ entry }: { entry: FileEntry }) {
@@ -43,8 +57,9 @@ function FileIcon({ entry }: { entry: FileEntry }) {
 }
 
 export const FileRow = React.memo(function FileRow({
-  entry, isCursor, isSelected, onClick, onDoubleClick, style,
+  entry, isCursor, isSelected, onClick, onDoubleClick, style, colSizeWidth, colDateWidth, dragPaths,
 }: Props) {
+  const { dateFormat, sizeUnit } = useConfigStore((s) => s.appearance);
   return (
     <div
       className={`file-row${isCursor ? ' cursor' : ''}${isSelected ? ' selected' : ''}`}
@@ -53,15 +68,21 @@ export const FileRow = React.memo(function FileRow({
       onDoubleClick={onDoubleClick}
       draggable
       onDragStart={(e) => {
-        e.dataTransfer.setData('text/plain', entry.path);
-        e.dataTransfer.setData('application/x-mac-filer-paths', JSON.stringify([entry.path]));
+        // HTML5 data for internal drops within this app
+        e.dataTransfer.setData('text/plain', dragPaths[0]);
+        e.dataTransfer.setData('application/x-mac-filer-paths', JSON.stringify(dragPaths));
+        // Native OS drag so external apps (Chrome, Finder, etc.) can receive real files
+        if (isTauri()) {
+          const label = dragPaths.length === 1 ? entry.name : `${dragPaths.length} items`;
+          tauriApi.startNativeDrag(dragPaths, label).catch(console.error);
+        }
       }}
     >
       <span className="file-select-indicator">{isSelected ? '✓' : ' '}</span>
       <FileIcon entry={entry} />
       <span className="file-name">{entry.name}{entry.is_symlink ? ' →' : ''}</span>
-      <span className="file-size">{entry.is_dir ? '—' : formatSize(entry.size)}</span>
-      <span className="file-date">{formatDate(entry.modified)}</span>
+      <span className="file-size" style={{ width: colSizeWidth }}>{entry.is_dir ? '—' : formatSize(entry.size, sizeUnit)}</span>
+      <span className="file-date" style={{ width: colDateWidth }}>{formatDate(entry.modified, dateFormat)}</span>
     </div>
   );
 });

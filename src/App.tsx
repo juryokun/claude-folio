@@ -14,6 +14,7 @@ import { KeybindingsHelp } from './components/help/KeybindingsHelp';
 import { useTabStore } from './store/tabStore';
 import { useFileStore } from './store/fileStore';
 import { useUiStore } from './store/uiStore';
+import { useConfigStore } from './store/configStore';
 import { useVimKeys } from './hooks/useVimKeys';
 import { useFileOps } from './hooks/useFileOps';
 import { tauriApi } from './lib/tauri';
@@ -30,9 +31,9 @@ async function getHomeDir(): Promise<string> {
 }
 
 export default function App() {
-  const { tabs, activeTab, navigateTo, openTab, closeTab, nextTab, prevTab, activeTabId } =
+  const { tabs, activeTab, navigateTo, openTab, closeTab, nextTab, prevTab, activeTabId, goBack, goForward } =
     useTabStore();
-  const { loadDir, setCursor, getPane, filteredEntries } = useFileStore();
+  const { loadDir, setCursor, getPane, filteredEntries, setSort } = useFileStore();
   const {
     showHidden, toggleHidden, setShowHelp, setShowSettings, setVimMode,
   } = useUiStore();
@@ -41,6 +42,9 @@ export default function App() {
   const fileOpsRef = useRef(fileOps);
   fileOpsRef.current = fileOps;
 
+  const loadConfig = useConfigStore((s) => s.load);
+  const keymap = useConfigStore((s) => s.keymap);
+
   // Resolve real home dir and navigate there on startup
   useEffect(() => {
     getHomeDir().then((home) => {
@@ -48,6 +52,7 @@ export default function App() {
       navigateTo(home);
     });
 
+    loadConfig();
     tauriApi.suppressDsStore().catch(() => {});
     tauriApi.check7zipInstalled().then(useUiStore.getState().setHas7zip).catch(() => {});
     tauriApi.checkZoxideInstalled().then(useUiStore.getState().setHasZoxide).catch(() => {});
@@ -139,19 +144,44 @@ export default function App() {
         case 'focus_path_bar':
           window.dispatchEvent(new CustomEvent('mac-filer:focus-path-bar'));
           break;
+        case 'focus_zoxide':
+          window.dispatchEvent(new CustomEvent('mac-filer:focus-zoxide'));
+          break;
+        case 'go_back': goBack(); break;
+        case 'go_forward': goForward(); break;
         case 'toggle_hidden':
           toggleHidden();
           break;
         case 'show_help':
           setShowHelp(true);
           break;
+        case 'add_bookmark':
+          ops.handleAddBookmark();
+          break;
+        case 'sort_name':
+          setSort(activeTabId, 'name', false);
+          break;
+        case 'sort_name_desc':
+          setSort(activeTabId, 'name', true);
+          break;
+        case 'sort_time':
+          setSort(activeTabId, 'time', false);
+          break;
+        case 'sort_time_desc':
+          setSort(activeTabId, 'time', true);
+          break;
+        case 'sort_reverse': {
+          const pane = getPane(activeTabId);
+          setSort(activeTabId, pane.sortKey, !pane.sortDesc);
+          break;
+        }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [activeTabId]
   );
 
-  useVimKeys(handleVimAction);
+  useVimKeys(handleVimAction, keymap);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

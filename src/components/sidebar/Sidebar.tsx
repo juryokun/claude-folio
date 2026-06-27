@@ -20,7 +20,26 @@ function getUsername(): string {
 export function Sidebar() {
   const { navigateTo, activeTab } = useTabStore();
   const { bookmarks, addBookmark, removeBookmark } = useBookmarkStore();
-  const { googleDrivePaths, setGoogleDrivePaths } = useUiStore();
+  const { googleDrivePaths, setGoogleDrivePaths, sidebarWidth, setSidebarWidth } = useUiStore();
+
+  const startResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+    const onMove = (ev: MouseEvent) => {
+      setSidebarWidth(Math.max(140, Math.min(480, startWidth + ev.clientX - startX)));
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
 
   const currentPath = activeTab().path;
 
@@ -43,7 +62,8 @@ export function Sidebar() {
   };
 
   return (
-    <div className="sidebar">
+    <div className="sidebar" style={{ width: sidebarWidth }}>
+      <div className="sidebar-resizer" onMouseDown={startResize} />
       <section className="sidebar-section">
         <div className="sidebar-section-title">よく使う場所</div>
         {FAVORITES.map((fav) => {
@@ -99,7 +119,7 @@ export function Sidebar() {
           </div>
         ))}
         {bookmarks.length === 0 && (
-          <div className="sidebar-hint">フォルダをドロップして追加</div>
+          <div className="sidebar-hint">B キーまたは :bm で追加</div>
         )}
       </section>
     </div>

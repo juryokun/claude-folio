@@ -37,6 +37,10 @@ export function SearchBar() {
         className="search-input"
         value={pane.filterQuery}
         onChange={(e) => setFilter(tab.id, e.target.value)}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
         onKeyDown={(e) => {
           if (e.key === 'Escape') {
             setFilter(tab.id, '');

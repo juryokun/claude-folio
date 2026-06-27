@@ -15,20 +15,30 @@ export function PathBar() {
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Exposed for Ctrl+L from vim keys
+  // Exposed for Ctrl+L / z key
   useEffect(() => {
-    const handler = (e: CustomEvent) => {
-      if (e.type === 'mac-filer:focus-path-bar') startEdit();
+    const handler = () => startEdit(currentPath);
+    const zoxideHandler = () => startEdit('');
+    window.addEventListener('mac-filer:focus-path-bar', handler);
+    window.addEventListener('mac-filer:focus-zoxide', zoxideHandler);
+    return () => {
+      window.removeEventListener('mac-filer:focus-path-bar', handler);
+      window.removeEventListener('mac-filer:focus-zoxide', zoxideHandler);
     };
-    window.addEventListener('mac-filer:focus-path-bar', handler as EventListener);
-    return () => window.removeEventListener('mac-filer:focus-path-bar', handler as EventListener);
   }, [currentPath]);
 
-  const startEdit = () => {
-    setInputValue(currentPath);
+  const startEdit = (initialValue: string) => {
+    setInputValue(initialValue);
     setEditing(true);
     setSuggestions([]);
-    setTimeout(() => inputRef.current?.select(), 0);
+    setSuggestionIndex(-1);
+    setTimeout(() => {
+      if (initialValue) {
+        inputRef.current?.select();
+      } else {
+        inputRef.current?.focus();
+      }
+    }, 0);
   };
 
   const commitEdit = (value: string) => {
@@ -41,26 +51,30 @@ export function PathBar() {
 
   const handleInputChange = async (value: string) => {
     setInputValue(value);
-    setSuggestionIndex(-1);
 
     if (!value) {
       setSuggestions([]);
+      setSuggestionIndex(-1);
       return;
     }
 
     // Absolute path: show filesystem completions (simplified: just use zoxide)
     if (value.startsWith('/') || value.startsWith('~')) {
       setSuggestions([]);
+      setSuggestionIndex(-1);
       return;
     }
 
-    // Zoxide query
+    // Zoxide query — auto-select first result
     if (hasZoxide) {
       try {
         const results = await tauriApi.zoxideQuery(value);
-        setSuggestions(results.slice(0, 8));
+        const trimmed = results.slice(0, 8);
+        setSuggestions(trimmed);
+        setSuggestionIndex(trimmed.length > 0 ? 0 : -1);
       } catch {
         setSuggestions([]);
+        setSuggestionIndex(-1);
       }
     }
   };
@@ -69,7 +83,15 @@ export function PathBar() {
     if (e.key === 'Escape') {
       setEditing(false);
       setSuggestions([]);
+      setSuggestionIndex(-1);
       setVimMode('NORMAL');
+      return;
+    }
+    if (e.ctrlKey && e.key === 'u') {
+      e.preventDefault();
+      setInputValue('');
+      setSuggestions([]);
+      setSuggestionIndex(-1);
       return;
     }
     if (e.key === 'Enter') {
@@ -78,14 +100,16 @@ export function PathBar() {
       commitEdit(val);
       return;
     }
-    if (e.key === 'ArrowDown') {
+    const isCtrlJ = e.ctrlKey && e.key === 'j';
+    const isCtrlK = e.ctrlKey && e.key === 'k';
+    if (e.key === 'ArrowDown' || isCtrlJ) {
       e.preventDefault();
       setSuggestionIndex((i) => Math.min(i + 1, suggestions.length - 1));
       return;
     }
-    if (e.key === 'ArrowUp') {
+    if (e.key === 'ArrowUp' || isCtrlK) {
       e.preventDefault();
-      setSuggestionIndex((i) => Math.max(i - 1, -1));
+      setSuggestionIndex((i) => Math.max(i - 1, 0));
       return;
     }
   };
@@ -101,6 +125,10 @@ export function PathBar() {
             className="path-input"
             value={inputValue}
             autoFocus
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onBlur={() => {
@@ -126,7 +154,7 @@ export function PathBar() {
           )}
         </div>
       ) : (
-        <div className="path-breadcrumb" onClick={startEdit}>
+        <div className="path-breadcrumb" onClick={() => startEdit(currentPath)}>
           <span
             className="path-segment"
             onClick={(e) => { e.stopPropagation(); navigateTo('/'); }}
@@ -137,7 +165,7 @@ export function PathBar() {
             const segPath = '/' + segments.slice(0, i + 1).join('/');
             return (
               <span key={segPath}>
-                <span className="path-sep">/</span>
+                {i > 0 && <span className="path-sep">/</span>}
                 <span
                   className="path-segment"
                   onClick={(e) => { e.stopPropagation(); navigateTo(segPath); }}

@@ -80,13 +80,26 @@ body {
 
 /* Sidebar */
 .sidebar {
-  width: var(--sidebar-width);
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
   overflow-y: auto;
   flex-shrink: 0;
   padding: 8px 0;
+  position: relative;
+  min-width: 140px;
+  max-width: 480px;
 }
+
+.sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+}
+.sidebar-resizer:hover { background: var(--text-accent); opacity: 0.4; }
 
 .sidebar-section { margin-bottom: 8px; }
 .sidebar-section-title {
@@ -187,6 +200,17 @@ body {
 
 .tab-content { flex: 1; overflow: hidden; }
 
+/* Full-height column separator lines (one per resizable column) */
+.col-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* File pane */
 .file-pane {
   flex: 1;
@@ -201,6 +225,58 @@ body {
 }
 .file-pane.error { color: #f48771; }
 .empty-dir { padding: 16px; color: var(--text-dim); text-align: center; }
+
+/* File list header */
+.file-list-header {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  height: 26px;
+  gap: 6px;                      /* same as .file-row → columns align perfectly */
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-dim);
+  user-select: none;
+}
+
+.header-col { font-weight: 600; }
+.sortable { cursor: pointer; }
+.sortable:hover { color: var(--text); }
+.sort-indicator { margin-left: 2px; font-size: 10px; }
+.sort-indicator.active { color: var(--text-accent); }
+.sort-indicator.inactive { opacity: 0.3; }
+
+/* Header-only: allow resize handles to overflow into the 6px flex gap */
+.file-list-header .file-size,
+.file-list-header .file-date {
+  overflow: visible;
+  position: relative;
+}
+
+/* Resize handle — absolute, centered over the 6px gap to its left.
+   gap=6px: center is 3px before column left edge.
+   left: -7px, width: 8px → center = -7 + 4 = -3 from left edge = 3px into the gap. */
+.col-resizer {
+  position: absolute;
+  top: 0;
+  left: -7px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+.col-resizer::after {
+  content: '';
+  width: 1px;
+  background: var(--border);
+  transition: background 0.15s, width 0.15s;
+}
+.col-resizer:hover::after { background: var(--text-accent); width: 2px; }
 
 /* File row */
 .file-row {
@@ -220,8 +296,8 @@ body {
 .file-select-indicator { width: 14px; color: var(--text-accent); font-size: 11px; }
 .file-icon { width: 20px; text-align: center; font-size: 14px; }
 .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-size { width: 70px; text-align: right; color: var(--text-dim); font-size: 11px; }
-.file-date { width: 90px; text-align: right; color: var(--text-dim); font-size: 11px; margin-left: 8px; }
+.file-size { text-align: right; color: var(--text-dim); font-size: 11px; flex-shrink: 0; overflow: hidden; }
+.file-date { text-align: right; color: var(--text-dim); font-size: 11px; flex-shrink: 0; overflow: hidden; }
 
 /* Search bar */
 .search-bar {

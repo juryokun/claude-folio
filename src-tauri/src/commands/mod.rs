@@ -1,3 +1,4 @@
+pub mod config;
 pub mod fs;
 pub mod trash;
 pub mod clipboard;

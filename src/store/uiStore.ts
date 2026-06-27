@@ -19,6 +19,7 @@ interface UiStore {
   terminalEmulator: TerminalEmulator;
   googleDrivePaths: string[];
   sidebarWidth: number;
+  columnWidths: { size: number; date: number };
   statusMessage: string | null;
 
   setVimMode: (mode: VimMode) => void;
@@ -36,6 +37,7 @@ interface UiStore {
   setTerminalEmulator: (v: TerminalEmulator) => void;
   setGoogleDrivePaths: (paths: string[]) => void;
   setSidebarWidth: (w: number) => void;
+  setColumnWidths: (w: Partial<{ size: number; date: number }>) => void;
 }
 
 export const useUiStore = create<UiStore>()(
@@ -57,6 +59,7 @@ export const useUiStore = create<UiStore>()(
       terminalEmulator: 'terminal',
       googleDrivePaths: [],
       sidebarWidth: 220,
+      columnWidths: { size: 70, date: 90 },
       statusMessage: null,
 
       setVimMode: (mode) => set({ vimMode: mode }),
@@ -78,6 +81,7 @@ export const useUiStore = create<UiStore>()(
       setTerminalEmulator: (v) => set({ terminalEmulator: v }),
       setGoogleDrivePaths: (paths) => set({ googleDrivePaths: paths }),
       setSidebarWidth: (w) => set({ sidebarWidth: w }),
+      setColumnWidths: (w) => set((s) => ({ columnWidths: { ...s.columnWidths, ...w } })),
     }),
     {
       name: 'mac-filer-ui',
@@ -85,6 +89,7 @@ export const useUiStore = create<UiStore>()(
         showHidden: s.showHidden,
         terminalEmulator: s.terminalEmulator,
         sidebarWidth: s.sidebarWidth,
+        columnWidths: s.columnWidths,
       }),
     }
   )

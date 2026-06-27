@@ -1,8 +1,8 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { FileRow } from './FileRow';
 import { useTabStore } from '../../store/tabStore';
-import { useFileStore } from '../../store/fileStore';
+import { useFileStore, type SortKey } from '../../store/fileStore';
 import { useUiStore } from '../../store/uiStore';
 import { tauriApi } from '../../lib/tauri';
 
@@ -10,10 +10,35 @@ interface Props {
   tabId: string;
 }
 
+function SortIndicator({ active, desc }: { active: boolean; desc: boolean }) {
+  if (!active) return <span className="sort-indicator inactive">↕</span>;
+  return <span className="sort-indicator active">{desc ? '↓' : '↑'}</span>;
+}
+
 export function FilePane({ tabId }: Props) {
   const { tabs, activeTabId, navigateTo } = useTabStore();
-  const { getPane, filteredEntries, setCursor, loadDir } = useFileStore();
-  const { showHidden } = useUiStore();
+  const { getPane, filteredEntries, setCursor, loadDir, setSort } = useFileStore();
+  const { showHidden, columnWidths, setColumnWidths } = useUiStore();
+
+  const startColResize = useCallback((e: React.MouseEvent, col: 'size' | 'date') => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startWidth = columnWidths[col];
+    const onMove = (ev: MouseEvent) => {
+      setColumnWidths({ [col]: Math.max(40, startWidth - (ev.clientX - startX)) });
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, [columnWidths, setColumnWidths]);
 
   const tab = tabs.find((t) => t.id === tabId)!;
   const pane = getPane(tabId);
@@ -70,6 +95,14 @@ export function FilePane({ tabId }: Props) {
     }
   };
 
+  const handleSortClick = (key: SortKey) => {
+    if (pane.sortKey === key) {
+      setSort(tabId, key, !pane.sortDesc);
+    } else {
+      setSort(tabId, key, false);
+    }
+  };
+
   if (pane.loading) {
     return <div className="file-pane loading">読み込み中...</div>;
   }
@@ -79,11 +112,42 @@ export function FilePane({ tabId }: Props) {
 
   return (
     <div
-      className={`file-pane${isActive ? ' active' : ''}`}
-      ref={parentRef}
-      style={{ overflow: 'auto', flex: 1, minHeight: 0 }}
+      className={`file-pane-wrapper${isActive ? ' active' : ''}`}
+      style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
+    >
+      {/* Full-height separator lines. Right-side calculation:
+          padding=8, date=W_d → sep2 center = 8 + W_d + 3 = W_d+11
+          + gap=6 + size=W_s       → sep1 center = W_d+11 + 6 + W_s = W_d+W_s+17 */}
+      <div className="col-line" style={{ right: columnWidths.date + columnWidths.size + 17 }} />
+      <div className="col-line" style={{ right: columnWidths.date + 11 }} />
+      <div className="file-list-header">
+        <span className="file-select-indicator" />
+        <span className="file-icon" />
+        <span
+          className="file-name header-col sortable"
+          onClick={() => handleSortClick('name')}
+        >
+          名前 <SortIndicator active={pane.sortKey === 'name'} desc={pane.sortDesc} />
+        </span>
+        <span className="file-size header-col" style={{ width: columnWidths.size }}>
+          サイズ
+          <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'size')} />
+        </span>
+        <span
+          className="file-date header-col sortable"
+          onClick={() => handleSortClick('time')}
+          style={{ width: columnWidths.date }}
+        >
+          更新日 <SortIndicator active={pane.sortKey === 'time'} desc={pane.sortDesc} />
+          <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'date')} />
+        </span>
+      </div>
+    <div
+      className="file-pane"
+      ref={parentRef}
+      style={{ overflow: 'auto', flex: 1, minHeight: 0 }}
     >
       <div
         style={{ height: `${virtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}
@@ -97,6 +161,13 @@ export function FilePane({ tabId }: Props) {
               entry={entry}
               isCursor={isActive && vItem.index === pane.cursor}
               isSelected={pane.selected.has(entry.path)}
+              colSizeWidth={columnWidths.size}
+              colDateWidth={columnWidths.date}
+              dragPaths={
+                pane.selected.size > 0 && pane.selected.has(entry.path)
+                  ? [...pane.selected]
+                  : [entry.path]
+              }
               onClick={() => {
                 if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
                 setCursor(tabId, vItem.index);
@@ -116,6 +187,7 @@ export function FilePane({ tabId }: Props) {
       {entries.length === 0 && !pane.loading && (
         <div className="empty-dir">（空のフォルダ）</div>
       )}
+    </div>
     </div>
   );
 }

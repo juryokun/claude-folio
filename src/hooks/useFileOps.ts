@@ -4,6 +4,7 @@ import { tauriApi } from '../lib/tauri';
 import { useTabStore } from '../store/tabStore';
 import { useFileStore } from '../store/fileStore';
 import { useUiStore } from '../store/uiStore';
+import { useBookmarkStore } from '../store/bookmarkStore';
 
 export function useFileOps() {
   const { activeTab, navigateTo } = useTabStore();
@@ -11,6 +12,7 @@ export function useFileOps() {
     useFileStore();
   const { showHidden, terminalEmulator, setShowRename, setShowNewDir, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage } =
     useUiStore();
+  const { addBookmark } = useBookmarkStore();
 
   const tab = activeTab();
   const tabId = tab.id;
@@ -141,6 +143,12 @@ export function useFileOps() {
     setVimMode('COMMAND');
   }, [setShowCommandPalette, setVimMode]);
 
+  const handleAddBookmark = useCallback(() => {
+    const label = path.basename(currentPath) || currentPath;
+    addBookmark(label, currentPath);
+    showStatusMessage(`🔖 ブックマークに追加: ${label}`);
+  }, [currentPath, addBookmark, showStatusMessage]);
+
   return {
     cursorEntry,
     entries,
@@ -159,6 +167,7 @@ export function useFileOps() {
     handleToggleSelect,
     handleEnterSearch,
     handleEnterCommand,
+    handleAddBookmark,
     reload,
   };
 }
