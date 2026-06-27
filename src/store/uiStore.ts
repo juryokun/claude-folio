@@ -13,6 +13,8 @@ interface UiStore {
   confirmCallback: (() => void) | null;
   showCommandPalette: boolean;
   renameTarget: string | null;
+  showOpenWith: boolean;
+  openWithTarget: string | null;
   has7zip: boolean;
   hasZoxide: boolean;
   terminalApp: string;
@@ -37,6 +39,7 @@ interface UiStore {
   showConfirmDialog: (message: string, onConfirm: () => void) => void;
   closeConfirm: () => void;
   setShowCommandPalette: (v: boolean) => void;
+  setShowOpenWith: (v: boolean, target?: string) => void;
   setHas7zip: (v: boolean) => void;
   setHasZoxide: (v: boolean) => void;
   setGoogleDrivePaths: (paths: string[]) => void;
@@ -57,6 +60,8 @@ export const useUiStore = create<UiStore>()(
       confirmCallback: null,
       showCommandPalette: false,
       renameTarget: null,
+      showOpenWith: false,
+      openWithTarget: null,
       has7zip: false,
       hasZoxide: false,
       terminalApp: '',
@@ -85,6 +90,7 @@ export const useUiStore = create<UiStore>()(
         set({ showConfirm: true, confirmMessage: message, confirmCallback: onConfirm }),
       closeConfirm: () => set({ showConfirm: false, confirmMessage: '', confirmCallback: null }),
       setShowCommandPalette: (v) => set({ showCommandPalette: v }),
+      setShowOpenWith: (v, target) => set({ showOpenWith: v, openWithTarget: target ?? null }),
       setHas7zip: (v) => set({ has7zip: v }),
       setHasZoxide: (v) => set({ hasZoxide: v }),
       setGoogleDrivePaths: (paths) => set({ googleDrivePaths: paths }),

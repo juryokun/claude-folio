@@ -31,6 +31,15 @@ export const tauriApi = {
   openFile: (path: string) =>
     invoke<void>('open_file', { path }),
 
+  openWithApp: (path: string, app: string) =>
+    invoke<void>('open_with_app', { path, app }),
+
+  listApplications: () =>
+    invoke<string[]>('list_applications'),
+
+  openWithCommand: (path: string, cmd: string) =>
+    invoke<void>('open_with_editor', { path, editorCmd: cmd }),
+
   openWithEditor: (path: string, editorCmd: string) =>
     invoke<void>('open_with_editor', { path, editorCmd }),
 
@@ -63,6 +72,18 @@ export const tauriApi = {
 
   extract7zip: (archive: string, dest: string) =>
     invoke<void>('extract_7zip', { archive, dest }),
+
+  watchDir: (path: string) =>
+    invoke<void>('watch_dir', { path }),
+
+  unwatchDir: () =>
+    invoke<void>('unwatch_dir'),
+
+  loadBookmarks: () =>
+    invoke<{ label: string; path: string }[]>('load_bookmarks'),
+
+  saveBookmarks: (bookmarks: { label: string; path: string }[]) =>
+    invoke<void>('save_bookmarks', { bookmarks }),
 
   loadConfig: () =>
     invoke<{ appearance?: { date_format?: string; size_unit?: string }; editor?: { command?: string }; terminal?: { app?: string; command?: string }; keymap?: Record<string, string[]> }>('load_config'),

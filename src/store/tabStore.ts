@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Tab } from '../types';
+import { tauriApi } from '../lib/tauri';
 
 // Use the HOME environment variable available via Tauri's shell context,
 // falling back to a safe default. Will be updated by App.tsx on mount.
@@ -76,6 +77,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
   },
 
   navigateTo: (path) => {
+    tauriApi.zoxideAdd(path).catch(() => {});
     set((s) => ({
       tabs: s.tabs.map((t) => {
         if (t.id !== s.activeTabId) return t;

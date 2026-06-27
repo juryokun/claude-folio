@@ -1,38 +1,46 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import type { Bookmark } from '../types';
+import { tauriApi } from '../lib/tauri';
 
 interface BookmarkStore {
   bookmarks: Bookmark[];
-  addBookmark: (label: string, path: string) => void;
-  removeBookmark: (id: string) => void;
-  reorderBookmarks: (from: number, to: number) => void;
+  loadBookmarks: () => Promise<void>;
+  addBookmark: (label: string, path: string) => Promise<void>;
+  removeBookmark: (id: string) => Promise<void>;
+  reorderBookmarks: (from: number, to: number) => Promise<void>;
 }
 
-export const useBookmarkStore = create<BookmarkStore>()(
-  persist(
-    (set) => ({
-      bookmarks: [],
+async function persist(bookmarks: Bookmark[]) {
+  await tauriApi.saveBookmarks(bookmarks.map(({ label, path }) => ({ label, path })));
+}
 
-      addBookmark: (label, path) => {
-        set((s) => ({
-          bookmarks: [...s.bookmarks, { id: crypto.randomUUID(), label, path }],
-        }));
-      },
+export const useBookmarkStore = create<BookmarkStore>((set, get) => ({
+  bookmarks: [],
 
-      removeBookmark: (id) => {
-        set((s) => ({ bookmarks: s.bookmarks.filter((b) => b.id !== id) }));
-      },
+  loadBookmarks: async () => {
+    const entries = await tauriApi.loadBookmarks();
+    const bookmarks = entries.map((e) => ({ id: crypto.randomUUID(), label: e.label, path: e.path }));
+    set({ bookmarks });
+  },
 
-      reorderBookmarks: (from, to) => {
-        set((s) => {
-          const bm = [...s.bookmarks];
-          const [moved] = bm.splice(from, 1);
-          bm.splice(to, 0, moved);
-          return { bookmarks: bm };
-        });
-      },
-    }),
-    { name: 'mac-filer-bookmarks' }
-  )
-);
+  addBookmark: async (label, path) => {
+    const bookmark: Bookmark = { id: crypto.randomUUID(), label, path };
+    const bookmarks = [...get().bookmarks, bookmark];
+    set({ bookmarks });
+    await persist(bookmarks);
+  },
+
+  removeBookmark: async (id) => {
+    const bookmarks = get().bookmarks.filter((b) => b.id !== id);
+    set({ bookmarks });
+    await persist(bookmarks);
+  },
+
+  reorderBookmarks: async (from, to) => {
+    const bm = [...get().bookmarks];
+    const [moved] = bm.splice(from, 1);
+    bm.splice(to, 0, moved);
+    set({ bookmarks: bm });
+    await persist(bm);
+  },
+}));

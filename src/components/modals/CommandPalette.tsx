@@ -68,7 +68,7 @@ export function CommandPalette() {
         }
         case 'bm': {
           const label = args.join(' ') || path.basename(tab.path);
-          addBookmark(label, tab.path);
+          await addBookmark(label, tab.path);
           break;
         }
         case 'sort':

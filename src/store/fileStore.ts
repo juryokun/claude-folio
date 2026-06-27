@@ -21,7 +21,7 @@ interface FileStore {
   clipboard: ClipboardState | null;
 
   getPane: (tabId: string) => PaneState;
-  loadDir: (tabId: string, path: string, showHidden: boolean) => Promise<void>;
+  loadDir: (tabId: string, path: string, showHidden: boolean, preserveCursor?: boolean) => Promise<void>;
   setPendingFocusName: (tabId: string, name: string | null) => void;
   setCursor: (tabId: string, index: number) => void;
   toggleSelect: (tabId: string, path: string) => void;
@@ -50,18 +50,31 @@ export const useFileStore = create<FileStore>((set, get) => ({
 
   getPane: (tabId) => get().panes[tabId] ?? defaultPane(),
 
-  loadDir: async (tabId, path, showHidden) => {
+  loadDir: async (tabId, path, showHidden, preserveCursor = false) => {
     if (!isTauri()) return;
-    set((s) => ({
-      panes: {
-        ...s.panes,
-        [tabId]: { ...(s.panes[tabId] ?? defaultPane()), loading: true, error: null },
-      },
-    }));
+    // When preserving cursor, skip the loading spinner to avoid flicker
+    if (!preserveCursor) {
+      set((s) => ({
+        panes: {
+          ...s.panes,
+          [tabId]: { ...(s.panes[tabId] ?? defaultPane()), loading: true, error: null },
+        },
+      }));
+    }
     try {
       const entries = await tauriApi.listDir(path, showHidden);
       set((s) => {
         const pane = s.panes[tabId] ?? defaultPane();
+        if (preserveCursor) {
+          // Keep cursor, selection, and filter as-is; just update the entries
+          const clampedCursor = Math.min(pane.cursor, Math.max(0, entries.length - 1));
+          return {
+            panes: {
+              ...s.panes,
+              [tabId]: { ...pane, entries, loading: false, error: null, cursor: clampedCursor },
+            },
+          };
+        }
         const focusName = pane.pendingFocusName;
         // Find cursor in the sorted order, not raw order
         const { sortKey, sortDesc } = pane;
@@ -91,8 +104,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
           },
         };
       });
-      // Keep zoxide in sync (fire and forget)
-      tauriApi.zoxideAdd(path).catch(() => {});
+
     } catch (e) {
       set((s) => ({
         panes: {

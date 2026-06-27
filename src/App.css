@@ -184,12 +184,31 @@ body {
   border: 1px solid var(--border);
   border-top: none;
   z-index: 100;
-  max-height: 200px;
+  max-height: 260px;
   overflow-y: auto;
 }
 
-.path-suggestion { padding: 5px 8px; cursor: pointer; }
+.path-suggestion { padding: 5px 8px; cursor: pointer; font-size: 13px; }
 .path-suggestion:hover, .path-suggestion.active { background: var(--bg-active); }
+.path-suggestion--empty { color: var(--text-dim); cursor: default; }
+.path-suggestion--empty:hover { background: transparent; }
+
+.path-suggestion--bookmark {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+}
+.path-suggestion-label { font-size: 13px; color: var(--text); }
+.path-suggestion-path {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.path-input--search::placeholder { color: var(--text-dim); }
 
 /* File area */
 .file-area {
@@ -365,7 +384,8 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-.modal-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+.modal-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+.modal-subtitle { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
 
 .modal-input, .command-input {
   width: 100%;
@@ -421,6 +441,43 @@ kbd {
 
 /* Settings modal */
 .settings-modal { max-width: 400px; }
+
+/* OpenWithModal */
+.open-with-modal { min-width: 360px; }
+.open-with-input-wrap { position: relative; }
+.open-with-candidates {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+.open-with-candidates li {
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 13px;
+}
+.open-with-candidates li:hover,
+.open-with-candidates li.selected {
+  background: var(--bg-hover);
+  color: var(--text-accent);
+}
+.open-with-mode-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  padding: 0 2px;
+}
 .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .setting-label { color: var(--text); }
 .setting-row select {
@@ -430,4 +487,73 @@ kbd {
   padding: 4px 8px;
   border-radius: 4px;
   outline: none;
+}
+
+/* BookmarkPicker */
+.bookmark-picker {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 520px;
+  max-height: 420px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.bookmark-picker-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.bookmark-picker-icon { font-size: 16px; flex-shrink: 0; }
+.bookmark-picker-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 14px;
+}
+.bookmark-picker-input::placeholder { color: var(--text-dim); }
+.bookmark-picker-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.bookmark-picker-empty {
+  padding: 16px 14px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.bookmark-picker-item {
+  display: flex;
+  flex-direction: column;
+  padding: 7px 14px;
+  cursor: pointer;
+  gap: 2px;
+}
+.bookmark-picker-item.selected,
+.bookmark-picker-item:hover {
+  background: var(--bg-hover);
+}
+.bookmark-picker-label {
+  font-size: 13px;
+  color: var(--text);
+}
+.bookmark-picker-path {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bookmark-picker-footer {
+  padding: 6px 14px;
+  font-size: 11px;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
 }

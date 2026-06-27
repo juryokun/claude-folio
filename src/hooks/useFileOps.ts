@@ -10,7 +10,7 @@ export function useFileOps() {
   const { activeTab, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
     useFileStore();
-  const { showHidden, terminalApp, terminalCommand, setShowRename, setShowNewDir, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage } =
+  const { showHidden, terminalApp, terminalCommand, setShowRename, setShowNewDir, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage, setShowOpenWith } =
     useUiStore();
   const { addBookmark } = useBookmarkStore();
 
@@ -28,8 +28,8 @@ export function useFileOps() {
     return [];
   }, [pane.selected, cursorEntry]);
 
-  const reload = useCallback(() => {
-    loadDir(tabId, currentPath, showHidden);
+  const reload = useCallback((preserveCursor = false) => {
+    loadDir(tabId, currentPath, showHidden, preserveCursor);
   }, [tabId, currentPath, showHidden, loadDir]);
 
   const handleNavigateInto = useCallback(() => {
@@ -136,6 +136,11 @@ export function useFileOps() {
     }
   }, [cursorEntry]);
 
+  const handleOpenWith = useCallback(() => {
+    if (!cursorEntry) return;
+    setShowOpenWith(true, cursorEntry.path);
+  }, [cursorEntry, setShowOpenWith]);
+
   const handleRename = useCallback(() => {
     if (!cursorEntry) return;
     setShowRename(true, cursorEntry.path);
@@ -161,9 +166,9 @@ export function useFileOps() {
     setVimMode('COMMAND');
   }, [setShowCommandPalette, setVimMode]);
 
-  const handleAddBookmark = useCallback(() => {
+  const handleAddBookmark = useCallback(async () => {
     const label = path.basename(currentPath) || currentPath;
-    addBookmark(label, currentPath);
+    await addBookmark(label, currentPath);
     showStatusMessage(`🔖 ブックマークに追加: ${label}`);
   }, [currentPath, addBookmark, showStatusMessage]);
 
@@ -181,6 +186,7 @@ export function useFileOps() {
     handleCopyName,
     handleOpenTerminal,
     handleOpenTerminalHere,
+    handleOpenWith,
     handleOpenEditor,
     handleRename,
     handleNewDir,

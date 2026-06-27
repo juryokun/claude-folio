@@ -16,6 +16,7 @@ export type VimAction =
   | 'copy_name'
   | 'open_terminal'
   | 'open_terminal_here'
+  | 'open_with_app'
   | 'open_editor'
   | 'toggle_sidebar'
   | 'rename'
@@ -36,7 +37,9 @@ export type VimAction =
   | 'sort_name_desc'
   | 'sort_time'
   | 'sort_time_desc'
-  | 'sort_reverse';
+  | 'sort_reverse'
+  | 'reload'
+  | 'open_bookmark_picker';
 
 export interface KeyBinding {
   keys: string[]; // sequence of key names
@@ -66,9 +69,11 @@ export const NORMAL_KEYMAP: KeyBinding[] = [
   { keys: ['y', 'n'],   action: 'copy_name' },
   { keys: ['o'],         action: 'open_terminal' },
   { keys: ['T'],         action: 'open_terminal_here' },
+  { keys: ['O'],         action: 'open_with_app' },
   { keys: ['e'],         action: 'open_editor' },
   { keys: ['\\'],        action: 'toggle_sidebar' },
   { keys: ['r'],         action: 'rename' },
+  { keys: ['R'],         action: 'reload' },
   { keys: ['a'],         action: 'new_dir' },
   { keys: ['t'],         action: 'new_tab' },
   { keys: [']'],         action: 'next_tab' },
@@ -79,6 +84,7 @@ export const NORMAL_KEYMAP: KeyBinding[] = [
   { keys: ['H'],         action: 'go_back' },
   { keys: ['L'],         action: 'go_forward' },
   { keys: ['B'],         action: 'add_bookmark' },
+  { keys: ['b'],         action: 'open_bookmark_picker' },
   { keys: ['s', 'n'],   action: 'sort_name' },
   { keys: ['s', 'N'],   action: 'sort_name_desc' },
   { keys: ['s', 't'],   action: 'sort_time' },
@@ -107,9 +113,11 @@ export const KEYBINDING_DOCS: Array<{ keys: string; description: string }> = [
   { keys: '/',               description: 'インクリメンタルサーチ' },
   { keys: ':',               description: 'コマンドパレット' },
   { keys: 'r',               description: 'リネーム' },
+  { keys: 'R',               description: 'ディレクトリを再読み込み' },
   { keys: 'a',               description: '新規ディレクトリ作成' },
   { keys: 'o',               description: 'ファイルを実行 / ディレクトリはターミナルを開く' },
   { keys: 'T',               description: 'カレントディレクトリをターミナルで開く' },
+  { keys: 'O',               description: 'アプリを指定してファイルを開く' },
   { keys: 'e',               description: 'エディタでファイルを開く' },
   { keys: '\\',              description: 'サイドバーの表示切替' },
   { keys: 't',               description: '新規タブ' },
@@ -118,6 +126,7 @@ export const KEYBINDING_DOCS: Array<{ keys: string; description: string }> = [
   { keys: 'Ctrl+L',          description: 'パスバーにフォーカス' },
   { keys: 'z',               description: 'zoxide で移動先を検索' },
   { keys: '?',               description: 'キーバインド一覧を表示' },
+  { keys: 'b',               description: 'ブックマーク検索（パスバー）' },
   { keys: 'B',               description: '現在のディレクトリをブックマークに追加' },
   { keys: 'sn',              description: '名前でソート（昇順）' },
   { keys: 'sN',              description: '名前でソート（降順）' },

@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
+import { listen } from '@tauri-apps/api/event';
 import { TabBar } from './components/tabs/TabBar';
 import { Sidebar } from './components/sidebar/Sidebar';
 import { FilePane } from './components/pane/FilePane';
@@ -9,11 +10,13 @@ import { RenameModal } from './components/modals/RenameModal';
 import { NewDirModal } from './components/modals/NewDirModal';
 import { ConfirmModal } from './components/modals/ConfirmModal';
 import { CommandPalette } from './components/modals/CommandPalette';
+import { OpenWithModal } from './components/modals/OpenWithModal';
 import { KeybindingsHelp } from './components/help/KeybindingsHelp';
 import { useTabStore } from './store/tabStore';
 import { useFileStore } from './store/fileStore';
 import { useUiStore } from './store/uiStore';
 import { useConfigStore } from './store/configStore';
+import { useBookmarkStore } from './store/bookmarkStore';
 import { useVimKeys } from './hooks/useVimKeys';
 import { useFileOps } from './hooks/useFileOps';
 import { tauriApi } from './lib/tauri';
@@ -43,6 +46,7 @@ export default function App() {
 
   const loadConfig = useConfigStore((s) => s.load);
   const keymap = useConfigStore((s) => s.keymap);
+  const loadBookmarks = useBookmarkStore((s) => s.loadBookmarks);
 
   // Resolve real home dir and navigate there on startup
   useEffect(() => {
@@ -52,6 +56,7 @@ export default function App() {
     });
 
     loadConfig();
+    loadBookmarks().catch(() => {});
     tauriApi.suppressDsStore().catch(() => {});
     tauriApi.check7zipInstalled().then(useUiStore.getState().setHas7zip).catch(() => {});
     tauriApi.checkZoxideInstalled().then(useUiStore.getState().setHasZoxide).catch(() => {});
@@ -63,6 +68,28 @@ export default function App() {
   useEffect(() => {
     loadDir(currentTabId, currentTabPath, showHidden);
   }, [currentTabId, currentTabPath, showHidden]);
+
+  // Watch active directory for external changes; debounce to avoid rapid reloads
+  const reloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showHiddenRef = useRef(showHidden);
+  showHiddenRef.current = showHidden;
+
+  useEffect(() => {
+    tauriApi.watchDir(currentTabPath).catch(() => {});
+
+    const unlisten = listen('mac-filer:dir-changed', () => {
+      if (reloadTimerRef.current) clearTimeout(reloadTimerRef.current);
+      reloadTimerRef.current = setTimeout(() => {
+        const tab = useTabStore.getState().activeTab();
+        loadDir(tab.id, tab.path, showHiddenRef.current, true);
+      }, 300);
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+      if (reloadTimerRef.current) clearTimeout(reloadTimerRef.current);
+    };
+  }, [currentTabPath]);
 
   const handleVimAction = useCallback(
     (action: VimAction) => {
@@ -125,6 +152,9 @@ export default function App() {
         case 'open_terminal_here':
           ops.handleOpenTerminalHere();
           break;
+        case 'open_with_app':
+          ops.handleOpenWith();
+          break;
         case 'open_editor':
           ops.handleOpenEditor();
           break;
@@ -157,6 +187,10 @@ export default function App() {
           break;
         case 'go_back': goBack(); break;
         case 'go_forward': goForward(); break;
+        case 'reload':
+          ops.reload(true);
+          useUiStore.getState().showStatusMessage('再読み込みしました');
+          break;
         case 'toggle_hidden':
           toggleHidden();
           break;
@@ -165,6 +199,9 @@ export default function App() {
           break;
         case 'add_bookmark':
           ops.handleAddBookmark();
+          break;
+        case 'open_bookmark_picker':
+          window.dispatchEvent(new CustomEvent('mac-filer:focus-bookmarks'));
           break;
         case 'sort_name':
           setSort(activeTabId, 'name', false);
@@ -231,6 +268,7 @@ export default function App() {
       <NewDirModal />
       <ConfirmModal />
       <CommandPalette />
+      <OpenWithModal />
       <KeybindingsHelp />
     </div>
   );
