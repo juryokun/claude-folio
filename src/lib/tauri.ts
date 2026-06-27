@@ -10,8 +10,11 @@ export const tauriApi = {
   renameFile: (from: string, to: string) =>
     invoke<void>('rename_file', { from, to }),
 
-  copyFiles: (sources: string[], dest: string) =>
-    invoke<void>('copy_files', { sources, dest }),
+  checkCopyConflicts: (sources: string[], dest: string) =>
+    invoke<string[]>('check_copy_conflicts', { sources, dest }),
+
+  copyFiles: (sources: string[], dest: string, strategy: 'overwrite' | 'rename' = 'rename') =>
+    invoke<void>('copy_files', { sources, dest, strategy }),
 
   moveFiles: (sources: string[], dest: string) =>
     invoke<void>('move_files', { sources, dest }),

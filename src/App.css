@@ -415,8 +415,41 @@ body {
   cursor: pointer;
   font-size: 13px;
 }
-.modal-actions button:hover { background: var(--bg-hover); }
+.modal-actions button:hover,
+.modal-actions .modal-btn:hover { background: var(--bg-hover); }
 .modal-actions button.primary { background: var(--bg-active); border-color: var(--text-accent); color: white; }
+
+.modal-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+}
+.modal-btn:hover { background: var(--bg-hover); }
+.modal-btn--danger { border-color: #c0392b; color: #e74c3c; }
+.modal-btn--danger:hover { background: rgba(231, 76, 60, 0.15); }
+
+.modal-body { margin: 8px 0 0; }
+.conflict-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.conflict-item {
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--text);
+  padding: 2px 0;
+}
+.conflict-more { color: var(--text-dim); }
 
 /* Command palette */
 .command-palette { padding: 12px; }

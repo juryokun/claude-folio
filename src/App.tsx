@@ -12,6 +12,7 @@ import { NewFileModal } from './components/modals/NewFileModal';
 import { ConfirmModal } from './components/modals/ConfirmModal';
 import { CommandPalette } from './components/modals/CommandPalette';
 import { OpenWithModal } from './components/modals/OpenWithModal';
+import { CopyConflictModal } from './components/modals/CopyConflictModal';
 import { PreviewPanel } from './components/preview/PreviewPanel';
 import { KeybindingsHelp } from './components/help/KeybindingsHelp';
 import { useTabStore } from './store/tabStore';
@@ -288,6 +289,7 @@ export default function App() {
       <ConfirmModal />
       <CommandPalette />
       <OpenWithModal />
+      <CopyConflictModal />
       <KeybindingsHelp />
     </div>
   );

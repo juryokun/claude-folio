@@ -28,6 +28,7 @@ interface UiStore {
   showSidebar: boolean;
   showPreview: boolean;
   previewWidth: number;
+  copyConflict: { conflicts: string[]; onResolve: (strategy: 'overwrite' | 'rename') => void } | null;
 
   setVimMode: (mode: VimMode) => void;
   setEditorCommand: (cmd: string) => void;
@@ -51,6 +52,8 @@ interface UiStore {
   setColumnWidths: (w: Partial<{ size: number; date: number }>) => void;
   togglePreview: () => void;
   setPreviewWidth: (w: number) => void;
+  showCopyConflict: (conflicts: string[], onResolve: (strategy: 'overwrite' | 'rename') => void) => void;
+  closeCopyConflict: () => void;
 }
 
 export const useUiStore = create<UiStore>()(
@@ -81,6 +84,7 @@ export const useUiStore = create<UiStore>()(
       showSidebar: true,
       showPreview: false,
       previewWidth: 320,
+      copyConflict: null,
 
       setVimMode: (mode) => set({ vimMode: mode }),
       setEditorCommand: (cmd) => set({ editorCommand: cmd }),
@@ -108,6 +112,8 @@ export const useUiStore = create<UiStore>()(
       setColumnWidths: (w) => set((s) => ({ columnWidths: { ...s.columnWidths, ...w } })),
       togglePreview: () => set((s) => ({ showPreview: !s.showPreview })),
       setPreviewWidth: (w) => set({ previewWidth: w }),
+      showCopyConflict: (conflicts, onResolve) => set({ copyConflict: { conflicts, onResolve } }),
+      closeCopyConflict: () => set({ copyConflict: null }),
     }),
     {
       name: 'mac-filer-ui',

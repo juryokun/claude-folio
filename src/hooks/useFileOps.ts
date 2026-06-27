@@ -10,7 +10,7 @@ export function useFileOps() {
   const { activeTab, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
     useFileStore();
-  const { showHidden, terminalApp, terminalCommand, setShowRename, setShowNewDir, setShowNewFile, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage, setShowOpenWith } =
+  const { showHidden, terminalApp, terminalCommand, setShowRename, setShowNewDir, setShowNewFile, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage, setShowOpenWith, showCopyConflict } =
     useUiStore();
   const { addBookmark } = useBookmarkStore();
 
@@ -80,20 +80,35 @@ export function useFileOps() {
 
   const handlePaste = useCallback(async () => {
     if (!clipboard) return;
-    try {
-      if (clipboard.mode === 'copy') {
-        await tauriApi.copyFiles(clipboard.paths, currentPath);
+
+    const doCopy = async (strategy: 'overwrite' | 'rename') => {
+      try {
+        await tauriApi.copyFiles(clipboard.paths, currentPath, strategy);
         showStatusMessage(`✅ ${clipboard.paths.length}件をペーストしました`);
+        reload();
+      } catch (e) {
+        console.error('ペーストに失敗しました:', e);
+      }
+    };
+
+    if (clipboard.mode === 'copy') {
+      const conflicts = await tauriApi.checkCopyConflicts(clipboard.paths, currentPath);
+      if (conflicts.length > 0) {
+        showCopyConflict(conflicts, doCopy);
       } else {
+        await doCopy('rename');
+      }
+    } else {
+      try {
         await tauriApi.moveFiles(clipboard.paths, currentPath);
         setClipboard(null);
         showStatusMessage(`✅ ${clipboard.paths.length}件を移動しました`);
+        reload();
+      } catch (e) {
+        console.error('ペーストに失敗しました:', e);
       }
-      reload();
-    } catch (e) {
-      console.error('ペーストに失敗しました:', e);
     }
-  }, [clipboard, currentPath, setClipboard, reload, showStatusMessage]);
+  }, [clipboard, currentPath, setClipboard, reload, showStatusMessage, showCopyConflict]);
 
   const handleCopyPath = useCallback(() => {
     const targets = getTargetPaths();

@@ -99,37 +99,51 @@ fn unique_dest(base: &Path) -> PathBuf {
     }
 }
 
+/// Return names of items in `sources` that already exist in `dest`.
 #[tauri::command]
-pub fn copy_files(sources: Vec<String>, dest: String) -> Result<(), String> {
+pub fn check_copy_conflicts(sources: Vec<String>, dest: String) -> Vec<String> {
     let dest_path = PathBuf::from(&dest);
+    sources
+        .iter()
+        .filter_map(|src| {
+            let src_path = PathBuf::from(src);
+            let name = src_path.file_name()?.to_string_lossy().to_string();
+            if dest_path.join(&name).exists() { Some(name) } else { None }
+        })
+        .collect()
+}
+
+#[tauri::command]
+pub fn copy_files(sources: Vec<String>, dest: String, strategy: String) -> Result<(), String> {
+    let dest_path = PathBuf::from(&dest);
+    let overwrite = strategy == "overwrite";
     for src in &sources {
         let src_path = PathBuf::from(src);
         let file_name = src_path
             .file_name()
             .ok_or_else(|| format!("Invalid source path: {}", src))?;
         if src_path.is_dir() {
-            // Directories merge into the destination (no rename)
             let target = dest_path.join(file_name);
-            copy_dir_recursive(&src_path, &target)?;
+            copy_dir_recursive(&src_path, &target, overwrite)?;
         } else {
-            let target = unique_dest(&dest_path.join(file_name));
+            let base = dest_path.join(file_name);
+            let target = if overwrite { base } else { unique_dest(&base) };
             std::fs::copy(&src_path, &target).map_err(|e| e.to_string())?;
         }
     }
     Ok(())
 }
 
-fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<(), String> {
+fn copy_dir_recursive(src: &Path, dest: &Path, overwrite: bool) -> Result<(), String> {
     std::fs::create_dir_all(dest).map_err(|e| e.to_string())?;
     for entry in std::fs::read_dir(src).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
         let entry_path = entry.path();
         if entry_path.is_dir() {
-            // Subdirectories always merge
-            copy_dir_recursive(&entry_path, &dest.join(entry.file_name()))?;
+            copy_dir_recursive(&entry_path, &dest.join(entry.file_name()), overwrite)?;
         } else {
-            // Files get unique names if a conflict exists
-            let target = unique_dest(&dest.join(entry.file_name()));
+            let base = dest.join(entry.file_name());
+            let target = if overwrite { base } else { unique_dest(&base) };
             std::fs::copy(&entry_path, &target).map_err(|e| e.to_string())?;
         }
     }
@@ -148,7 +162,7 @@ pub fn move_files(sources: Vec<String>, dest: String) -> Result<(), String> {
         // Try rename first (same volume), fall back to copy+delete
         if std::fs::rename(&src_path, &target).is_err() {
             if src_path.is_dir() {
-                copy_dir_recursive(&src_path, &target)?;
+                copy_dir_recursive(&src_path, &target, true)?;
                 std::fs::remove_dir_all(&src_path).map_err(|e| e.to_string())?;
             } else {
                 std::fs::copy(&src_path, &target).map_err(|e| e.to_string())?;
