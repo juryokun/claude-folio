@@ -61,7 +61,7 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
       if (e.metaKey && !e.ctrlKey && !e.altKey) {
         if (e.key === 'c') { e.preventDefault(); onAction('yank_selected'); clearBuffer(); return; }
         if (e.key === 'x') { e.preventDefault(); onAction('cut_selected'); clearBuffer(); return; }
-        if (e.key === 'v' || e.key === 'p') { e.preventDefault(); onAction('paste'); clearBuffer(); return; }
+        if (e.key === 'v') { e.preventDefault(); onAction('paste'); clearBuffer(); return; }
         if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); onAction('delete_selected'); clearBuffer(); return; }
       }
 
