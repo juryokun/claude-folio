@@ -174,6 +174,7 @@ export function FilePane({ tabId }: Props) {
               }}
               onDoubleClick={() => {
                 if (entry.is_dir) navigateTo(entry.path);
+                else tauriApi.openFile(entry.path).catch(console.error);
               }}
               style={{
                 position: 'absolute',

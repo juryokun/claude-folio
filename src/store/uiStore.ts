@@ -21,8 +21,10 @@ interface UiStore {
   sidebarWidth: number;
   columnWidths: { size: number; date: number };
   statusMessage: string | null;
+  editorCommand: string;
 
   setVimMode: (mode: VimMode) => void;
+  setEditorCommand: (cmd: string) => void;
   showStatusMessage: (msg: string, durationMs?: number) => void;
   toggleHidden: () => void;
   setShowHelp: (v: boolean) => void;
@@ -61,8 +63,10 @@ export const useUiStore = create<UiStore>()(
       sidebarWidth: 220,
       columnWidths: { size: 70, date: 90 },
       statusMessage: null,
+      editorCommand: '',
 
       setVimMode: (mode) => set({ vimMode: mode }),
+      setEditorCommand: (cmd) => set({ editorCommand: cmd }),
       showStatusMessage: (msg, durationMs = 2000) => {
         set({ statusMessage: msg });
         setTimeout(() => set({ statusMessage: null }), durationMs);

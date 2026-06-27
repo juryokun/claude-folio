@@ -1,3 +1,28 @@
+/// Open a file with the default application (macOS `open` command).
+#[tauri::command]
+pub fn open_file(path: String) -> Result<(), String> {
+    std::process::Command::new("open")
+        .arg(&path)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Open a file with a specific editor command.
+#[tauri::command]
+pub fn open_with_editor(path: String, editor_cmd: String) -> Result<(), String> {
+    let parts: Vec<&str> = editor_cmd.split_whitespace().collect();
+    if parts.is_empty() {
+        return Err("editor command is empty".to_string());
+    }
+    std::process::Command::new(parts[0])
+        .args(&parts[1..])
+        .arg(&path)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[tauri::command]
 pub fn open_terminal_at(path: String, emulator: String) -> Result<(), String> {
     let app_name = match emulator.as_str() {

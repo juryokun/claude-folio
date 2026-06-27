@@ -57,6 +57,11 @@ export const useConfigStore = create<ConfigStore>((set) => ({
         sizeUnit: (raw.appearance?.size_unit ?? 'binary') as 'binary' | 'decimal',
       };
       const keymap = buildKeymap(raw.keymap ?? {});
+      const editorCommand = raw.editor?.command ?? '';
+      if (editorCommand) {
+        const { useUiStore } = await import('./uiStore');
+        useUiStore.getState().setEditorCommand(editorCommand);
+      }
       set({ appearance, keymap, loaded: true });
     } catch {
       set({ loaded: true }); // use defaults on error

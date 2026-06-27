@@ -4,6 +4,7 @@ import { tauriApi } from '../../lib/tauri';
 import { useUiStore } from '../../store/uiStore';
 import { useTabStore } from '../../store/tabStore';
 import { useFileStore } from '../../store/fileStore';
+import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 
 export function RenameModal() {
   const { showRename, renameTarget, setShowRename } = useUiStore();
@@ -13,6 +14,7 @@ export function RenameModal() {
 
   const [name, setName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const ime = useImeAwareEnter(() => handleRename());
 
   useEffect(() => {
     if (showRename && renameTarget) {
@@ -51,8 +53,9 @@ export function RenameModal() {
           className="modal-input"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          {...ime.handlers}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') handleRename();
+            ime.handlers.onKeyDown(e);
             if (e.key === 'Escape') setShowRename(false);
           }}
         />

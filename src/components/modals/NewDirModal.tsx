@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 import { tauriApi } from '../../lib/tauri';
 import { useUiStore } from '../../store/uiStore';
 import { useTabStore } from '../../store/tabStore';
@@ -11,6 +12,7 @@ export function NewDirModal() {
 
   const [name, setName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const ime = useImeAwareEnter(() => handleCreate());
 
   useEffect(() => {
     if (showNewDir) {
@@ -44,8 +46,9 @@ export function NewDirModal() {
           placeholder="フォルダ名"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          {...ime.handlers}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') handleCreate();
+            ime.handlers.onKeyDown(e);
             if (e.key === 'Escape') setShowNewDir(false);
           }}
         />

@@ -28,6 +28,12 @@ export const tauriApi = {
   copyNameToClipboard: (paths: string[]) =>
     invoke<void>('copy_name_to_clipboard', { paths }),
 
+  openFile: (path: string) =>
+    invoke<void>('open_file', { path }),
+
+  openWithEditor: (path: string, editorCmd: string) =>
+    invoke<void>('open_with_editor', { path, editorCmd }),
+
   openTerminalAt: (path: string, emulator: string) =>
     invoke<void>('open_terminal_at', { path, emulator }),
 
@@ -59,7 +65,7 @@ export const tauriApi = {
     invoke<void>('extract_7zip', { archive, dest }),
 
   loadConfig: () =>
-    invoke<{ appearance?: { date_format?: string; size_unit?: string }; keymap?: Record<string, string[]> }>('load_config'),
+    invoke<{ appearance?: { date_format?: string; size_unit?: string }; editor?: { command?: string }; keymap?: Record<string, string[]> }>('load_config'),
 
   initConfig: () =>
     invoke<string>('init_config'),

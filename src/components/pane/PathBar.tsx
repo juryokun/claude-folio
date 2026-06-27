@@ -14,6 +14,7 @@ export function PathBar() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
+  const composingRef = useRef(false);
 
   // Exposed for Ctrl+L / z key
   useEffect(() => {
@@ -94,7 +95,7 @@ export function PathBar() {
       setSuggestionIndex(-1);
       return;
     }
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !composingRef.current) {
       e.preventDefault();
       const val = suggestionIndex >= 0 ? suggestions[suggestionIndex] : inputValue;
       commitEdit(val);
@@ -130,6 +131,8 @@ export function PathBar() {
             autoCapitalize="off"
             spellCheck={false}
             onChange={(e) => handleInputChange(e.target.value)}
+            onCompositionStart={() => { composingRef.current = true; }}
+            onCompositionEnd={() => { setTimeout(() => { composingRef.current = false; }, 0); }}
             onKeyDown={handleKeyDown}
             onBlur={() => {
               setTimeout(() => {

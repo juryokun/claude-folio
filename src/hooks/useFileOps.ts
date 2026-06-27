@@ -33,13 +33,10 @@ export function useFileOps() {
   }, [tabId, currentPath, showHidden, loadDir]);
 
   const handleNavigateInto = useCallback(() => {
-    if (!cursorEntry) return;
-    if (cursorEntry.is_dir) {
-      navigateTo(cursorEntry.path);
-    } else {
-      tauriApi.openTerminalAt(cursorEntry.path, terminalEmulator).catch(console.error);
-    }
-  }, [cursorEntry, navigateTo, terminalEmulator]);
+    // l / Enter / ArrowRight — directories only; files are ignored
+    if (!cursorEntry || !cursorEntry.is_dir) return;
+    navigateTo(cursorEntry.path);
+  }, [cursorEntry, navigateTo]);
 
   const handleNavigateUp = useCallback(() => {
     const parent = path.dirname(currentPath);
@@ -115,8 +112,25 @@ export function useFileOps() {
   }, [getTargetPaths, showStatusMessage]);
 
   const handleOpenTerminal = useCallback(() => {
-    tauriApi.openTerminalAt(currentPath, terminalEmulator).catch(console.error);
-  }, [currentPath, terminalEmulator]);
+    if (cursorEntry && !cursorEntry.is_dir) {
+      // o on a file → open with OS default app
+      tauriApi.openFile(cursorEntry.path).catch(console.error);
+    } else {
+      // o on a directory (or no selection) → open terminal
+      tauriApi.openTerminalAt(currentPath, terminalEmulator).catch(console.error);
+    }
+  }, [cursorEntry, currentPath, terminalEmulator]);
+
+  const handleOpenEditor = useCallback(() => {
+    if (!cursorEntry || cursorEntry.is_dir) return;
+    const editorCmd = useUiStore.getState().editorCommand;
+    if (editorCmd) {
+      tauriApi.openWithEditor(cursorEntry.path, editorCmd).catch(console.error);
+    } else {
+      // fallback: open with OS default (same as o)
+      tauriApi.openFile(cursorEntry.path).catch(console.error);
+    }
+  }, [cursorEntry]);
 
   const handleRename = useCallback(() => {
     if (!cursorEntry) return;
@@ -162,6 +176,7 @@ export function useFileOps() {
     handleCopyPath,
     handleCopyName,
     handleOpenTerminal,
+    handleOpenEditor,
     handleRename,
     handleNewDir,
     handleToggleSelect,

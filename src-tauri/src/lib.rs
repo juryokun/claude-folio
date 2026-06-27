@@ -6,7 +6,7 @@ use commands::{
     fs::{copy_files, create_dir, detect_google_drive, list_dir, move_files, rename_file},
     search::{check_7zip_installed, compress_7zip, extract_7zip, search_files},
     system::suppress_ds_store,
-    terminal::{check_zoxide_installed, open_terminal_at, zoxide_add, zoxide_query},
+    terminal::{check_zoxide_installed, open_file, open_with_editor, open_terminal_at, zoxide_add, zoxide_query},
     trash::move_to_trash,
 };
 
@@ -18,6 +18,8 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .invoke_handler(tauri::generate_handler![
+            open_file,
+            open_with_editor,
             load_config,
             init_config,
             list_dir,

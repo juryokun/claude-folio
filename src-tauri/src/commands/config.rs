@@ -19,9 +19,17 @@ impl Default for AppearanceConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct EditorConfig {
+    /// Shell command used to open files with `e`. e.g. "code", "nvim", "emacs"
+    pub command: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppConfig {
     #[serde(default)]
     pub appearance: AppearanceConfig,
+    #[serde(default)]
+    pub editor: EditorConfig,
     /// action_name -> list of key sequences ("j", "d d", "s n" …)
     #[serde(default)]
     pub keymap: HashMap<String, Vec<String>>,
@@ -74,6 +82,12 @@ date_format = "%Y/%m/%d"
 
 # Size unit: "binary" (KiB, MiB, GiB) or "decimal" (KB, MB, GB)
 size_unit = "binary"
+
+[editor]
+# Command used when pressing `e` to open a file in your editor.
+# Leave empty to fall back to the OS default app (same as `o`).
+# Examples: "code", "nvim", "emacs", "subl"
+command = ""
 
 [keymap]
 # Override default keybindings.

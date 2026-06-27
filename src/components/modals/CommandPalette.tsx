@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 import path from 'path-browserify';
 import { useUiStore } from '../../store/uiStore';
 import { useTabStore } from '../../store/tabStore';
@@ -17,6 +18,7 @@ export function CommandPalette() {
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const ime = useImeAwareEnter(() => runCommand(input));
 
   useEffect(() => {
     if (showCommandPalette) {
@@ -128,8 +130,9 @@ export function CommandPalette() {
           className="command-input"
           value={input}
           onChange={(e) => { setInput(e.target.value); setError(''); }}
+          {...ime.handlers}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') runCommand(input);
+            ime.handlers.onKeyDown(e);
             if (e.key === 'Escape') close();
           }}
           placeholder=":コマンド (例: cd, bm, zip, tabnew, q)"

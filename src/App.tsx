@@ -123,6 +123,9 @@ export default function App() {
         case 'open_terminal':
           ops.handleOpenTerminal();
           break;
+        case 'open_editor':
+          ops.handleOpenEditor();
+          break;
         case 'rename':
           ops.handleRename();
           break;
