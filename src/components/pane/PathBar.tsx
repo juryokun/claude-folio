@@ -172,6 +172,19 @@ export function PathBar() {
       return;
     }
 
+    // Tab in bookmark mode: fill input with selected item's path and switch to path mode
+    if (e.key === 'Tab' && mode === 'bookmark') {
+      e.preventDefault();
+      const item = bookmarkSuggestions[suggestionIndex];
+      if (item) {
+        const path = item.path.endsWith('/') ? item.path : item.path + '/';
+        setMode('path');
+        setInputValue(path);
+        fetchCompletions(path, true);
+      }
+      return;
+    }
+
     // Tab: complete to current suggestion or common prefix
     if (e.key === 'Tab' && mode === 'path' && suggestions.length > 0) {
       e.preventDefault();
