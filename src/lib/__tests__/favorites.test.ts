@@ -6,14 +6,14 @@ const HOME = '/Users/testuser';
 
 describe('favoritePath', () => {
   it.each<[FavoriteKey, string]>([
-    ['home',         HOME],
-    ['desktop',      `${HOME}/Desktop`],
-    ['documents',    `${HOME}/Documents`],
-    ['downloads',    `${HOME}/Downloads`],
-    ['pictures',     `${HOME}/Pictures`],
-    ['music',        `${HOME}/Music`],
-    ['movies',       `${HOME}/Movies`],
-    ['public',       `${HOME}/Public`],
+    ['home', HOME],
+    ['desktop', `${HOME}/Desktop`],
+    ['documents', `${HOME}/Documents`],
+    ['downloads', `${HOME}/Downloads`],
+    ['pictures', `${HOME}/Pictures`],
+    ['music', `${HOME}/Music`],
+    ['movies', `${HOME}/Movies`],
+    ['public', `${HOME}/Public`],
     ['applications', '/Applications'],
   ])('favoritePath(%s) returns correct path', (key, expected) => {
     expect(favoritePath(key, HOME)).toBe(expected);

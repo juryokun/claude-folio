@@ -5,7 +5,8 @@ import path from 'path-browserify';
 
 export function TabBar() {
   const { t } = useTranslation();
-  const { tabs, activeTabId, setActiveTab, closeTab, openTab, goBack, goForward, activeTab } = useTabStore();
+  const { tabs, activeTabId, setActiveTab, closeTab, openTab, goBack, goForward, activeTab } =
+    useTabStore();
   const fileOps = useFileOps();
 
   const tab = activeTab();
@@ -54,7 +55,10 @@ export function TabBar() {
           {tabs.length > 1 && (
             <button
               className="tab-close"
-              onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                closeTab(tab.id);
+              }}
               aria-label="タブを閉じる"
             >
               ×

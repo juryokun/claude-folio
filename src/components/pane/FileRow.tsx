@@ -18,14 +18,16 @@ interface Props {
   subLabel?: string; // shown dimmed under the filename (e.g. parent path in find mode)
 }
 
-function formatSize(bytes: number, unit: 'binary' | 'decimal'): { value: string; unit: string } | null {
+function formatSize(
+  bytes: number,
+  unit: 'binary' | 'decimal',
+): { value: string; unit: string } | null {
   if (bytes === 0) return null;
   const base = unit === 'binary' ? 1024 : 1000;
-  const units = unit === 'binary'
-    ? ['B', 'KiB', 'MiB', 'GiB', 'TiB']
-    : ['B', 'KB', 'MB', 'GB', 'TB'];
+  const units =
+    unit === 'binary' ? ['B', 'KiB', 'MiB', 'GiB', 'TiB'] : ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.min(Math.floor(Math.log(bytes) / Math.log(base)), units.length - 1);
-  const value = i === 0 ? String(bytes) : (bytes / Math.pow(base, i)).toFixed(1);
+  const value = i === 0 ? String(bytes) : (bytes / base ** i).toFixed(1);
   return { value, unit: units[i] };
 }
 
@@ -46,25 +48,66 @@ function FileIcon({ entry }: { entry: FileEntry }) {
   if (entry.is_dir) return <span className="file-icon dir">📁</span>;
   const ext = entry.extension?.toLowerCase();
   const icons: Record<string, string> = {
-    png: '🖼️', jpg: '🖼️', jpeg: '🖼️', gif: '🖼️', webp: '🖼️', svg: '🖼️',
-    mp4: '🎬', mov: '🎬', avi: '🎬', mkv: '🎬',
-    mp3: '🎵', wav: '🎵', flac: '🎵', aac: '🎵',
+    png: '🖼️',
+    jpg: '🖼️',
+    jpeg: '🖼️',
+    gif: '🖼️',
+    webp: '🖼️',
+    svg: '🖼️',
+    mp4: '🎬',
+    mov: '🎬',
+    avi: '🎬',
+    mkv: '🎬',
+    mp3: '🎵',
+    wav: '🎵',
+    flac: '🎵',
+    aac: '🎵',
     pdf: '📄',
-    doc: '📝', docx: '📝', xls: '📊', xlsx: '📊', ppt: '📊', pptx: '📊',
-    zip: '🗜️', tar: '🗜️', gz: '🗜️', '7z': '🗜️', rar: '🗜️',
-    js: '💻', ts: '💻', tsx: '💻', jsx: '💻', rs: '💻', py: '💻', go: '💻',
-    json: '📋', yaml: '📋', yml: '📋', toml: '📋',
-    md: '📖', txt: '📄',
-    sh: '⚙️', bash: '⚙️',
+    doc: '📝',
+    docx: '📝',
+    xls: '📊',
+    xlsx: '📊',
+    ppt: '📊',
+    pptx: '📊',
+    zip: '🗜️',
+    tar: '🗜️',
+    gz: '🗜️',
+    '7z': '🗜️',
+    rar: '🗜️',
+    js: '💻',
+    ts: '💻',
+    tsx: '💻',
+    jsx: '💻',
+    rs: '💻',
+    py: '💻',
+    go: '💻',
+    json: '📋',
+    yaml: '📋',
+    yml: '📋',
+    toml: '📋',
+    md: '📖',
+    txt: '📄',
+    sh: '⚙️',
+    bash: '⚙️',
   };
   return <span className="file-icon">{ext && icons[ext] ? icons[ext] : '📄'}</span>;
 }
 
 export const FileRow = React.memo(function FileRow({
-  entry, isCursor, isSelected, onClick, onDoubleClick, onContextMenu, style, colSizeWidth, colDateWidth, dragPaths, subLabel,
+  entry,
+  isCursor,
+  isSelected,
+  onClick,
+  onDoubleClick,
+  onContextMenu,
+  style,
+  colSizeWidth,
+  colDateWidth,
+  dragPaths,
+  subLabel,
 }: Props) {
   const { dateFormat, sizeUnit } = useConfigStore((s) => s.appearance);
-  const pendingKey = useUiStore((s) => isCursor ? s.pendingKey : null);
+  const pendingKey = useUiStore((s) => (isCursor ? s.pendingKey : null));
   return (
     <div
       className={`file-row${isCursor ? ' cursor' : ''}${isSelected ? ' selected' : ''}`}
@@ -94,12 +137,31 @@ export const FileRow = React.memo(function FileRow({
         {subLabel && <span className="file-sub-label">{subLabel}</span>}
       </span>
       <span className="file-size" style={{ width: colSizeWidth }}>
-        {entry.is_dir ? <><span className="file-size-value">—</span><span className="file-size-unit" /></> : (() => {
-          const s = formatSize(entry.size, sizeUnit);
-          return s ? <><span className="file-size-value">{s.value}</span><span className="file-size-unit">{s.unit}</span></> : <><span className="file-size-value">0</span><span className="file-size-unit">B</span></>;
-        })()}
+        {entry.is_dir ? (
+          <>
+            <span className="file-size-value">—</span>
+            <span className="file-size-unit" />
+          </>
+        ) : (
+          (() => {
+            const s = formatSize(entry.size, sizeUnit);
+            return s ? (
+              <>
+                <span className="file-size-value">{s.value}</span>
+                <span className="file-size-unit">{s.unit}</span>
+              </>
+            ) : (
+              <>
+                <span className="file-size-value">0</span>
+                <span className="file-size-unit">B</span>
+              </>
+            );
+          })()
+        )}
       </span>
-      <span className="file-date" style={{ width: colDateWidth }}>{formatDate(entry.modified, dateFormat)}</span>
+      <span className="file-date" style={{ width: colDateWidth }}>
+        {formatDate(entry.modified, dateFormat)}
+      </span>
       {pendingKey && <span className="file-prefix-badge">{pendingKey} ▸</span>}
     </div>
   );

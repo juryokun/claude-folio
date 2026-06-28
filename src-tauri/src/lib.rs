@@ -6,16 +6,25 @@ use tauri::{Emitter, Manager};
 #[cfg(not(test))]
 use commands::{
     bookmarks::{load_bookmarks, save_bookmarks},
-    custom_commands::{load_custom_commands, run_shell_command},
     cli::{get_startup_path, install_cli},
-    config::{init_config, load_config, save_language},
     clipboard::{copy_name_to_clipboard, copy_path_to_clipboard},
-    fs::{check_copy_conflicts, copy_files, create_dir, create_file, detect_google_drive, list_dir, list_dir_completions, move_files, read_text_file, rename_file},
-    search::{check_7zip_installed, check_fd_installed, compress_7zip, extract_7zip, search_files, search_with_fd},
+    config::{init_config, load_config, save_language},
+    custom_commands::{load_custom_commands, run_shell_command},
+    fs::{
+        check_copy_conflicts, copy_files, create_dir, create_file, detect_google_drive, list_dir,
+        list_dir_completions, move_files, read_text_file, rename_file,
+    },
+    search::{
+        check_7zip_installed, check_fd_installed, compress_7zip, extract_7zip, search_files,
+        search_with_fd,
+    },
     system::suppress_ds_store,
-    terminal::{check_zoxide_installed, list_applications, open_file, open_with_app, open_with_editor, open_terminal_at, quick_look, zoxide_add, zoxide_query},
+    terminal::{
+        check_zoxide_installed, list_applications, open_file, open_terminal_at, open_with_app,
+        open_with_editor, quick_look, zoxide_add, zoxide_query,
+    },
     trash::move_to_trash,
-    watch::{watch_dir, unwatch_dir, WatcherState},
+    watch::{unwatch_dir, watch_dir, WatcherState},
 };
 
 #[cfg(not(test))]
@@ -41,16 +50,14 @@ fn start_ipc_listener(app: tauri::AppHandle) {
             Ok(l) => l,
             Err(_) => return,
         };
-        for stream in listener.incoming() {
-            if let Ok(mut s) = stream {
-                let mut buf = String::new();
-                if s.read_to_string(&mut buf).is_ok() {
-                    let path = buf.trim().to_string();
-                    let payload: Option<String> = if path.is_empty() { None } else { Some(path) };
-                    let _ = app.emit("folio:open-tab", payload);
-                    if let Some(win) = app.get_webview_window("main") {
-                        let _ = win.set_focus();
-                    }
+        for mut s in listener.incoming().flatten() {
+            let mut buf = String::new();
+            if s.read_to_string(&mut buf).is_ok() {
+                let path = buf.trim().to_string();
+                let payload: Option<String> = if path.is_empty() { None } else { Some(path) };
+                let _ = app.emit("folio:open-tab", payload);
+                if let Some(win) = app.get_webview_window("main") {
+                    let _ = win.set_focus();
                 }
             }
         }
@@ -118,13 +125,16 @@ pub fn run() {
 
 #[cfg(test)]
 mod integration_tests {
-    use tempfile::TempDir;
-    use std::fs;
     use crate::commands::{
-        fs::{check_copy_conflicts, copy_files, create_dir, create_file, list_dir, move_files, read_text_file, rename_file},
-        config::{load_config_from, save_language_to},
         bookmarks::{load_bookmarks_from, save_bookmarks_to, BookmarkEntry},
+        config::{load_config_from, save_language_to},
+        fs::{
+            check_copy_conflicts, copy_files, create_dir, create_file, list_dir, move_files,
+            read_text_file, rename_file,
+        },
     };
+    use std::fs;
+    use tempfile::TempDir;
 
     // ── ファイルシステム・ライフサイクル ─────────────────────────────────────
 
@@ -146,7 +156,11 @@ mod integration_tests {
         let new = dir.path().join("new.txt");
         create_file(old.to_string_lossy().to_string()).unwrap();
 
-        rename_file(old.to_string_lossy().to_string(), new.to_string_lossy().to_string()).unwrap();
+        rename_file(
+            old.to_string_lossy().to_string(),
+            new.to_string_lossy().to_string(),
+        )
+        .unwrap();
 
         let entries = list_dir(dir.path().to_string_lossy().to_string(), false).unwrap();
         assert_eq!(entries.len(), 1);
@@ -163,7 +177,8 @@ mod integration_tests {
         move_files(
             vec![file.to_string_lossy().to_string()],
             dest.path().to_string_lossy().to_string(),
-        ).unwrap();
+        )
+        .unwrap();
 
         let src_entries = list_dir(src.path().to_string_lossy().to_string(), false).unwrap();
         let dest_entries = list_dir(dest.path().to_string_lossy().to_string(), false).unwrap();
@@ -195,13 +210,15 @@ mod integration_tests {
             vec![file.to_string_lossy().to_string()],
             archive.path().to_string_lossy().to_string(),
             "rename".to_string(),
-        ).unwrap();
+        )
+        .unwrap();
 
         // コピー先でファイル内容を読み取り
         let content = read_text_file(
             archive.path().join("main.rs").to_string_lossy().to_string(),
             1024,
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(content, "fn main() {}");
     }
 
@@ -219,7 +236,8 @@ mod integration_tests {
             vec![subdir.to_string_lossy().to_string()],
             dest.path().to_string_lossy().to_string(),
             "rename".to_string(),
-        ).unwrap();
+        )
+        .unwrap();
 
         let copied = dest.path().join("subdir");
         assert!(copied.is_dir());
@@ -246,8 +264,12 @@ mod integration_tests {
             vec![src.path().join("file.txt").to_string_lossy().to_string()],
             dest.path().to_string_lossy().to_string(),
             "overwrite".to_string(),
-        ).unwrap();
-        assert_eq!(fs::read(dest.path().join("file.txt")).unwrap(), b"new content");
+        )
+        .unwrap();
+        assert_eq!(
+            fs::read(dest.path().join("file.txt")).unwrap(),
+            b"new content"
+        );
     }
 
     #[test]
@@ -261,13 +283,17 @@ mod integration_tests {
             vec![src.path().join("file.txt").to_string_lossy().to_string()],
             dest.path().to_string_lossy().to_string(),
             "rename".to_string(),
-        ).unwrap();
+        )
+        .unwrap();
 
         let entries = list_dir(dest.path().to_string_lossy().to_string(), false).unwrap();
         let names: Vec<&str> = entries.iter().map(|e| e.name.as_str()).collect();
-        assert!(names.contains(&"file.txt"),   "元ファイルが残っていること");
-        assert!(names.contains(&"file_1.txt"), "リネームコピーが存在すること");
-        assert_eq!(fs::read(dest.path().join("file.txt")).unwrap(),   b"old");
+        assert!(names.contains(&"file.txt"), "元ファイルが残っていること");
+        assert!(
+            names.contains(&"file_1.txt"),
+            "リネームコピーが存在すること"
+        );
+        assert_eq!(fs::read(dest.path().join("file.txt")).unwrap(), b"old");
         assert_eq!(fs::read(dest.path().join("file_1.txt")).unwrap(), b"new");
     }
 
@@ -319,12 +345,22 @@ mod integration_tests {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("config.toml");
 
-        fs::write(&path, "[appearance]\ndate_format = \"%Y-%m-%d\"\nlanguage = \"ja\"\n").unwrap();
+        fs::write(
+            &path,
+            "[appearance]\ndate_format = \"%Y-%m-%d\"\nlanguage = \"ja\"\n",
+        )
+        .unwrap();
         save_language_to(&path, "en").unwrap();
 
         let content = fs::read_to_string(&path).unwrap();
-        assert!(content.contains("date_format"), "appearance セクションが保持されていること");
-        assert!(content.contains("language = \"en\""), "言語が更新されていること");
+        assert!(
+            content.contains("date_format"),
+            "appearance セクションが保持されていること"
+        );
+        assert!(
+            content.contains("language = \"en\""),
+            "言語が更新されていること"
+        );
     }
 
     // ── ブックマークのラウンドトリップ ───────────────────────────────────────
@@ -334,8 +370,14 @@ mod integration_tests {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("bookmarks.toml");
         let bookmarks = vec![
-            BookmarkEntry { label: "Home".to_string(), path: "/Users/user".to_string() },
-            BookmarkEntry { label: "Work".to_string(), path: "/Users/user/work".to_string() },
+            BookmarkEntry {
+                label: "Home".to_string(),
+                path: "/Users/user".to_string(),
+            },
+            BookmarkEntry {
+                label: "Work".to_string(),
+                path: "/Users/user/work".to_string(),
+            },
         ];
 
         save_bookmarks_to(&path, bookmarks.clone()).unwrap();
@@ -349,7 +391,10 @@ mod integration_tests {
 
         assert!(load_bookmarks_from(&path).is_empty());
 
-        let bm = BookmarkEntry { label: "Projects".to_string(), path: "/projects".to_string() };
+        let bm = BookmarkEntry {
+            label: "Projects".to_string(),
+            path: "/projects".to_string(),
+        };
         save_bookmarks_to(&path, vec![bm]).unwrap();
         assert_eq!(load_bookmarks_from(&path).len(), 1);
 
@@ -362,7 +407,10 @@ mod integration_tests {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("bookmarks.toml");
 
-        let mk = |l: &str, p: &str| BookmarkEntry { label: l.to_string(), path: p.to_string() };
+        let mk = |l: &str, p: &str| BookmarkEntry {
+            label: l.to_string(),
+            path: p.to_string(),
+        };
         save_bookmarks_to(&path, vec![mk("A", "/a"), mk("B", "/b"), mk("C", "/c")]).unwrap();
 
         // B を先頭に移動
@@ -372,8 +420,13 @@ mod integration_tests {
         save_bookmarks_to(&path, bms).unwrap();
 
         let reloaded = load_bookmarks_from(&path);
-        assert_eq!(reloaded.iter().map(|b| b.label.as_str()).collect::<Vec<_>>(),
-                   vec!["B", "A", "C"]);
+        assert_eq!(
+            reloaded
+                .iter()
+                .map(|b| b.label.as_str())
+                .collect::<Vec<_>>(),
+            vec!["B", "A", "C"]
+        );
     }
 
     #[test]
@@ -381,7 +434,10 @@ mod integration_tests {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("bookmarks.toml");
         let bookmarks: Vec<BookmarkEntry> = (0..5)
-            .map(|i| BookmarkEntry { label: format!("B{i}"), path: format!("/path/{i}") })
+            .map(|i| BookmarkEntry {
+                label: format!("B{i}"),
+                path: format!("/path/{i}"),
+            })
             .collect();
 
         save_bookmarks_to(&path, bookmarks.clone()).unwrap();

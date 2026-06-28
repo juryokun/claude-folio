@@ -40,12 +40,29 @@ async function getHomeDir(): Promise<string> {
 }
 
 export default function App() {
-  const { tabs, activeTab, navigateTo, openTab, closeTab, nextTab, prevTab, activeTabId, goBack, goForward } =
-    useTabStore();
+  const {
+    tabs,
+    activeTab,
+    navigateTo,
+    openTab,
+    closeTab,
+    nextTab,
+    prevTab,
+    activeTabId,
+    goBack,
+    goForward,
+  } = useTabStore();
   const { loadDir, setCursor, getPane, filteredEntries, setSort, clearFind } = useFileStore();
   const {
-    showHidden, toggleHidden, setShowHelp, setVimMode, toggleSidebar, showSidebar,
-    showPreview, togglePreview, openFind,
+    showHidden,
+    toggleHidden,
+    setShowHelp,
+    setVimMode,
+    toggleSidebar,
+    showSidebar,
+    showPreview,
+    togglePreview,
+    openFind,
   } = useUiStore();
 
   const fileOps = useFileOps();
@@ -60,8 +77,8 @@ export default function App() {
   // Resolve real home dir, then navigate to startup path arg (or home)
   useEffect(() => {
     getHomeDir().then(async (home) => {
-      (window as any).__macFilerUsername = home.split('/').pop();
-      (window as any).__macFilerHome = home;
+      window.__macFilerUsername = home.split('/').pop();
+      window.__macFilerHome = home;
       setHomeDir(home);
       const startupPath = await tauriApi.getStartupPath().catch(() => null);
       navigateTo(startupPath ?? home);
@@ -71,9 +88,18 @@ export default function App() {
     loadConfig();
     loadBookmarks().catch(() => {});
     tauriApi.suppressDsStore().catch(() => {});
-    tauriApi.check7zipInstalled().then(useUiStore.getState().setHas7zip).catch(() => {});
-    tauriApi.checkZoxideInstalled().then(useUiStore.getState().setHasZoxide).catch(() => {});
-    tauriApi.checkFdInstalled().then(useUiStore.getState().setHasFd).catch(() => {});
+    tauriApi
+      .check7zipInstalled()
+      .then(useUiStore.getState().setHas7zip)
+      .catch(() => {});
+    tauriApi
+      .checkZoxideInstalled()
+      .then(useUiStore.getState().setHasZoxide)
+      .catch(() => {});
+    tauriApi
+      .checkFdInstalled()
+      .then(useUiStore.getState().setHasFd)
+      .catch(() => {});
     loadCustomCommands().catch(() => {});
 
     // When a second CLI launch targets this already-running instance, open a new tab.
@@ -81,15 +107,17 @@ export default function App() {
       const path = event.payload;
       openTab(path ?? undefined);
     });
-    return () => { unlisten.then((fn) => fn()); };
-  }, []);
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [loadConfig, loadBookmarks, loadCustomCommands, navigateTo, openTab]);
 
   // Load directory when active tab path changes
   const currentTabPath = activeTab().path;
   const currentTabId = activeTab().id;
   useEffect(() => {
     loadDir(currentTabId, currentTabPath, showHidden);
-  }, [currentTabId, currentTabPath, showHidden]);
+  }, [currentTabId, currentTabPath, showHidden, loadDir]);
 
   // Watch active directory for external changes; debounce to avoid rapid reloads
   const reloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -110,7 +138,10 @@ export default function App() {
         loadDir(tab.id, tab.path, showHiddenRef.current, true);
       }, 300);
     }).then((fn) => {
-      if (cancelled) { fn(); return; }
+      if (cancelled) {
+        fn();
+        return;
+      }
       unlistenFn = fn;
     });
 
@@ -119,7 +150,7 @@ export default function App() {
       unlistenFn?.();
       if (reloadTimerRef.current) clearTimeout(reloadTimerRef.current);
     };
-  }, [currentTabPath]);
+  }, [currentTabPath, loadDir]);
 
   const handleVimAction = useCallback(
     (action: VimAction) => {
@@ -221,8 +252,12 @@ export default function App() {
         case 'focus_zoxide':
           window.dispatchEvent(new CustomEvent('mac-filer:focus-zoxide'));
           break;
-        case 'go_back': goBack(); break;
-        case 'go_forward': goForward(); break;
+        case 'go_back':
+          goBack();
+          break;
+        case 'go_forward':
+          goForward();
+          break;
         case 'reload':
           ops.reload(true);
           useUiStore.getState().showStatusMessage('再読み込みしました');
@@ -270,8 +305,25 @@ export default function App() {
         }
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeTabId]
+    [
+      activeTabId,
+      activeTab,
+      setCursor,
+      getPane,
+      filteredEntries,
+      toggleSidebar,
+      openTab,
+      closeTab,
+      nextTab,
+      prevTab,
+      goBack,
+      goForward,
+      toggleHidden,
+      togglePreview,
+      setShowHelp,
+      openFind,
+      setSort,
+    ],
   );
 
   useVimKeys(handleVimAction, keymap);
@@ -289,7 +341,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [setVimMode, setShowHelp]);
+  }, [setVimMode, setShowHelp, clearFind]);
 
   return (
     <div className="app">
@@ -303,7 +355,12 @@ export default function App() {
               <div
                 key={t.id}
                 className="tab-content"
-                style={{ display: t.id === activeTabId ? 'flex' : 'none', flex: 1, minHeight: 0, overflow: 'hidden' }}
+                style={{
+                  display: t.id === activeTabId ? 'flex' : 'none',
+                  flex: 1,
+                  minHeight: 0,
+                  overflow: 'hidden',
+                }}
               >
                 <FilePane tabId={t.id} />
               </div>

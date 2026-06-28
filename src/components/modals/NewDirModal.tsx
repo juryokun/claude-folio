@@ -27,7 +27,10 @@ export function NewDirModal() {
 
   const handleCreate = async () => {
     const trimmed = name.trim();
-    if (!trimmed) { setShowNewDir(false); return; }
+    if (!trimmed) {
+      setShowNewDir(false);
+      return;
+    }
     const tab = activeTab();
     try {
       await tauriApi.createDir(`${tab.path}/${trimmed}`);
@@ -56,7 +59,9 @@ export function NewDirModal() {
         />
         <div className="modal-actions">
           <button onClick={() => setShowNewDir(false)}>{t('newDirModal.cancel')}</button>
-          <button className="primary" onClick={handleCreate}>{t('newDirModal.create')}</button>
+          <button className="primary" onClick={handleCreate}>
+            {t('newDirModal.create')}
+          </button>
         </div>
       </div>
     </div>

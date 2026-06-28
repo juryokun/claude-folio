@@ -22,7 +22,9 @@ fn bookmarks_path() -> Option<std::path::PathBuf> {
 }
 
 pub(crate) fn load_bookmarks_from(path: &std::path::Path) -> Vec<BookmarkEntry> {
-    let Ok(content) = std::fs::read_to_string(path) else { return vec![] };
+    let Ok(content) = std::fs::read_to_string(path) else {
+        return vec![];
+    };
     toml::from_str::<BookmarksFile>(&content)
         .unwrap_or_else(|e| {
             eprintln!("[folio] bookmarks parse error: {e}");
@@ -31,7 +33,10 @@ pub(crate) fn load_bookmarks_from(path: &std::path::Path) -> Vec<BookmarkEntry> 
         .bookmarks
 }
 
-pub(crate) fn save_bookmarks_to(path: &std::path::Path, bookmarks: Vec<BookmarkEntry>) -> Result<(), String> {
+pub(crate) fn save_bookmarks_to(
+    path: &std::path::Path,
+    bookmarks: Vec<BookmarkEntry>,
+) -> Result<(), String> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
@@ -42,7 +47,9 @@ pub(crate) fn save_bookmarks_to(path: &std::path::Path, bookmarks: Vec<BookmarkE
 
 #[tauri::command]
 pub fn load_bookmarks() -> Vec<BookmarkEntry> {
-    let Some(path) = bookmarks_path() else { return vec![] };
+    let Some(path) = bookmarks_path() else {
+        return vec![];
+    };
     load_bookmarks_from(&path)
 }
 
@@ -60,7 +67,10 @@ mod tests {
     use tempfile::TempDir;
 
     fn entry(label: &str, path: &str) -> BookmarkEntry {
-        BookmarkEntry { label: label.to_string(), path: path.to_string() }
+        BookmarkEntry {
+            label: label.to_string(),
+            path: path.to_string(),
+        }
     }
 
     #[test]
@@ -82,11 +92,15 @@ mod tests {
     fn load_bookmarks_from_valid_toml() {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("bookmarks.toml");
-        std::fs::write(&path, r#"
+        std::fs::write(
+            &path,
+            r#"
 [[bookmarks]]
 label = "Projects"
 path = "/Users/user/Projects"
-"#).unwrap();
+"#,
+        )
+        .unwrap();
         let result = load_bookmarks_from(&path);
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].label, "Projects");

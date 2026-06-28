@@ -1,4 +1,15 @@
-export type ThemeId = 'dark' | 'light' | 'monokai' | 'nord' | 'dracula' | 'gruvbox' | 'ayu-dark' | 'solarized-light' | 'one-light' | 'catppuccin-latte' | 'papercolor';
+export type ThemeId =
+  | 'dark'
+  | 'light'
+  | 'monokai'
+  | 'nord'
+  | 'dracula'
+  | 'gruvbox'
+  | 'ayu-dark'
+  | 'solarized-light'
+  | 'one-light'
+  | 'catppuccin-latte'
+  | 'papercolor';
 
 export interface Theme {
   id: ThemeId;

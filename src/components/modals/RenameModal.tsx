@@ -63,7 +63,9 @@ export function RenameModal() {
         />
         <div className="modal-actions">
           <button onClick={() => setShowRename(false)}>{t('renameModal.cancel')}</button>
-          <button className="primary" onClick={handleRename}>{t('renameModal.rename')}</button>
+          <button className="primary" onClick={handleRename}>
+            {t('renameModal.rename')}
+          </button>
         </div>
       </div>
     </div>

@@ -22,7 +22,9 @@ export function ConfirmModal() {
 
   return (
     <div className="modal-overlay" onClick={closeConfirm}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}
+      <div
+        className="modal"
+        onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === 'Enter') handleConfirm();
           if (e.key === 'Escape') closeConfirm();

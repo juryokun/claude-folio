@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppearanceConfig {
@@ -9,8 +9,12 @@ pub struct AppearanceConfig {
     pub size_unit: String,
 }
 
-fn default_date_format() -> String { "%Y/%m/%d %H:%M:%S".to_string() }
-fn default_size_unit() -> String { "binary".to_string() }
+fn default_date_format() -> String {
+    "%Y/%m/%d %H:%M:%S".to_string()
+}
+fn default_size_unit() -> String {
+    "binary".to_string()
+}
 
 impl Default for AppearanceConfig {
     fn default() -> Self {
@@ -60,7 +64,9 @@ pub struct SidebarConfig {
 
 impl Default for SidebarConfig {
     fn default() -> Self {
-        Self { favorites: default_favorites() }
+        Self {
+            favorites: default_favorites(),
+        }
     }
 }
 
@@ -95,7 +101,9 @@ impl Default for AppConfig {
     }
 }
 
-fn default_language() -> String { "en".to_string() }
+fn default_language() -> String {
+    "en".to_string()
+}
 
 fn config_path() -> Option<std::path::PathBuf> {
     std::env::var("HOME").ok().map(|h| {
@@ -231,8 +239,14 @@ mod tests {
         // A line like "# language = ..." should NOT be treated as the language key
         let input = "# language = \"en\"\nlanguage = \"en\"\n";
         let result = replace_language_line(input, "ja");
-        assert!(result.contains("# language = \"en\""), "comment should be preserved");
-        assert!(result.contains("language = \"ja\""), "real key should be updated");
+        assert!(
+            result.contains("# language = \"en\""),
+            "comment should be preserved"
+        );
+        assert!(
+            result.contains("language = \"ja\""),
+            "real key should be updated"
+        );
     }
 
     // ── load_config_from ─────────────────────────────────────────────────────
@@ -283,7 +297,10 @@ mod tests {
         save_language_to(&path, "ja").unwrap();
         let content = std::fs::read_to_string(&path).unwrap();
         assert!(content.contains("language = \"ja\""));
-        assert!(content.contains("# my config"), "comments should be preserved");
+        assert!(
+            content.contains("# my config"),
+            "comments should be preserved"
+        );
     }
 
     #[test]

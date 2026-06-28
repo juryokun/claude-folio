@@ -5,19 +5,17 @@ import en from './en';
 
 export type Language = 'ja' | 'en';
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources: {
-      ja: { translation: ja },
-      en: { translation: en },
-    },
-    lng: 'en',
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-  });
+i18n.use(initReactI18next).init({
+  resources: {
+    ja: { translation: ja },
+    en: { translation: en },
+  },
+  lng: 'en',
+  fallbackLng: 'en',
+  interpolation: {
+    escapeValue: false,
+  },
+});
 
 export function setLanguage(lang: Language) {
   i18n.changeLanguage(lang);

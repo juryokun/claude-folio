@@ -33,7 +33,7 @@ describe('buildKeymap', () => {
     const km = buildKeymap({ cursor_down: ['n'] });
     const binding = km.find((b) => b.action === 'cursor_down');
     expect(binding).toBeDefined();
-    expect(binding!.keys).toEqual(['n']);
+    expect(binding?.keys).toEqual(['n']);
     // default 'j' binding for cursor_down should be gone
     const oldBinding = km.find((b) => b.keys[0] === 'j' && b.action === 'cursor_down');
     expect(oldBinding).toBeUndefined();
@@ -57,7 +57,7 @@ describe('buildKeymap', () => {
     const km = buildKeymap({ delete_selected: ['d d'] });
     const binding = km.find((b) => b.action === 'delete_selected');
     expect(binding).toBeDefined();
-    expect(binding!.keys).toEqual(['d', 'd']);
+    expect(binding?.keys).toEqual(['d', 'd']);
   });
 });
 
@@ -117,7 +117,7 @@ describe('NORMAL_KEYMAP', () => {
   });
 
   it('open_terminal action is not in NORMAL_KEYMAP', () => {
-    const kb = NORMAL_KEYMAP.find((b) => b.action === 'open_terminal' as string);
+    const kb = NORMAL_KEYMAP.find((b) => b.action === ('open_terminal' as string));
     expect(kb).toBeUndefined();
   });
 });

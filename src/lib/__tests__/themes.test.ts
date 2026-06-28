@@ -18,7 +18,14 @@ describe('THEMES', () => {
   });
 
   it('every theme has required CSS variables', () => {
-    const required = ['--bg', '--bg-secondary', '--text', '--text-accent', '--border', '--cursor-bg'];
+    const required = [
+      '--bg',
+      '--bg-secondary',
+      '--text',
+      '--text-accent',
+      '--border',
+      '--cursor-bg',
+    ];
     for (const theme of THEMES) {
       for (const v of required) {
         expect(theme.vars[v], `${theme.id} missing ${v}`).toBeDefined();

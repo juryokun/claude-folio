@@ -11,8 +11,9 @@ describe('commonPrefix', () => {
   });
 
   it('finds common prefix of multiple paths', () => {
-    expect(commonPrefix(['/Users/foo/alpha/', '/Users/foo/alpha2/', '/Users/foo/aaa/']))
-      .toBe('/Users/foo/a');
+    expect(commonPrefix(['/Users/foo/alpha/', '/Users/foo/alpha2/', '/Users/foo/aaa/'])).toBe(
+      '/Users/foo/a',
+    );
   });
 
   it('returns empty string when no common prefix', () => {

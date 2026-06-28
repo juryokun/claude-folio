@@ -52,7 +52,8 @@ export function FindBar() {
     );
   }
 
-  const prompt = findType === 'file' ? 'find files:' : findType === 'dir' ? 'find dirs:' : 'find all:';
+  const prompt =
+    findType === 'file' ? 'find files:' : findType === 'dir' ? 'find dirs:' : 'find all:';
   const badge = findType === 'file' ? 'ff' : findType === 'dir' ? 'fd' : 'fa';
 
   return (

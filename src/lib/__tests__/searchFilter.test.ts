@@ -36,7 +36,8 @@ describe('parseFilterQuery', () => {
 });
 
 describe('matchesFilter – partial', () => {
-  const filter = parseFilterQuery('foo')!;
+  const filter = parseFilterQuery('foo');
+  if (!filter) throw new Error('parseFilterQuery returned null');
 
   it('matches substring', () => {
     expect(matchesFilter('foobar', filter)).toBe(true);
@@ -53,26 +54,30 @@ describe('matchesFilter – partial', () => {
 
 describe('matchesFilter – regex', () => {
   it('matches by extension', () => {
-    const filter = parseFilterQuery('/\\.ts$')!;
+    const filter = parseFilterQuery('/\\.ts$');
+    if (!filter) throw new Error('parseFilterQuery returned null');
     expect(matchesFilter('store.ts', filter)).toBe(true);
     expect(matchesFilter('store.tsx', filter)).toBe(false);
   });
 
   it('matches dotfiles pattern', () => {
-    const filter = parseFilterQuery('/^\\.')!;
+    const filter = parseFilterQuery('/^\\.');
+    if (!filter) throw new Error('parseFilterQuery returned null');
     expect(matchesFilter('.gitignore', filter)).toBe(true);
     expect(matchesFilter('readme.md', filter)).toBe(false);
   });
 
   it('is case-insensitive', () => {
-    const filter = parseFilterQuery('/README')!;
+    const filter = parseFilterQuery('/README');
+    if (!filter) throw new Error('parseFilterQuery returned null');
     expect(matchesFilter('readme.md', filter)).toBe(true);
   });
 });
 
 describe('matchesFilter – invalid_regex', () => {
   it('always returns false', () => {
-    const filter = parseFilterQuery('/[invalid')!;
+    const filter = parseFilterQuery('/[invalid');
+    if (!filter) throw new Error('parseFilterQuery returned null');
     expect(matchesFilter('anything', filter)).toBe(false);
     expect(matchesFilter('[invalid', filter)).toBe(false);
   });

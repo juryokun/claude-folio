@@ -54,7 +54,7 @@ describe('fileStore 統合テスト', () => {
       mockListDir.mockResolvedValue([entry('b.txt'), entry('a.txt')]);
       await useFileStore.getState().loadDir(TAB, '/test', false);
       const entries = useFileStore.getState().filteredEntries(TAB);
-      expect(entries.map(e => e.name)).toEqual(['a.txt', 'b.txt']);
+      expect(entries.map((e) => e.name)).toEqual(['a.txt', 'b.txt']);
     });
 
     it('ディレクトリはファイルより先に来る', async () => {
@@ -96,7 +96,7 @@ describe('fileStore 統合テスト', () => {
     it('クエリに一致するエントリのみ返す', () => {
       useFileStore.getState().setFilter(TAB, 'json');
       const entries = useFileStore.getState().filteredEntries(TAB);
-      expect(entries.map(e => e.name)).toEqual(['package.json', 'tsconfig.json']);
+      expect(entries.map((e) => e.name)).toEqual(['package.json', 'tsconfig.json']);
     });
 
     it('クエリ大文字小文字を無視する', () => {
@@ -133,25 +133,37 @@ describe('fileStore 統合テスト', () => {
 
     it('名前昇順ソート', () => {
       useFileStore.getState().setSort(TAB, 'name', false);
-      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      const names = useFileStore
+        .getState()
+        .filteredEntries(TAB)
+        .map((e) => e.name);
       expect(names).toEqual(['a.txt', 'b.txt', 'c.txt']);
     });
 
     it('名前降順ソート', () => {
       useFileStore.getState().setSort(TAB, 'name', true);
-      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      const names = useFileStore
+        .getState()
+        .filteredEntries(TAB)
+        .map((e) => e.name);
       expect(names).toEqual(['c.txt', 'b.txt', 'a.txt']);
     });
 
     it('更新日時昇順ソート', () => {
       useFileStore.getState().setSort(TAB, 'time', false);
-      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      const names = useFileStore
+        .getState()
+        .filteredEntries(TAB)
+        .map((e) => e.name);
       expect(names).toEqual(['a.txt', 'c.txt', 'b.txt']);
     });
 
     it('更新日時降順ソート', () => {
       useFileStore.getState().setSort(TAB, 'time', true);
-      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      const names = useFileStore
+        .getState()
+        .filteredEntries(TAB)
+        .map((e) => e.name);
       expect(names).toEqual(['b.txt', 'c.txt', 'a.txt']);
     });
   });
@@ -202,7 +214,7 @@ describe('fileStore 統合テスト', () => {
 
     it('cut モードもセットできる', () => {
       useFileStore.getState().setClipboard({ paths: ['/test/b.txt'], mode: 'cut' });
-      expect(useFileStore.getState().clipboard!.mode).toBe('cut');
+      expect(useFileStore.getState().clipboard?.mode).toBe('cut');
     });
   });
 
@@ -235,7 +247,7 @@ describe('fileStore 統合テスト', () => {
     beforeEach(async () => {
       mockListDir.mockResolvedValue([
         entry('c.json', false, 3000),
-        entry('a.txt',  false, 1000),
+        entry('a.txt', false, 1000),
         entry('b.json', false, 2000),
       ]);
       await useFileStore.getState().loadDir(TAB, '/test', false);
@@ -244,21 +256,30 @@ describe('fileStore 統合テスト', () => {
     it('フィルタ後にソートが正しく効く', () => {
       useFileStore.getState().setFilter(TAB, 'json');
       useFileStore.getState().setSort(TAB, 'name', false);
-      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      const names = useFileStore
+        .getState()
+        .filteredEntries(TAB)
+        .map((e) => e.name);
       expect(names).toEqual(['b.json', 'c.json']);
     });
 
     it('フィルタ後に降順ソートが効く', () => {
       useFileStore.getState().setFilter(TAB, 'json');
       useFileStore.getState().setSort(TAB, 'name', true);
-      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      const names = useFileStore
+        .getState()
+        .filteredEntries(TAB)
+        .map((e) => e.name);
       expect(names).toEqual(['c.json', 'b.json']);
     });
 
     it('フィルタ後に時刻ソートが効く', () => {
       useFileStore.getState().setFilter(TAB, 'json');
       useFileStore.getState().setSort(TAB, 'time', false);
-      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      const names = useFileStore
+        .getState()
+        .filteredEntries(TAB)
+        .map((e) => e.name);
       expect(names).toEqual(['b.json', 'c.json']);
     });
 
@@ -266,7 +287,10 @@ describe('fileStore 統合テスト', () => {
       useFileStore.getState().setFilter(TAB, 'json');
       useFileStore.getState().setSort(TAB, 'name', false);
       useFileStore.getState().setFilter(TAB, '');
-      const names = useFileStore.getState().filteredEntries(TAB).map(e => e.name);
+      const names = useFileStore
+        .getState()
+        .filteredEntries(TAB)
+        .map((e) => e.name);
       expect(names).toEqual(['a.txt', 'b.json', 'c.json']);
     });
   });
@@ -279,7 +303,12 @@ describe('fileStore 統合テスト', () => {
       await useFileStore.getState().loadDir(TAB, '/test', false);
       useFileStore.getState().setCursor(TAB, 2);
 
-      mockListDir.mockResolvedValue([entry('a.txt'), entry('b.txt'), entry('c.txt'), entry('d.txt')]);
+      mockListDir.mockResolvedValue([
+        entry('a.txt'),
+        entry('b.txt'),
+        entry('c.txt'),
+        entry('d.txt'),
+      ]);
       await useFileStore.getState().loadDir(TAB, '/test', false, true);
 
       expect(useFileStore.getState().getPane(TAB).cursor).toBe(2);

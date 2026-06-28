@@ -3,13 +3,11 @@ use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum OutputMode {
+    #[default]
     Auto,
     Modal,
-}
-
-impl Default for OutputMode {
-    fn default() -> Self { OutputMode::Auto }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -90,7 +88,11 @@ fn shell_args(shell: &str, command: &str) -> Vec<String> {
 }
 
 #[tauri::command]
-pub fn run_shell_command(shell: String, command: String, cwd: String) -> Result<ShellOutput, String> {
+pub fn run_shell_command(
+    shell: String,
+    command: String,
+    cwd: String,
+) -> Result<ShellOutput, String> {
     let shell_bin = resolve_shell(&shell);
     let args = shell_args(&shell_bin, &command);
 
@@ -128,11 +130,14 @@ mod tests {
     #[test]
     fn load_minimal_command() {
         let dir = TempDir::new().unwrap();
-        let path = write_commands(&dir, r#"
+        let path = write_commands(
+            &dir,
+            r#"
 [[commands]]
 name = "hello"
 command = "echo hello"
-"#);
+"#,
+        );
         let cmds = load_custom_commands_from(&path);
         assert_eq!(cmds.len(), 1);
         assert_eq!(cmds[0].name, "hello");
@@ -144,7 +149,9 @@ command = "echo hello"
     #[test]
     fn load_full_command() {
         let dir = TempDir::new().unwrap();
-        let path = write_commands(&dir, r#"
+        let path = write_commands(
+            &dir,
+            r#"
 [[commands]]
 name = "cleanup"
 desc = "Remove temp files"
@@ -153,7 +160,8 @@ shell = "/bin/bash"
 reload = true
 confirm = true
 output = "modal"
-"#);
+"#,
+        );
         let cmds = load_custom_commands_from(&path);
         assert_eq!(cmds[0].desc, "Remove temp files");
         assert_eq!(cmds[0].shell, "/bin/bash");
@@ -165,11 +173,14 @@ output = "modal"
     #[test]
     fn output_defaults_to_auto() {
         let dir = TempDir::new().unwrap();
-        let path = write_commands(&dir, r#"
+        let path = write_commands(
+            &dir,
+            r#"
 [[commands]]
 name = "hello"
 command = "echo hello"
-"#);
+"#,
+        );
         let cmds = load_custom_commands_from(&path);
         assert_eq!(cmds[0].output, OutputMode::Auto);
     }
@@ -177,7 +188,9 @@ command = "echo hello"
     #[test]
     fn load_multiple_commands() {
         let dir = TempDir::new().unwrap();
-        let path = write_commands(&dir, r#"
+        let path = write_commands(
+            &dir,
+            r#"
 [[commands]]
 name = "a"
 command = "echo a"
@@ -185,7 +198,8 @@ command = "echo a"
 [[commands]]
 name = "b"
 command = "echo b"
-"#);
+"#,
+        );
         let cmds = load_custom_commands_from(&path);
         assert_eq!(cmds.len(), 2);
         assert_eq!(cmds[0].name, "a");
@@ -219,7 +233,8 @@ command = "echo b"
             "/bin/sh".to_string(),
             "echo hello".to_string(),
             dir.path().to_string_lossy().to_string(),
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(out.stdout.trim(), "hello");
         assert_eq!(out.exit_code, 0);
     }
@@ -231,7 +246,8 @@ command = "echo b"
             "/bin/sh".to_string(),
             "exit 42".to_string(),
             dir.path().to_string_lossy().to_string(),
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(out.exit_code, 42);
     }
 }

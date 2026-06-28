@@ -20,7 +20,9 @@ pub fn expand_tilde(path: &str) -> String {
 
 fn expand_tilde_with_home(path: &str, home: Option<&str>) -> String {
     if path == "~" {
-        return home.map(|h| h.to_string()).unwrap_or_else(|| path.to_string());
+        return home
+            .map(|h| h.to_string())
+            .unwrap_or_else(|| path.to_string());
     }
     if let Some(rest) = path.strip_prefix("~/") {
         if let Some(h) = home {
@@ -68,7 +70,11 @@ pub fn list_dir(path: String, show_hidden: bool) -> Result<Vec<FileEntry>, Strin
                 None
             };
             let is_dir = metadata.is_dir() || (is_symlink && entry_path.is_dir());
-            let size = if metadata.is_file() { metadata.len() } else { 0 };
+            let size = if metadata.is_file() {
+                metadata.len()
+            } else {
+                0
+            };
             let modified = metadata.modified().ok().map(system_time_to_unix);
             let extension = if is_dir {
                 None
@@ -135,9 +141,7 @@ pub fn list_dir_completions(partial: String) -> Vec<String> {
             let is_dir = e.file_type().map(|ft| ft.is_dir()).unwrap_or(false);
             is_dir && matches && (!is_hidden || show_hidden)
         })
-        .map(|e| {
-            format!("{}{}/", parent_str, e.file_name().to_string_lossy())
-        })
+        .map(|e| format!("{}{}/", parent_str, e.file_name().to_string_lossy()))
         .collect();
 
     results.sort();
@@ -156,8 +160,14 @@ fn unique_dest(base: &Path) -> PathBuf {
     if !base.exists() {
         return base.to_path_buf();
     }
-    let stem = base.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
-    let ext = base.extension().map(|e| format!(".{}", e.to_string_lossy())).unwrap_or_default();
+    let stem = base
+        .file_stem()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let ext = base
+        .extension()
+        .map(|e| format!(".{}", e.to_string_lossy()))
+        .unwrap_or_default();
     let parent = base.parent().unwrap_or(Path::new("."));
     let mut n = 1u32;
     loop {
@@ -178,7 +188,11 @@ pub fn check_copy_conflicts(sources: Vec<String>, dest: String) -> Vec<String> {
         .filter_map(|src| {
             let src_path = PathBuf::from(src);
             let name = src_path.file_name()?.to_string_lossy().to_string();
-            if dest_path.join(&name).exists() { Some(name) } else { None }
+            if dest_path.join(&name).exists() {
+                Some(name)
+            } else {
+                None
+            }
         })
         .collect()
 }
@@ -273,7 +287,11 @@ pub fn detect_google_drive() -> Vec<String> {
                 let name = entry.file_name().to_string_lossy().to_string();
                 if name.starts_with("GoogleDrive-") {
                     let my_drive = entry.path().join("My Drive");
-                    let target = if my_drive.exists() { my_drive } else { entry.path() };
+                    let target = if my_drive.exists() {
+                        my_drive
+                    } else {
+                        entry.path()
+                    };
                     // Resolve symlinks to get canonical path before deduplicating
                     let canonical = std::fs::canonicalize(&target).unwrap_or(target);
                     paths.push(canonical.to_string_lossy().to_string());
@@ -309,10 +327,14 @@ pub fn read_text_file(path: String, max_bytes: usize) -> Result<String, String> 
     let n = file.read(&mut buf).map_err(|e| e.to_string())?;
     buf.truncate(n);
     let truncated = n > max_bytes;
-    if truncated { buf.truncate(max_bytes); }
+    if truncated {
+        buf.truncate(max_bytes);
+    }
     match String::from_utf8(buf) {
         Ok(mut s) => {
-            if truncated { s.push_str("\n\n[...省略...]"); }
+            if truncated {
+                s.push_str("\n\n[...省略...]");
+            }
             Ok(s)
         }
         Err(_) => Err("binary".to_string()),
@@ -329,17 +351,26 @@ mod tests {
 
     #[test]
     fn expand_tilde_plain_path_unchanged() {
-        assert_eq!(expand_tilde_with_home("/usr/local/bin", Some("/home/user")), "/usr/local/bin");
+        assert_eq!(
+            expand_tilde_with_home("/usr/local/bin", Some("/home/user")),
+            "/usr/local/bin"
+        );
     }
 
     #[test]
     fn expand_tilde_alone_expands_to_home() {
-        assert_eq!(expand_tilde_with_home("~", Some("/home/user")), "/home/user");
+        assert_eq!(
+            expand_tilde_with_home("~", Some("/home/user")),
+            "/home/user"
+        );
     }
 
     #[test]
     fn expand_tilde_prefix_expands() {
-        assert_eq!(expand_tilde_with_home("~/docs", Some("/home/user")), "/home/user/docs");
+        assert_eq!(
+            expand_tilde_with_home("~/docs", Some("/home/user")),
+            "/home/user/docs"
+        );
     }
 
     #[test]
@@ -519,7 +550,11 @@ mod tests {
         let from = dir.path().join("old.txt");
         let to = dir.path().join("new.txt");
         fs::write(&from, b"data").unwrap();
-        assert!(rename_file(from.to_string_lossy().to_string(), to.to_string_lossy().to_string()).is_ok());
+        assert!(rename_file(
+            from.to_string_lossy().to_string(),
+            to.to_string_lossy().to_string()
+        )
+        .is_ok());
         assert!(!from.exists());
         assert!(to.exists());
     }
@@ -537,7 +572,8 @@ mod tests {
             vec![src.to_string_lossy().to_string()],
             dest_dir.path().to_string_lossy().to_string(),
             "overwrite".to_string(),
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(fs::read(dest_dir.path().join("file.txt")).unwrap(), b"new");
     }
 
@@ -552,7 +588,8 @@ mod tests {
             vec![src.to_string_lossy().to_string()],
             dest_dir.path().to_string_lossy().to_string(),
             "rename".to_string(),
-        ).unwrap();
+        )
+        .unwrap();
         assert!(dest_dir.path().join("file.txt").exists());
         assert!(dest_dir.path().join("file_1.txt").exists());
     }
@@ -657,7 +694,21 @@ mod tests {
 
         let partial = format!("{}/", dir.path().to_string_lossy());
         let results = list_dir_completions(partial);
-        assert_eq!(results[0].split('/').filter(|s| !s.is_empty()).last().unwrap(), "aaa");
-        assert_eq!(results[2].split('/').filter(|s| !s.is_empty()).last().unwrap(), "zoo");
+        assert_eq!(
+            results[0]
+                .split('/')
+                .filter(|s| !s.is_empty())
+                .last()
+                .unwrap(),
+            "aaa"
+        );
+        assert_eq!(
+            results[2]
+                .split('/')
+                .filter(|s| !s.is_empty())
+                .last()
+                .unwrap(),
+            "zoo"
+        );
     }
 }

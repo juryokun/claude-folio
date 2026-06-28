@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { type KeyBinding, type VimAction } from '../lib/vim/keymap';
+import type { KeyBinding, VimAction } from '../lib/vim/keymap';
 import { useUiStore } from '../store/uiStore';
 import { useCustomCommandStore } from '../store/customCommandStore';
 
@@ -24,7 +24,7 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
   const tryMatch = useCallback(
     (buffer: string[]) => {
       const exact = keymap.find(
-        (kb) => kb.keys.length === buffer.length && kb.keys.every((k, i) => k === buffer[i])
+        (kb) => kb.keys.length === buffer.length && kb.keys.every((k, i) => k === buffer[i]),
       );
       if (exact) {
         onAction(exact.action);
@@ -33,7 +33,9 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
       }
 
       const hasPrefix = keymap.some(
-        (kb) => kb.keys.length > buffer.length && kb.keys.every((k, i) => i >= buffer.length || k === buffer[i])
+        (kb) =>
+          kb.keys.length > buffer.length &&
+          kb.keys.every((k, i) => i >= buffer.length || k === buffer[i]),
       );
 
       if (!hasPrefix) {
@@ -44,7 +46,7 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
         timerRef.current = setTimeout(clearBuffer, SEQUENCE_TIMEOUT);
       }
     },
-    [onAction, clearBuffer, keymap]
+    [onAction, clearBuffer, keymap, setPendingKey],
   );
 
   useEffect(() => {
@@ -65,11 +67,36 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
 
       // Cmd+C / Cmd+X / Cmd+V / Cmd+Delete — macOS-style shortcuts
       if (e.metaKey && !e.ctrlKey && !e.altKey) {
-        if (e.key === 'c') { e.preventDefault(); onAction('yank_selected'); clearBuffer(); return; }
-        if (e.key === 'x') { e.preventDefault(); onAction('cut_selected'); clearBuffer(); return; }
-        if (e.key === 'v') { e.preventDefault(); onAction('paste'); clearBuffer(); return; }
-        if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); onAction('delete_selected'); clearBuffer(); return; }
-        if (e.key === 'w') { e.preventDefault(); onAction('close_tab'); clearBuffer(); return; }
+        if (e.key === 'c') {
+          e.preventDefault();
+          onAction('yank_selected');
+          clearBuffer();
+          return;
+        }
+        if (e.key === 'x') {
+          e.preventDefault();
+          onAction('cut_selected');
+          clearBuffer();
+          return;
+        }
+        if (e.key === 'v') {
+          e.preventDefault();
+          onAction('paste');
+          clearBuffer();
+          return;
+        }
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+          e.preventDefault();
+          onAction('delete_selected');
+          clearBuffer();
+          return;
+        }
+        if (e.key === 'w') {
+          e.preventDefault();
+          onAction('close_tab');
+          clearBuffer();
+          return;
+        }
       }
 
       // ArrowLeft → navigate to parent
@@ -98,5 +125,5 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [vimMode, hasOutput, onAction, clearBuffer, tryMatch]);
+  }, [vimMode, hasOutput, onAction, clearBuffer, tryMatch, keymap]);
 }

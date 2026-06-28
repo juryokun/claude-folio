@@ -150,7 +150,7 @@ describe('tabStore 統合テスト', () => {
       const initialPath = useTabStore.getState().activeTab().path;
       useTabStore.getState().navigateTo('/a');
       useTabStore.getState().navigateTo('/b');
-      useTabStore.getState().goBack();    // /a にいる
+      useTabStore.getState().goBack(); // /a にいる
       useTabStore.getState().navigateTo('/c');
       const tab = useTabStore.getState().activeTab();
       expect(tab.history).toEqual([initialPath, '/a', '/c']);
@@ -169,11 +169,11 @@ describe('tabStore 統合テスト', () => {
     it('タブを別の位置に移動できる', () => {
       useTabStore.getState().openTab('/a');
       useTabStore.getState().openTab('/b');
-      const before = useTabStore.getState().tabs.map(t => t.path);
+      const before = useTabStore.getState().tabs.map((t) => t.path);
 
       useTabStore.getState().reorderTabs(0, 2);
 
-      const after = useTabStore.getState().tabs.map(t => t.path);
+      const after = useTabStore.getState().tabs.map((t) => t.path);
       expect(after[0]).toBe(before[1]);
       expect(after[2]).toBe(before[0]);
     });

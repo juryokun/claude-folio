@@ -5,20 +5,20 @@ vi.mock('../../lib/tauri', () => ({
   isTauri: vi.fn().mockReturnValue(true),
 }));
 
-const mockSetEditorCommand  = vi.fn();
-const mockSetTerminalApp    = vi.fn();
+const mockSetEditorCommand = vi.fn();
+const mockSetTerminalApp = vi.fn();
 const mockSetTerminalCommand = vi.fn();
-const mockSetLanguage       = vi.fn();
+const mockSetLanguage = vi.fn();
 
 // configStore が動的インポートする uiStore をモック
 // ※ 変数参照は vi.mock ファクトリ外（ホイスト後）なので問題ない
 vi.mock('../uiStore', () => ({
   useUiStore: {
     getState: () => ({
-      setEditorCommand:   mockSetEditorCommand,
-      setTerminalApp:     mockSetTerminalApp,
+      setEditorCommand: mockSetEditorCommand,
+      setTerminalApp: mockSetTerminalApp,
       setTerminalCommand: mockSetTerminalCommand,
-      setLanguage:        mockSetLanguage,
+      setLanguage: mockSetLanguage,
     }),
   },
 }));
@@ -29,7 +29,16 @@ import { NORMAL_KEYMAP } from '../../lib/vim/keymap';
 
 const mockLoadConfig = vi.mocked(tauriApi.loadConfig);
 
-const DEFAULT_FAVORITES = ['home', 'desktop', 'documents', 'downloads', 'pictures', 'music', 'movies', 'applications'];
+const DEFAULT_FAVORITES = [
+  'home',
+  'desktop',
+  'documents',
+  'downloads',
+  'pictures',
+  'music',
+  'movies',
+  'applications',
+];
 
 function resetStore() {
   useConfigStore.setState({
@@ -78,7 +87,9 @@ describe('configStore 統合テスト', () => {
 
   describe('load() — appearance', () => {
     it('date_format を反映する', async () => {
-      mockLoadConfig.mockResolvedValue({ appearance: { date_format: '%Y-%m-%d', size_unit: 'binary' } });
+      mockLoadConfig.mockResolvedValue({
+        appearance: { date_format: '%Y-%m-%d', size_unit: 'binary' },
+      });
       await useConfigStore.getState().load();
       expect(useConfigStore.getState().appearance.dateFormat).toBe('%Y-%m-%d');
     });
@@ -109,7 +120,7 @@ describe('configStore 統合テスト', () => {
       mockLoadConfig.mockResolvedValue({ keymap: { cursor_down: ['n'] } });
       await useConfigStore.getState().load();
       const km = useConfigStore.getState().keymap;
-      const binding = km.find(b => b.action === 'cursor_down');
+      const binding = km.find((b) => b.action === 'cursor_down');
       expect(binding?.keys).toEqual(['n']);
     });
 
@@ -117,14 +128,14 @@ describe('configStore 統合テスト', () => {
       mockLoadConfig.mockResolvedValue({ keymap: { cursor_down: ['n'] } });
       await useConfigStore.getState().load();
       const km = useConfigStore.getState().keymap;
-      expect(km.find(b => b.action === 'cursor_up')).toBeDefined();
+      expect(km.find((b) => b.action === 'cursor_up')).toBeDefined();
     });
 
     it('コードシーケンス "g g" が正しくパースされる', async () => {
       mockLoadConfig.mockResolvedValue({ keymap: { cursor_first: ['g g'] } });
       await useConfigStore.getState().load();
       const km = useConfigStore.getState().keymap;
-      const binding = km.find(b => b.action === 'cursor_first');
+      const binding = km.find((b) => b.action === 'cursor_first');
       expect(binding?.keys).toEqual(['g', 'g']);
     });
   });

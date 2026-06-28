@@ -18,7 +18,11 @@ pub fn get_startup_path() -> Option<String> {
                 p
             };
             let path = PathBuf::from(&expanded);
-            if path.is_dir() { Some(expanded) } else { None }
+            if path.is_dir() {
+                Some(expanded)
+            } else {
+                None
+            }
         })
 }
 
@@ -43,7 +47,7 @@ pub fn install_cli() -> Result<(), String> {
     // current_exe() → .../Claude Folio.app/Contents/MacOS/folio
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
     let resources = exe
-        .parent()           // MacOS/
+        .parent() // MacOS/
         .and_then(|p| p.parent()) // Contents/
         .map(|p| p.join("Resources"))
         .ok_or("Could not resolve app bundle path")?;

@@ -33,7 +33,13 @@ export function SearchBar() {
         <span>🔍</span>
         {isRegexMode && <span className="search-mode-badge">regex</span>}
         <span className="search-query">{pane.filterQuery}</span>
-        <button onClick={() => { setFilter(tab.id, ''); }}>✕</button>
+        <button
+          onClick={() => {
+            setFilter(tab.id, '');
+          }}
+        >
+          ✕
+        </button>
       </div>
     );
   }
@@ -63,9 +69,8 @@ export function SearchBar() {
             const entries = filteredEntries(tab.id);
             const pane = getPane(tab.id);
             const max = Math.max(0, entries.length - 1);
-            const next = e.key === 'j'
-              ? Math.min(pane.cursor + 1, max)
-              : Math.max(pane.cursor - 1, 0);
+            const next =
+              e.key === 'j' ? Math.min(pane.cursor + 1, max) : Math.max(pane.cursor - 1, 0);
             setCursor(tab.id, next);
           }
         }}

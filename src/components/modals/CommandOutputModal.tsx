@@ -45,9 +45,14 @@ export function CommandOutputModal() {
             exit {output.exit_code}
           </span>
           <span className="command-output-hint">j/k scroll · Enter/Esc close</span>
-          <button className="command-output-close" onClick={clearOutput}>✕</button>
+          <button className="command-output-close" onClick={clearOutput}>
+            ✕
+          </button>
         </div>
-        <pre ref={bodyRef} className={`command-output-body${isError ? ' command-output-stderr' : ''}`}>
+        <pre
+          ref={bodyRef}
+          className={`command-output-body${isError ? ' command-output-stderr' : ''}`}
+        >
           {body}
         </pre>
       </div>

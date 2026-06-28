@@ -33,7 +33,10 @@ export function OpenWithModal() {
     if (showOpenWith) {
       setInput('');
       setSelectedIdx(-1);
-      tauriApi.listApplications().then(setApps).catch(() => setApps([]));
+      tauriApi
+        .listApplications()
+        .then(setApps)
+        .catch(() => setApps([]));
       setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [showOpenWith]);
@@ -44,7 +47,9 @@ export function OpenWithModal() {
     return apps.filter((a) => a.toLowerCase().includes(lower)).slice(0, 8);
   }, [input, apps]);
 
-  useEffect(() => { setSelectedIdx(-1); }, [candidates]);
+  useEffect(() => {
+    setSelectedIdx(-1);
+  }, []);
 
   if (!showOpenWith || !openWithTarget) return null;
 
@@ -59,7 +64,10 @@ export function OpenWithModal() {
   };
 
   const handleOpen = async () => {
-    if (!trimmed) { setShowOpenWith(false); return; }
+    if (!trimmed) {
+      setShowOpenWith(false);
+      return;
+    }
     try {
       if (resolveMode(trimmed, apps) === 'app') {
         await tauriApi.openWithApp(openWithTarget, trimmed);
@@ -76,7 +84,10 @@ export function OpenWithModal() {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     ime.handlers.onKeyDown(e);
-    if (e.key === 'Escape') { setShowOpenWith(false); return; }
+    if (e.key === 'Escape') {
+      setShowOpenWith(false);
+      return;
+    }
     if (candidates.length === 0) return;
     if (e.key === 'ArrowDown' || (e.ctrlKey && e.key === 'j')) {
       e.preventDefault();
@@ -121,7 +132,10 @@ export function OpenWithModal() {
                 <li
                   key={name}
                   className={i === selectedIdx ? 'selected' : ''}
-                  onMouseDown={(e) => { e.preventDefault(); applyCandidate(name); }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyCandidate(name);
+                  }}
                 >
                   {name}
                 </li>
@@ -134,7 +148,9 @@ export function OpenWithModal() {
 
         <div className="modal-actions">
           <button onClick={() => setShowOpenWith(false)}>{t('openWithModal.cancel')}</button>
-          <button className="primary" onClick={handleOpen} disabled={!trimmed}>{t('openWithModal.open')}</button>
+          <button className="primary" onClick={handleOpen} disabled={!trimmed}>
+            {t('openWithModal.open')}
+          </button>
         </div>
       </div>
     </div>

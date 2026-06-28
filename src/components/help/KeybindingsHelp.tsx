@@ -16,14 +16,18 @@ export function KeybindingsHelp() {
           <tbody>
             {KEYBINDING_DOCS.map(({ keys, description }) => (
               <tr key={keys}>
-                <td className="keybinding-key"><kbd>{keys}</kbd></td>
+                <td className="keybinding-key">
+                  <kbd>{keys}</kbd>
+                </td>
                 <td className="keybinding-desc">{description}</td>
               </tr>
             ))}
           </tbody>
         </table>
         <div className="modal-actions">
-          <button className="primary" onClick={() => setShowHelp(false)}>{t('keybindingsHelp.close')}</button>
+          <button className="primary" onClick={() => setShowHelp(false)}>
+            {t('keybindingsHelp.close')}
+          </button>
         </div>
       </div>
     </div>

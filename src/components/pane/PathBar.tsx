@@ -18,7 +18,7 @@ interface PickerItem {
 type PathBarMode = 'path' | 'bookmark';
 
 function getHome(): string {
-  return (window as any).__macFilerHome ?? `/Users/${(window as any).__macFilerUsername ?? 'user'}`;
+  return window.__macFilerHome ?? `/Users/${window.__macFilerUsername ?? 'user'}`;
 }
 
 export function PathBar() {
@@ -61,9 +61,25 @@ export function PathBar() {
     if (mode !== 'bookmark') return [];
     const q = inputValue.toLowerCase();
     return allPickerItems.filter(
-      (item) => !q || item.label.toLowerCase().includes(q) || item.path.toLowerCase().includes(q)
+      (item) => !q || item.label.toLowerCase().includes(q) || item.path.toLowerCase().includes(q),
     );
   }, [mode, inputValue, allPickerItems]);
+
+  const startMode = useCallback(
+    (m: PathBarMode, initialValue: string) => {
+      setMode(m);
+      setInputValue(initialValue);
+      setEditing(true);
+      setSuggestions([]);
+      setSuggestionIndex(m === 'bookmark' ? (allPickerItems.length > 0 ? 0 : -1) : -1);
+      setCompletionSource('fs');
+      setTimeout(() => {
+        if (initialValue) inputRef.current?.select();
+        else inputRef.current?.focus();
+      }, 0);
+    },
+    [allPickerItems.length],
+  );
 
   useEffect(() => {
     const handler = () => startMode('path', currentPath);
@@ -77,20 +93,7 @@ export function PathBar() {
       window.removeEventListener('mac-filer:focus-zoxide', zoxideHandler);
       window.removeEventListener('mac-filer:focus-bookmarks', bookmarkHandler);
     };
-  }, [currentPath]);
-
-  const startMode = (m: PathBarMode, initialValue: string) => {
-    setMode(m);
-    setInputValue(initialValue);
-    setEditing(true);
-    setSuggestions([]);
-    setSuggestionIndex(m === 'bookmark' ? (allPickerItems.length > 0 ? 0 : -1) : -1);
-    setCompletionSource('fs');
-    setTimeout(() => {
-      if (initialValue) inputRef.current?.select();
-      else inputRef.current?.focus();
-    }, 0);
-  };
+  }, [currentPath, startMode]);
 
   const close = () => {
     setEditing(false);
@@ -113,42 +116,45 @@ export function PathBar() {
   };
 
   // keepIndexAtMinus1: true after Tab — suggestions are shown as guide only, Enter uses inputValue
-  const fetchCompletions = useCallback(async (value: string, keepIndexAtMinus1 = false) => {
-    if (!value) {
-      setSuggestions([]);
-      setSuggestionIndex(-1);
-      return;
-    }
+  const fetchCompletions = useCallback(
+    async (value: string, keepIndexAtMinus1 = false) => {
+      if (!value) {
+        setSuggestions([]);
+        setSuggestionIndex(-1);
+        return;
+      }
 
-    const expanded = expandTilde(value, getHome());
-    const isAbsPath = expanded.startsWith('/');
+      const expanded = expandTilde(value, getHome());
+      const isAbsPath = expanded.startsWith('/');
 
-    if (isAbsPath) {
-      try {
-        const results = await tauriApi.listDirCompletions(expanded);
-        setSuggestions(results);
-        setSuggestionIndex(keepIndexAtMinus1 ? -1 : (results.length > 0 ? 0 : -1));
-        setCompletionSource('fs');
-      } catch {
+      if (isAbsPath) {
+        try {
+          const results = await tauriApi.listDirCompletions(expanded);
+          setSuggestions(results);
+          setSuggestionIndex(keepIndexAtMinus1 ? -1 : results.length > 0 ? 0 : -1);
+          setCompletionSource('fs');
+        } catch {
+          setSuggestions([]);
+          setSuggestionIndex(-1);
+        }
+      } else if (hasZoxide) {
+        try {
+          const results = await tauriApi.zoxideQuery(value);
+          const trimmed = results.slice(0, 8);
+          setSuggestions(trimmed);
+          setSuggestionIndex(keepIndexAtMinus1 ? -1 : trimmed.length > 0 ? 0 : -1);
+          setCompletionSource('zoxide');
+        } catch {
+          setSuggestions([]);
+          setSuggestionIndex(-1);
+        }
+      } else {
         setSuggestions([]);
         setSuggestionIndex(-1);
       }
-    } else if (hasZoxide) {
-      try {
-        const results = await tauriApi.zoxideQuery(value);
-        const trimmed = results.slice(0, 8);
-        setSuggestions(trimmed);
-        setSuggestionIndex(keepIndexAtMinus1 ? -1 : (trimmed.length > 0 ? 0 : -1));
-        setCompletionSource('zoxide');
-      } catch {
-        setSuggestions([]);
-        setSuggestionIndex(-1);
-      }
-    } else {
-      setSuggestions([]);
-      setSuggestionIndex(-1);
-    }
-  }, [hasZoxide]);
+    },
+    [hasZoxide],
+  );
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -162,7 +168,10 @@ export function PathBar() {
   const listLength = mode === 'bookmark' ? bookmarkSuggestions.length : suggestions.length;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') { close(); return; }
+    if (e.key === 'Escape') {
+      close();
+      return;
+    }
 
     if (e.ctrlKey && e.key === 'u') {
       e.preventDefault();
@@ -177,7 +186,7 @@ export function PathBar() {
       e.preventDefault();
       const item = bookmarkSuggestions[suggestionIndex];
       if (item) {
-        const path = item.path.endsWith('/') ? item.path : item.path + '/';
+        const path = item.path.endsWith('/') ? item.path : `${item.path}/`;
         setMode('path');
         setInputValue(path);
         fetchCompletions(path, true);
@@ -230,9 +239,7 @@ export function PathBar() {
   const segments = currentPath.split('/').filter(Boolean);
 
   const placeholder =
-    mode === 'bookmark'
-      ? t('pathBar.bookmarkSearch')
-      : t('pathBar.pathOrKeyword');
+    mode === 'bookmark' ? t('pathBar.bookmarkSearch') : t('pathBar.pathOrKeyword');
 
   return (
     <div className="path-bar">
@@ -249,8 +256,13 @@ export function PathBar() {
             autoCapitalize="off"
             spellCheck={false}
             onChange={(e) => handleInputChange(e.target.value)}
-            onCompositionStart={() => { composingRef.current = true; }}
-            onCompositionEnd={() => { composingRef.current = false; imeEndedAtRef.current = Date.now(); }}
+            onCompositionStart={() => {
+              composingRef.current = true;
+            }}
+            onCompositionEnd={() => {
+              composingRef.current = false;
+              imeEndedAtRef.current = Date.now();
+            }}
             onKeyDown={handleKeyDown}
             onBlur={() => {
               setTimeout(() => {
@@ -281,11 +293,12 @@ export function PathBar() {
                   }}
                 >
                   {completionSource === 'fs'
-                    ? (() => { const parts = s.split('/').filter(Boolean); return parts[parts.length - 1] + '/'; })()
+                    ? (() => {
+                        const parts = s.split('/').filter(Boolean);
+                        return `${parts[parts.length - 1]}/`;
+                      })()
                     : s}
-                  {completionSource === 'fs' && (
-                    <span className="path-suggestion-full">{s}</span>
-                  )}
+                  {completionSource === 'fs' && <span className="path-suggestion-full">{s}</span>}
                 </div>
               ))}
             </div>
@@ -297,18 +310,21 @@ export function PathBar() {
                 <div className="path-suggestion path-suggestion--empty">
                   {t('pathBar.noMatches')}
                 </div>
-              ) : bookmarkSuggestions.map((item, i) => (
-                <div
-                  key={item.id}
-                  className={`path-suggestion path-suggestion--bookmark${i === suggestionIndex ? ' active' : ''}`}
-                  onMouseDown={() => commitBookmark(i)}
-                >
-                  <span className="path-suggestion-label">
-                    {item.isFavorite ? '📁 ' : '🔖 '}{item.label}
-                  </span>
-                  <span className="path-suggestion-path">{item.path}</span>
-                </div>
-              ))}
+              ) : (
+                bookmarkSuggestions.map((item, i) => (
+                  <div
+                    key={item.id}
+                    className={`path-suggestion path-suggestion--bookmark${i === suggestionIndex ? ' active' : ''}`}
+                    onMouseDown={() => commitBookmark(i)}
+                  >
+                    <span className="path-suggestion-label">
+                      {item.isFavorite ? '📁 ' : '🔖 '}
+                      {item.label}
+                    </span>
+                    <span className="path-suggestion-path">{item.path}</span>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
@@ -316,18 +332,24 @@ export function PathBar() {
         <div className="path-breadcrumb" onClick={() => startMode('path', currentPath)}>
           <span
             className="path-segment"
-            onClick={(e) => { e.stopPropagation(); navigateTo('/'); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigateTo('/');
+            }}
           >
             /
           </span>
           {segments.map((seg, i) => {
-            const segPath = '/' + segments.slice(0, i + 1).join('/');
+            const segPath = `/${segments.slice(0, i + 1).join('/')}`;
             return (
               <span key={segPath}>
                 {i > 0 && <span className="path-sep">/</span>}
                 <span
                   className="path-segment"
-                  onClick={(e) => { e.stopPropagation(); navigateTo(segPath); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateTo(segPath);
+                  }}
                 >
                   {seg}
                 </span>

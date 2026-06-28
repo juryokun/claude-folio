@@ -27,7 +27,10 @@ export function NewFileModal() {
 
   const handleCreate = async () => {
     const trimmed = name.trim();
-    if (!trimmed) { setShowNewFile(false); return; }
+    if (!trimmed) {
+      setShowNewFile(false);
+      return;
+    }
     const tab = activeTab();
     try {
       await tauriApi.createFile(`${tab.path}/${trimmed}`);
@@ -58,7 +61,9 @@ export function NewFileModal() {
         />
         <div className="modal-actions">
           <button onClick={() => setShowNewFile(false)}>{t('newFileModal.cancel')}</button>
-          <button className="primary" onClick={handleCreate}>{t('newFileModal.create')}</button>
+          <button className="primary" onClick={handleCreate}>
+            {t('newFileModal.create')}
+          </button>
         </div>
       </div>
     </div>

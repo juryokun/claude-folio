@@ -12,7 +12,7 @@ export function commonPrefix(strs: string[]): string {
 
 /** Expand a leading `~` to the given home directory. */
 export function expandTilde(value: string, home: string): string {
-  if (value === '~') return home + '/';
+  if (value === '~') return `${home}/`;
   if (value.startsWith('~/')) return home + value.slice(1);
   return value;
 }

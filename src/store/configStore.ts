@@ -5,17 +5,30 @@ import { NORMAL_KEYMAP } from '../lib/vim/keymap';
 import { buildKeymap } from '../lib/vim/keymapUtils';
 
 export interface AppearanceConfig {
-  dateFormat: string;  // e.g. "%Y/%m/%d"
+  dateFormat: string; // e.g. "%Y/%m/%d"
   sizeUnit: 'binary' | 'decimal';
 }
 
 export type FavoriteKey =
-  | 'home' | 'desktop' | 'documents' | 'downloads'
-  | 'pictures' | 'music' | 'movies' | 'applications' | 'public';
+  | 'home'
+  | 'desktop'
+  | 'documents'
+  | 'downloads'
+  | 'pictures'
+  | 'music'
+  | 'movies'
+  | 'applications'
+  | 'public';
 
 const DEFAULT_FAVORITES: FavoriteKey[] = [
-  'home', 'desktop', 'documents', 'downloads',
-  'pictures', 'music', 'movies', 'applications',
+  'home',
+  'desktop',
+  'documents',
+  'downloads',
+  'pictures',
+  'music',
+  'movies',
+  'applications',
 ];
 
 interface ConfigStore {
@@ -30,7 +43,6 @@ const DEFAULT_APPEARANCE: AppearanceConfig = {
   dateFormat: '%Y/%m/%d',
   sizeUnit: 'binary',
 };
-
 
 export const useConfigStore = create<ConfigStore>((set) => ({
   appearance: DEFAULT_APPEARANCE,

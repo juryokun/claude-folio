@@ -34,7 +34,10 @@ interface UiStore {
   showSidebar: boolean;
   showPreview: boolean;
   previewWidth: number;
-  copyConflict: { conflicts: string[]; onResolve: (strategy: 'overwrite' | 'rename') => void } | null;
+  copyConflict: {
+    conflicts: string[];
+    onResolve: (strategy: 'overwrite' | 'rename') => void;
+  } | null;
   language: Language;
   theme: ThemeId;
   pendingKey: string | null;
@@ -67,7 +70,10 @@ interface UiStore {
   setColumnWidths: (w: Partial<{ size: number; date: number }>) => void;
   togglePreview: () => void;
   setPreviewWidth: (w: number) => void;
-  showCopyConflict: (conflicts: string[], onResolve: (strategy: 'overwrite' | 'rename') => void) => void;
+  showCopyConflict: (
+    conflicts: string[],
+    onResolve: (strategy: 'overwrite' | 'rename') => void,
+  ) => void;
   closeCopyConflict: () => void;
 }
 
@@ -109,8 +115,15 @@ export const useUiStore = create<UiStore>()(
 
       setVimMode: (mode) => set({ vimMode: mode }),
       setPendingKey: (key) => set({ pendingKey: key }),
-      setLanguage: (lang) => { setLanguage(lang); set({ language: lang }); tauriApi.saveLanguage(lang).catch(console.error); },
-      setTheme: (id) => { applyTheme(id); set({ theme: id }); },
+      setLanguage: (lang) => {
+        setLanguage(lang);
+        set({ language: lang });
+        tauriApi.saveLanguage(lang).catch(console.error);
+      },
+      setTheme: (id) => {
+        applyTheme(id);
+        set({ theme: id });
+      },
       setEditorCommand: (cmd) => set({ editorCommand: cmd }),
       setTerminalApp: (app) => set({ terminalApp: app }),
       setTerminalCommand: (cmd) => set({ terminalCommand: cmd }),
@@ -153,6 +166,6 @@ export const useUiStore = create<UiStore>()(
         previewWidth: s.previewWidth,
         theme: s.theme,
       }),
-    }
-  )
+    },
+  ),
 );

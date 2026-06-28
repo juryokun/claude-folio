@@ -130,13 +130,13 @@ describe('bookmarkStore 統合テスト', () => {
 
     it('先頭アイテムを末尾へ移動できる', async () => {
       await useBookmarkStore.getState().reorderBookmarks(0, 2);
-      const labels = useBookmarkStore.getState().bookmarks.map(b => b.label);
+      const labels = useBookmarkStore.getState().bookmarks.map((b) => b.label);
       expect(labels).toEqual(['B', 'C', 'A']);
     });
 
     it('末尾アイテムを先頭へ移動できる', async () => {
       await useBookmarkStore.getState().reorderBookmarks(2, 0);
-      const labels = useBookmarkStore.getState().bookmarks.map(b => b.label);
+      const labels = useBookmarkStore.getState().bookmarks.map((b) => b.label);
       expect(labels).toEqual(['C', 'A', 'B']);
     });
 
@@ -148,7 +148,7 @@ describe('bookmarkStore 統合テスト', () => {
     it('saveBookmarks には並べ替え後の順序が渡される', async () => {
       await useBookmarkStore.getState().reorderBookmarks(0, 2);
       const saved = mockSaveBookmarks.mock.calls[0][0] as { label: string; path: string }[];
-      expect(saved.map(b => b.label)).toEqual(['B', 'C', 'A']);
+      expect(saved.map((b) => b.label)).toEqual(['B', 'C', 'A']);
     });
   });
 
@@ -157,16 +157,18 @@ describe('bookmarkStore 統合テスト', () => {
   describe('CRUD フロー全体', () => {
     it('追加・削除・並べ替えの連鎖が正しく動作する', async () => {
       await useBookmarkStore.getState().addBookmark('Alpha', '/alpha');
-      await useBookmarkStore.getState().addBookmark('Beta',  '/beta');
+      await useBookmarkStore.getState().addBookmark('Beta', '/beta');
       await useBookmarkStore.getState().addBookmark('Gamma', '/gamma');
       expect(useBookmarkStore.getState().bookmarks).toHaveLength(3);
 
-      const betaId = useBookmarkStore.getState().bookmarks.find(b => b.label === 'Beta')!.id;
+      const betaBm = useBookmarkStore.getState().bookmarks.find((b) => b.label === 'Beta');
+      expect(betaBm).toBeDefined();
+      const betaId = betaBm?.id ?? '';
       await useBookmarkStore.getState().removeBookmark(betaId);
-      expect(useBookmarkStore.getState().bookmarks.map(b => b.label)).toEqual(['Alpha', 'Gamma']);
+      expect(useBookmarkStore.getState().bookmarks.map((b) => b.label)).toEqual(['Alpha', 'Gamma']);
 
       await useBookmarkStore.getState().reorderBookmarks(0, 1);
-      expect(useBookmarkStore.getState().bookmarks.map(b => b.label)).toEqual(['Gamma', 'Alpha']);
+      expect(useBookmarkStore.getState().bookmarks.map((b) => b.label)).toEqual(['Gamma', 'Alpha']);
     });
   });
 });

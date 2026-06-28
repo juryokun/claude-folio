@@ -8,7 +8,7 @@ import { favoritePath } from '../../lib/favorites';
 import { tauriApi } from '../../lib/tauri';
 
 function getUsername(): string {
-  return (window as any).__macFilerUsername ?? 'user';
+  return window.__macFilerUsername ?? 'user';
 }
 
 export function Sidebar() {
@@ -40,10 +40,11 @@ export function Sidebar() {
   const currentPath = activeTab().path;
 
   useEffect(() => {
-    // Fetch home dir from system
-    fetch('').catch(() => {});
-    tauriApi.detectGoogleDrive().then(setGoogleDrivePaths).catch(() => {});
-  }, []);
+    tauriApi
+      .detectGoogleDrive()
+      .then(setGoogleDrivePaths)
+      .catch(() => {});
+  }, [setGoogleDrivePaths]);
 
   const handleDropOnBookmarks = (e: React.DragEvent) => {
     e.preventDefault();

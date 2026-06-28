@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  substitutePlaceholders,
-  shouldShowOutputModal,
-  pushHistory,
-} from '../customCommands';
+import { substitutePlaceholders, shouldShowOutputModal, pushHistory } from '../customCommands';
 
 describe('substitutePlaceholders', () => {
   const ctx = { file: '/home/user/docs/report.pdf', dir: '/home/user/docs', name: 'report.pdf' };
@@ -21,13 +17,15 @@ describe('substitutePlaceholders', () => {
   });
 
   it('replaces multiple placeholders', () => {
-    expect(substitutePlaceholders('cp {file} {dir}/backup_{name}', ctx))
-      .toBe('cp /home/user/docs/report.pdf /home/user/docs/backup_report.pdf');
+    expect(substitutePlaceholders('cp {file} {dir}/backup_{name}', ctx)).toBe(
+      'cp /home/user/docs/report.pdf /home/user/docs/backup_report.pdf',
+    );
   });
 
   it('replaces repeated placeholder', () => {
-    expect(substitutePlaceholders('{file} {file}', ctx))
-      .toBe('/home/user/docs/report.pdf /home/user/docs/report.pdf');
+    expect(substitutePlaceholders('{file} {file}', ctx)).toBe(
+      '/home/user/docs/report.pdf /home/user/docs/report.pdf',
+    );
   });
 
   it('leaves unknown placeholders untouched', () => {
