@@ -1,4 +1,4 @@
-export type ThemeId = 'dark' | 'light' | 'monokai' | 'nord' | 'dracula' | 'gruvbox' | 'tokyo-night';
+export type ThemeId = 'dark' | 'light' | 'monokai' | 'nord' | 'dracula' | 'gruvbox';
 
 export interface Theme {
   id: ThemeId;
@@ -101,22 +101,6 @@ export const THEMES: Theme[] = [
       '--text-accent': '#fabd2f',
       '--border': '#3c3836',
       '--cursor-bg': '#504945',
-    },
-  },
-  {
-    id: 'tokyo-night',
-    label: 'Tokyo Night',
-    vars: {
-      '--bg': '#1a1b26',
-      '--bg-secondary': '#16161e',
-      '--bg-hover': '#1f2335',
-      '--bg-active': '#283457',
-      '--bg-selected': '#1f2335',
-      '--text': '#a9b1d6',
-      '--text-dim': '#565f89',
-      '--text-accent': '#7aa2f7',
-      '--border': '#292e42',
-      '--cursor-bg': '#283457',
     },
   },
 ];

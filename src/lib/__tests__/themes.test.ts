@@ -10,7 +10,6 @@ describe('THEMES', () => {
     expect(ids).toContain('nord');
     expect(ids).toContain('dracula');
     expect(ids).toContain('gruvbox');
-    expect(ids).toContain('tokyo-night');
   });
 
   it('every theme has required CSS variables', () => {
@@ -31,7 +30,6 @@ describe('isValidThemeId', () => {
     expect(isValidThemeId('nord')).toBe(true);
     expect(isValidThemeId('dracula')).toBe(true);
     expect(isValidThemeId('gruvbox')).toBe(true);
-    expect(isValidThemeId('tokyo-night')).toBe(true);
   });
 
   it('returns false for unknown ids', () => {
