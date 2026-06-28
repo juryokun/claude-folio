@@ -37,8 +37,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Claude Folio ${{ github.ref_name }}'
+          releaseName: 'Folio ${{ github.ref_name }}'
           releaseBody: |
             See the assets below to download the installer.
+
+            ## Installation (macOS)
+
+            The app is not yet notarized with Apple. After installing from the DMG, macOS may show **"Folio is damaged and can't be opened."**
+
+            To fix this, run the following command in Terminal:
+
+            ```bash
+            xattr -dr com.apple.quarantine /Applications/Folio.app
+            ```
+
+            Then open the app normally.
           releaseDraft: true
           prerelease: false
