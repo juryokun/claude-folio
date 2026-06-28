@@ -26,6 +26,8 @@ const ja = {
     colName: '名前',
     colSize: 'サイズ',
     colDate: '更新日時',
+    colDateCreated: '作成日時',
+    colDateAccessed: 'アクセス日時',
     ctx: {
       rename: '名前を変更',
       delete: 'ゴミ箱に移動',

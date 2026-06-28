@@ -48,6 +48,8 @@ pub fn search_files(
                 link_target: None,
                 size,
                 modified,
+                created: None,
+                accessed: None,
                 extension,
             })
         })
@@ -133,6 +135,8 @@ pub fn search_with_fd(
                         .map(|d| d.as_secs())
                         .unwrap_or(0)
                 }),
+                created: None,
+                accessed: None,
                 is_symlink,
                 link_target,
                 extension,

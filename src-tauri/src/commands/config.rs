@@ -3,10 +3,20 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppearanceConfig {
+    #[serde(default = "default_date_format")]
+    pub date_format: String,
+    #[serde(default = "default_date_column")]
+    pub date_column: String,
     #[serde(default = "default_size_unit")]
     pub size_unit: String,
 }
 
+fn default_date_format() -> String {
+    "auto".to_string()
+}
+fn default_date_column() -> String {
+    "modified".to_string()
+}
 fn default_size_unit() -> String {
     "binary".to_string()
 }
@@ -14,6 +24,8 @@ fn default_size_unit() -> String {
 impl Default for AppearanceConfig {
     fn default() -> Self {
         Self {
+            date_format: "auto".to_string(),
+            date_column: "modified".to_string(),
             size_unit: "binary".to_string(),
         }
     }

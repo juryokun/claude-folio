@@ -10,7 +10,9 @@ pub struct FileEntry {
     pub is_symlink: bool,
     pub link_target: Option<String>,
     pub size: u64,
-    pub modified: Option<u64>, // Unix timestamp in seconds
+    pub modified: Option<u64>,  // Unix timestamp in seconds
+    pub created: Option<u64>,   // Unix timestamp in seconds
+    pub accessed: Option<u64>,  // Unix timestamp in seconds
     pub extension: Option<String>,
 }
 
@@ -76,6 +78,8 @@ pub fn list_dir(path: String, show_hidden: bool) -> Result<Vec<FileEntry>, Strin
                 0
             };
             let modified = metadata.modified().ok().map(system_time_to_unix);
+            let created = metadata.created().ok().map(system_time_to_unix);
+            let accessed = metadata.accessed().ok().map(system_time_to_unix);
             let extension = if is_dir {
                 None
             } else {
@@ -92,6 +96,8 @@ pub fn list_dir(path: String, show_hidden: bool) -> Result<Vec<FileEntry>, Strin
                 link_target,
                 size,
                 modified,
+                created,
+                accessed,
                 extension,
             })
         })

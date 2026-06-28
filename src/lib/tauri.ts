@@ -1,4 +1,4 @@
-import { invoke, isTauri, Channel } from '@tauri-apps/api/core';
+import { Channel, invoke, isTauri } from '@tauri-apps/api/core';
 import type { FileEntry } from '../types';
 
 export { isTauri };
@@ -82,7 +82,7 @@ export const tauriApi = {
 
   loadConfig: () =>
     invoke<{
-      appearance?: { date_format?: string; size_unit?: string };
+      appearance?: { date_format?: string; date_column?: string; size_unit?: string };
       editor?: { command?: string };
       terminal?: { app?: string; command?: string };
       keymap?: Record<string, string[]>;

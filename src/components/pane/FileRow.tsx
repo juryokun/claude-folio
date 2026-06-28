@@ -32,12 +32,30 @@ function formatSize(
   return { value, unit: units[i] };
 }
 
+function applyStrftime(ts: number, fmt: string): string {
+  const d = new Date(ts * 1000);
+  return fmt
+    .replace('%Y', String(d.getFullYear()))
+    .replace('%m', String(d.getMonth() + 1).padStart(2, '0'))
+    .replace('%d', String(d.getDate()).padStart(2, '0'))
+    .replace('%H', String(d.getHours()).padStart(2, '0'))
+    .replace('%M', String(d.getMinutes()).padStart(2, '0'))
+    .replace('%S', String(d.getSeconds()).padStart(2, '0'));
+}
+
 function formatDateParts(
   ts: number | undefined,
+  fmt: string,
   todayLabel: string,
   yesterdayLabel: string,
 ): { label: string; time: string } {
   if (!ts) return { label: '—', time: '' };
+
+  if (fmt !== 'auto') {
+    // Custom format: no label/time split, put everything in label
+    return { label: applyStrftime(ts, fmt), time: '' };
+  }
+
   const d = new Date(ts * 1000);
   const now = new Date();
   const hms = [d.getHours(), d.getMinutes(), d.getSeconds()]
@@ -123,7 +141,7 @@ export const FileRow = React.memo(function FileRow({
   subLabel,
 }: Props) {
   const { t } = useTranslation();
-  const { sizeUnit } = useConfigStore((s) => s.appearance);
+  const { sizeUnit, dateFormat, dateColumn } = useConfigStore((s) => s.appearance);
   const pendingKey = useUiStore((s) => (isCursor ? s.pendingKey : null));
   return (
     <div
@@ -178,8 +196,15 @@ export const FileRow = React.memo(function FileRow({
       </span>
       <span className="file-date" style={{ width: colDateWidth }}>
         {(() => {
+          const ts =
+            dateColumn === 'created'
+              ? entry.created
+              : dateColumn === 'accessed'
+                ? entry.accessed
+                : entry.modified;
           const { label, time } = formatDateParts(
-            entry.modified,
+            ts,
+            dateFormat,
             t('fileDate.today'),
             t('fileDate.yesterday'),
           );

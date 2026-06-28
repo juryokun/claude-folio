@@ -6,6 +6,8 @@ export interface FileEntry {
   link_target?: string;
   size: number;
   modified?: number; // Unix timestamp seconds
+  created?: number; // Unix timestamp seconds
+  accessed?: number; // Unix timestamp seconds
   extension?: string;
 }
 

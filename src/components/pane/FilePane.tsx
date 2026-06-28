@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useFileOps } from '../../hooks/useFileOps';
 import { tauriApi } from '../../lib/tauri';
 import { useBookmarkStore } from '../../store/bookmarkStore';
+import { useConfigStore } from '../../store/configStore';
 import { type SortKey, useFileStore } from '../../store/fileStore';
 import { useTabStore } from '../../store/tabStore';
 import { useUiStore } from '../../store/uiStore';
@@ -32,6 +33,7 @@ export function FilePane({ tabId }: Props) {
   const { tabs, activeTabId, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setCursor, loadDir, setSort, clipboard } = useFileStore();
   const { showHidden, columnWidths, setColumnWidths } = useUiStore();
+  const { dateColumn } = useConfigStore((s) => s.appearance);
   const fileOps = useFileOps();
   const { terminalApp, terminalCommand, showStatusMessage } = useUiStore();
   const { addBookmark } = useBookmarkStore();
@@ -328,7 +330,11 @@ export function FilePane({ tabId }: Props) {
           onClick={() => handleSortClick('time')}
           style={{ width: columnWidths.date }}
         >
-          {t('filePane.colDate')}{' '}
+          {dateColumn === 'created'
+            ? t('filePane.colDateCreated')
+            : dateColumn === 'accessed'
+              ? t('filePane.colDateAccessed')
+              : t('filePane.colDate')}{' '}
           <SortIndicator active={pane.sortKey === 'time'} desc={pane.sortDesc} />
           <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'date')} />
         </span>

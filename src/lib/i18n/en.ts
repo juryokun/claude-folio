@@ -26,6 +26,8 @@ const en = {
     colName: 'Name',
     colSize: 'Size',
     colDate: 'Modified',
+    colDateCreated: 'Created',
+    colDateAccessed: 'Accessed',
     ctx: {
       rename: 'Rename',
       delete: 'Move to Trash',
