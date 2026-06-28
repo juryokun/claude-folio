@@ -36,15 +36,16 @@ export function FilePane({ tabId }: Props) {
   const { terminalApp, terminalCommand, showStatusMessage } = useUiStore();
   const { addBookmark } = useBookmarkStore();
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
-
   const startColResize = useCallback(
     (e: React.MouseEvent, col: 'size' | 'date') => {
       e.preventDefault();
       e.stopPropagation();
       const startX = e.clientX;
       const startWidth = columnWidths[col];
+      let moved = false;
       const onMove = (ev: MouseEvent) => {
-        const minWidth = col === 'size' ? 80 : 80;
+        if (!moved && Math.abs(ev.clientX - startX) > 2) moved = true;
+        const minWidth = 80;
         setColumnWidths({ [col]: Math.max(minWidth, startWidth - (ev.clientX - startX)) });
       };
       const onUp = () => {
@@ -52,6 +53,13 @@ export function FilePane({ tabId }: Props) {
         window.removeEventListener('mouseup', onUp);
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
+        if (moved) {
+          // suppress the click that fires after mouseup on trackpad
+          window.addEventListener('click', (ev) => ev.stopPropagation(), {
+            capture: true,
+            once: true,
+          });
+        }
       };
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
