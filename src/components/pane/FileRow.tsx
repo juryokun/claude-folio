@@ -175,9 +175,9 @@ export const FileRow = React.memo(function FileRow({
       <FileIcon entry={entry} />
       {gitSymbol !== undefined && (
         <span
-          className={`file-git-status git-${gitSymbol === '?' ? 'untracked' : gitSymbol === 'M' ? 'modified' : gitSymbol === 'A' ? 'added' : gitSymbol === 'D' ? 'deleted' : gitSymbol === 'U' ? 'unmerged' : 'clean'}`}
+          className={`file-git-status${gitSymbol ? ` git-${gitSymbol === '?' ? 'untracked' : gitSymbol === 'M' ? 'modified' : gitSymbol === 'A' ? 'added' : gitSymbol === 'D' ? 'deleted' : 'unmerged'}` : ''}`}
         >
-          {gitSymbol ?? ' '}
+          {gitSymbol}
         </span>
       )}
       <span className="file-name">

@@ -392,7 +392,7 @@ export function FilePane({ tabId }: Props) {
                 isSelected={pane.selected.has(entry.path)}
                 colSizeWidth={showSize ? columnWidths.size : undefined}
                 dateCols={dateCols}
-                gitSymbol={showGitStatus ? pane.gitStatus[entry.name] : undefined}
+                gitSymbol={showGitStatus ? (pane.gitStatus[entry.name] ?? '') : undefined}
                 subLabel={inFindMode ? path.dirname(entry.path) : undefined}
                 dragPaths={
                   pane.selected.size > 0 && pane.selected.has(entry.path)
