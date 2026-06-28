@@ -637,14 +637,20 @@ body {
   padding: 0 2px;
   flex-shrink: 0;
 }
+.command-output-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: sans-serif;
+  flex-shrink: 0;
+}
 .command-output-body {
   padding: 12px;
   font-size: 12px;
   font-family: monospace;
   white-space: pre-wrap;
   word-break: break-all;
-  max-height: 400px;
-  overflow-y: auto;
+  height: 400px;
+  overflow-y: scroll;
   color: var(--text);
   margin: 0;
 }

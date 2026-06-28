@@ -384,12 +384,14 @@ export function CommandPalette() {
     }
 
     const listLen = activeList.length;
-    if (e.key === 'ArrowDown' && listLen > 0) {
+    const isDown = e.key === 'ArrowDown' || (e.key === 'j' && e.ctrlKey);
+    const isUp   = e.key === 'ArrowUp'   || (e.key === 'k' && e.ctrlKey);
+    if (isDown && listLen > 0) {
       e.preventDefault();
       setCycleIndex((i) => (i + 1) % listLen);
       return;
     }
-    if (e.key === 'ArrowUp' && listLen > 0) {
+    if (isUp && listLen > 0) {
       e.preventDefault();
       setCycleIndex((i) => (i - 1 + listLen) % listLen);
       return;
