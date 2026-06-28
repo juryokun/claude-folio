@@ -582,6 +582,7 @@ body {
 .file-date-label {
   flex-shrink: 0;
   white-space: nowrap;
+  min-width: 10ch;
 }
 .file-date-time {
   flex: 1;
