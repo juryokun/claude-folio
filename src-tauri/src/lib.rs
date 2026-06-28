@@ -6,6 +6,7 @@ use tauri::{Emitter, Manager};
 #[cfg(not(test))]
 use commands::{
     bookmarks::{load_bookmarks, save_bookmarks},
+    custom_commands::{load_custom_commands, run_shell_command},
     cli::{get_startup_path, install_cli},
     config::{init_config, load_config, save_language},
     clipboard::{copy_name_to_clipboard, copy_path_to_clipboard},
@@ -108,6 +109,8 @@ pub fn run() {
             unwatch_dir,
             load_bookmarks,
             save_bookmarks,
+            load_custom_commands,
+            run_shell_command,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

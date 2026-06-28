@@ -12,6 +12,7 @@ import { NewDirModal } from './components/modals/NewDirModal';
 import { NewFileModal } from './components/modals/NewFileModal';
 import { ConfirmModal } from './components/modals/ConfirmModal';
 import { CommandPalette } from './components/modals/CommandPalette';
+import { CommandOutputModal } from './components/modals/CommandOutputModal';
 import { OpenWithModal } from './components/modals/OpenWithModal';
 import { CopyConflictModal } from './components/modals/CopyConflictModal';
 import { PreviewPanel } from './components/preview/PreviewPanel';
@@ -21,6 +22,7 @@ import { useFileStore } from './store/fileStore';
 import { useUiStore } from './store/uiStore';
 import { useConfigStore } from './store/configStore';
 import { useBookmarkStore } from './store/bookmarkStore';
+import { useCustomCommandStore } from './store/customCommandStore';
 import { useVimKeys } from './hooks/useVimKeys';
 import { useFileOps } from './hooks/useFileOps';
 import { tauriApi } from './lib/tauri';
@@ -53,6 +55,7 @@ export default function App() {
   const loadConfig = useConfigStore((s) => s.load);
   const keymap = useConfigStore((s) => s.keymap);
   const loadBookmarks = useBookmarkStore((s) => s.loadBookmarks);
+  const loadCustomCommands = useCustomCommandStore((s) => s.loadCommands);
 
   // Resolve real home dir, then navigate to startup path arg (or home)
   useEffect(() => {
@@ -71,6 +74,7 @@ export default function App() {
     tauriApi.check7zipInstalled().then(useUiStore.getState().setHas7zip).catch(() => {});
     tauriApi.checkZoxideInstalled().then(useUiStore.getState().setHasZoxide).catch(() => {});
     tauriApi.checkFdInstalled().then(useUiStore.getState().setHasFd).catch(() => {});
+    loadCustomCommands().catch(() => {});
 
     // When a second CLI launch targets this already-running instance, open a new tab.
     const unlisten = listen<string | null>('folio:open-tab', (event) => {
@@ -317,6 +321,7 @@ export default function App() {
       <NewFileModal />
       <ConfirmModal />
       <CommandPalette />
+      <CommandOutputModal />
       <OpenWithModal />
       <CopyConflictModal />
       <KeybindingsHelp />

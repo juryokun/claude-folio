@@ -121,6 +121,12 @@ export const tauriApi = {
   installCli: () =>
     invoke<void>('install_cli'),
 
+  loadCustomCommands: () =>
+    invoke<import('../lib/customCommands').CustomCommand[]>('load_custom_commands'),
+
+  runShellCommand: (shell: string, command: string, cwd: string) =>
+    invoke<import('../lib/customCommands').ShellOutput>('run_shell_command', { shell, command, cwd }),
+
   startNativeDrag: (paths: string[], label: string): Promise<void> => {
     // Build a simple PNG drag image via canvas
     const canvas = document.createElement('canvas');

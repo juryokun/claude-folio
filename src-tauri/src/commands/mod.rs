@@ -1,5 +1,6 @@
 pub mod bookmarks;
 pub mod cli;
+pub mod custom_commands;
 pub mod config;
 pub mod fs;
 pub mod trash;

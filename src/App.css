@@ -576,6 +576,80 @@ body {
   border-color: var(--text-accent);
 }
 
+.command-custom-badge {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--text-accent);
+  color: var(--text-accent);
+  font-family: sans-serif;
+  flex-shrink: 0;
+}
+.command-completion-item.custom { display: flex; align-items: center; gap: 4px; }
+
+.command-shell-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  font-family: sans-serif;
+}
+
+/* Command output modal */
+.command-output-modal {
+  max-width: 680px;
+  width: 90vw;
+  padding: 0;
+  overflow: hidden;
+}
+.command-output-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+}
+.command-output-label {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.command-output-badge {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+.command-output-badge.ok { background: var(--bg-selected); color: var(--text-accent); }
+.command-output-badge.error { background: #3d1a1a; color: #f48771; }
+.command-output-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+.command-output-body {
+  padding: 12px;
+  font-size: 12px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 400px;
+  overflow-y: auto;
+  color: var(--text);
+  margin: 0;
+}
+.command-output-stderr { color: #f48771; }
+
 /* Help modal */
 .help-modal { max-height: 80vh; overflow-y: auto; max-width: 500px; }
 .keybinding-table { width: 100%; border-collapse: collapse; }

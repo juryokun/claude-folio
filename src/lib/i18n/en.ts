@@ -91,6 +91,8 @@ const en = {
       langChanged: '🌐 Language switched to {{lang}}',
       themeChanged: '🎨 Theme switched to {{id}}',
       cliInstalled: '✅ Installed: /usr/local/bin/folio',
+      customDone: '✅ {{name}} done',
+      customConfirm: 'Run :{{name}}?\n{{command}}',
     },
   },
   confirmModal: {
@@ -139,6 +141,10 @@ const en = {
     cancel: 'Cancel',
     create: 'Create',
     error: 'Failed to create folder: {{error}}',
+  },
+  commandPaletteHint: {
+    shellMode: '! prefix: run shell command directly',
+    history: 'history',
   },
   searchBar: {
     placeholder: 'Search... (prefix / for regex)',

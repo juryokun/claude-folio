@@ -91,6 +91,8 @@ const ja = {
       langChanged: '🌐 言語を {{lang}} に切り替えました',
       themeChanged: '🎨 テーマを {{id}} に切り替えました',
       cliInstalled: '✅ インストールしました: /usr/local/bin/folio',
+      customDone: '✅ {{name}} 完了',
+      customConfirm: ':{{name}} を実行しますか？\n{{command}}',
     },
   },
   confirmModal: {
@@ -139,6 +141,10 @@ const ja = {
     cancel: 'キャンセル',
     create: '作成',
     error: 'フォルダ作成に失敗しました: {{error}}',
+  },
+  commandPaletteHint: {
+    shellMode: '! プレフィックス: シェルコマンドを直接実行',
+    history: '履歴',
   },
   searchBar: {
     placeholder: '検索... (/ で始めると正規表現)',
