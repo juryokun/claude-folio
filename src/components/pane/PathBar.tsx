@@ -112,7 +112,8 @@ export function PathBar() {
     navigateTo(item.path);
   };
 
-  const fetchCompletions = useCallback(async (value: string) => {
+  // keepIndexAtMinus1: true after Tab — suggestions are shown as guide only, Enter uses inputValue
+  const fetchCompletions = useCallback(async (value: string, keepIndexAtMinus1 = false) => {
     if (!value) {
       setSuggestions([]);
       setSuggestionIndex(-1);
@@ -123,23 +124,21 @@ export function PathBar() {
     const isAbsPath = expanded.startsWith('/');
 
     if (isAbsPath) {
-      // Filesystem completion
       try {
         const results = await tauriApi.listDirCompletions(expanded);
         setSuggestions(results);
-        setSuggestionIndex(results.length > 0 ? 0 : -1);
+        setSuggestionIndex(keepIndexAtMinus1 ? -1 : (results.length > 0 ? 0 : -1));
         setCompletionSource('fs');
       } catch {
         setSuggestions([]);
         setSuggestionIndex(-1);
       }
     } else if (hasZoxide) {
-      // Zoxide keyword search
       try {
         const results = await tauriApi.zoxideQuery(value);
         const trimmed = results.slice(0, 8);
         setSuggestions(trimmed);
-        setSuggestionIndex(trimmed.length > 0 ? 0 : -1);
+        setSuggestionIndex(keepIndexAtMinus1 ? -1 : (trimmed.length > 0 ? 0 : -1));
         setCompletionSource('zoxide');
       } catch {
         setSuggestions([]);
@@ -177,16 +176,14 @@ export function PathBar() {
     if (e.key === 'Tab' && mode === 'path' && suggestions.length > 0) {
       e.preventDefault();
       if (suggestionIndex >= 0) {
-        // Fill with the selected suggestion
         const completed = suggestions[suggestionIndex];
         setInputValue(completed);
-        fetchCompletions(completed);
+        fetchCompletions(completed, true);
       } else {
-        // Fill with common prefix across all suggestions
         const prefix = commonPrefix(suggestions);
         if (prefix.length > expandTilde(inputValue, getHome()).length) {
           setInputValue(prefix);
-          fetchCompletions(prefix);
+          fetchCompletions(prefix, true);
         }
       }
       return;
@@ -263,7 +260,7 @@ export function PathBar() {
                   onMouseDown={() => {
                     if (completionSource === 'fs') {
                       setInputValue(s);
-                      fetchCompletions(s);
+                      fetchCompletions(s, true);
                       inputRef.current?.focus();
                     } else {
                       commitPath(s);
