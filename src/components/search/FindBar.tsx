@@ -40,7 +40,7 @@ export function FindBar() {
   // Inactive banner shown while find results are displayed
   if (!showFind) {
     if (!findMode) return null;
-    const label = findMode.type === 'file' ? 'ff' : 'fd';
+    const label = findMode.type === 'file' ? 'ff' : findMode.type === 'dir' ? 'fd' : 'fa';
     const count = findMode.loading ? '…' : String(findMode.results.length);
     return (
       <div className="find-bar find-bar--inactive">
@@ -52,11 +52,12 @@ export function FindBar() {
     );
   }
 
-  const prompt = findType === 'file' ? 'find files:' : 'find dirs:';
+  const prompt = findType === 'file' ? 'find files:' : findType === 'dir' ? 'find dirs:' : 'find all:';
+  const badge = findType === 'file' ? 'ff' : findType === 'dir' ? 'fd' : 'fa';
 
   return (
     <div className="find-bar find-bar--active">
-      <span className="find-bar-badge">{findType === 'file' ? 'ff' : 'fd'}</span>
+      <span className="find-bar-badge">{badge}</span>
       <span className="find-bar-prompt">{prompt}</span>
       <input
         ref={inputRef}

@@ -87,18 +87,16 @@ pub fn search_with_fd(
 ) -> Result<Vec<FileEntry>, String> {
     let fd = find_fd().ok_or("fd is not installed")?;
 
-    let type_flag = match fd_type.as_str() {
-        "dir" => "d",
-        _ => "f",
-    };
+    let mut args: Vec<&str> = vec!["--max-results", "500", "--color", "never"];
+    match fd_type.as_str() {
+        "file" => { args.extend_from_slice(&["--type", "f"]); }
+        "dir"  => { args.extend_from_slice(&["--type", "d"]); }
+        _      => {} // "all": no --type filter
+    }
+    args.extend_from_slice(&["--", &query, &root]);
 
     let output = std::process::Command::new(fd)
-        .args([
-            "--type", type_flag,
-            "--max-results", "500",
-            "--color", "never",
-            "--", &query, &root,
-        ])
+        .args(&args)
         .output()
         .map_err(|e| e.to_string())?;
 

@@ -242,6 +242,9 @@ export default function App() {
         case 'find_dirs':
           openFind('dir');
           break;
+        case 'find_all':
+          openFind('all');
+          break;
         case 'sort_name':
           setSort(activeTabId, 'name', false);
           break;

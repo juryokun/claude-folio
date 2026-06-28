@@ -189,7 +189,7 @@ export function FilePane({ tabId }: Props) {
       <div className="col-line" style={{ right: columnWidths.date + 11 }} />
       {pane.findMode && (
         <div className="find-mode-banner">
-          <span className="find-bar-badge">{pane.findMode.type === 'file' ? 'ff' : 'fd'}</span>
+          <span className="find-bar-badge">{pane.findMode.type === 'file' ? 'ff' : pane.findMode.type === 'dir' ? 'fd' : 'fa'}</span>
           <span>{pane.findMode.query}</span>
           {pane.findMode.loading
             ? <span className="find-mode-count">検索中…</span>

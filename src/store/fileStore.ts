@@ -8,7 +8,7 @@ export type SortKey = 'name' | 'time';
 
 export interface FindMode {
   query: string;
-  type: 'file' | 'dir';
+  type: 'file' | 'dir' | 'all';
   results: FileEntry[];
   loading: boolean;
 }
@@ -40,7 +40,7 @@ interface FileStore {
   setSort: (tabId: string, key: SortKey, desc: boolean) => void;
   setClipboard: (state: ClipboardState | null) => void;
   filteredEntries: (tabId: string) => FileEntry[];
-  startFind: (tabId: string, query: string, type: 'file' | 'dir', root: string) => Promise<void>;
+  startFind: (tabId: string, query: string, type: 'file' | 'dir' | 'all', root: string) => Promise<void>;
   clearFind: (tabId: string) => void;
 }
 

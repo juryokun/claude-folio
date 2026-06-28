@@ -22,7 +22,7 @@ interface UiStore {
   hasZoxide: boolean;
   hasFd: boolean;
   showFind: boolean;
-  findType: 'file' | 'dir';
+  findType: 'file' | 'dir' | 'all';
   terminalApp: string;
   terminalCommand: string;
   googleDrivePaths: string[];
@@ -57,7 +57,7 @@ interface UiStore {
   setHas7zip: (v: boolean) => void;
   setHasZoxide: (v: boolean) => void;
   setHasFd: (v: boolean) => void;
-  openFind: (type: 'file' | 'dir') => void;
+  openFind: (type: 'file' | 'dir' | 'all') => void;
   closeFind: () => void;
   setGoogleDrivePaths: (paths: string[]) => void;
   setSidebarWidth: (w: number) => void;
