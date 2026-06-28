@@ -1,6 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import path from 'path-browserify';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFileOps } from '../../hooks/useFileOps';
 import { tauriApi } from '../../lib/tauri';
@@ -78,16 +78,15 @@ export function FilePane({ tabId }: Props) {
   const inFindMode = !!pane.findMode;
 
   // Merge config-time column defs with UI column widths
-  const widthMap: Record<string, number> = {
-    date: columnWidths.date,
-    dateCreated: columnWidths.dateCreated,
-    dateAccessed: columnWidths.dateAccessed,
-  };
-  const dateCols = visibleDateCols.map((col) => ({
-    ...col,
-    width: widthMap[col.colKey],
-    label: t(col.labelKey),
-  }));
+  const dateCols = useMemo(
+    () =>
+      visibleDateCols.map((col) => ({
+        ...col,
+        width: columnWidths[col.colKey],
+        label: t(col.labelKey),
+      })),
+    [visibleDateCols, columnWidths, t],
+  );
 
   const totalDateWidth = dateCols.reduce((s, c) => s + c.width, 0);
 

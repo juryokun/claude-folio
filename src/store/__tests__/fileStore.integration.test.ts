@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../lib/tauri', () => ({
   tauriApi: {
@@ -8,9 +8,9 @@ vi.mock('../../lib/tauri', () => ({
   isTauri: vi.fn().mockReturnValue(true),
 }));
 
-import { useFileStore } from '../fileStore';
 import { tauriApi } from '../../lib/tauri';
 import type { FileEntry } from '../../types';
+import { useFileStore } from '../fileStore';
 
 const mockListDir = vi.mocked(tauriApi.listDir);
 
@@ -35,6 +35,7 @@ function resetPane() {
         sortKey: 'name',
         sortDesc: false,
         findMode: null,
+        displayEntries: [],
       },
     },
     clipboard: null,

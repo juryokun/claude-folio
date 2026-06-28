@@ -147,8 +147,9 @@ export const FileRow = React.memo(function FileRow({
   subLabel,
 }: Props) {
   const { t } = useTranslation();
-  const { sizeUnit } = useConfigStore((s) => s.appearance);
-  const pendingKey = useUiStore((s) => (isCursor ? s.pendingKey : null));
+  const sizeUnit = useConfigStore((s) => s.appearance.sizeUnit);
+  const rawPendingKey = useUiStore((s) => s.pendingKey);
+  const pendingKey = isCursor ? rawPendingKey : null;
   return (
     <div
       className={`file-row${isCursor ? ' cursor' : ''}${isSelected ? ' selected' : ''}`}
