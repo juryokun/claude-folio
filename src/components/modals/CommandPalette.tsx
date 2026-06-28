@@ -29,8 +29,6 @@ export function CommandPalette() {
       { name: 'cd', args: '<path|keyword>', desc: t('commandPalette.cmd.cd') },
       { name: 'bm', args: '[label]', desc: t('commandPalette.cmd.bm') },
       { name: 'filter', args: '<ext>', desc: t('commandPalette.cmd.filter') },
-      { name: 'zip', args: '[name]', desc: t('commandPalette.cmd.zip') },
-      { name: 'unzip', desc: t('commandPalette.cmd.unzip') },
       { name: 'init-config', desc: t('commandPalette.cmd.initConfig') },
       { name: 'reload-config', desc: t('commandPalette.cmd.reloadConfig') },
       { name: 'clear-storage', desc: t('commandPalette.cmd.clearStorage') },
@@ -56,7 +54,6 @@ export function CommandPalette() {
     showCommandPalette,
     setShowCommandPalette,
     setVimMode,
-    has7zip,
     setLanguage,
     setTheme,
     showStatusMessage,
@@ -141,10 +138,14 @@ export function CommandPalette() {
     const pane = useFileStore.getState().getPane(tab.id);
     const entry = pane.entries[pane.cursor];
     const filePath = entry ? entry.path : tab.path;
+    const selectedPaths =
+      pane.selected.size > 0 ? Array.from(pane.selected) : entry ? [filePath] : [];
+    const selected = selectedPaths.map((p) => `'${p.replace(/'/g, "'\\''")}'`).join(' ');
     return {
       file: filePath,
       dir: tab.path,
       name: entry ? entry.name : '',
+      selected,
     };
   }, [activeTab]);
 
@@ -269,43 +270,6 @@ export function CommandPalette() {
           case 'filter':
             useFileStore.getState().setFilter(tab.id, args[0] ?? '');
             break;
-          case 'open':
-            if (has7zip && args[0] === 'zip') {
-              const name = args[1] ?? 'archive.zip';
-              const selected = Array.from(useFileStore.getState().getPane(tab.id).selected);
-              const paths = selected.length > 0 ? selected : [];
-              if (paths.length > 0) {
-                await tauriApi.compress7zip(paths, path.join(tab.path, name), true);
-                loadDir(tab.id, tab.path, showHidden);
-              }
-            }
-            break;
-          case 'zip': {
-            if (!has7zip) {
-              setError(t('commandPalette.err.no7zip'));
-              return;
-            }
-            const zipName = (args[0] ?? 'archive') + (args[0]?.endsWith('.zip') ? '' : '.zip');
-            const pane = useFileStore.getState().getPane(tab.id);
-            const targets =
-              pane.selected.size > 0 ? Array.from(pane.selected) : pane.entries.map((e) => e.path);
-            await tauriApi.compress7zip(targets, path.join(tab.path, zipName), true);
-            loadDir(tab.id, tab.path, showHidden);
-            break;
-          }
-          case 'unzip': {
-            if (!has7zip) {
-              setError(t('commandPalette.err.no7zip'));
-              return;
-            }
-            const pane = useFileStore.getState().getPane(tab.id);
-            const entry = pane.entries[pane.cursor];
-            if (entry) {
-              await tauriApi.extract7zip(entry.path, tab.path);
-              loadDir(tab.id, tab.path, showHidden);
-            }
-            break;
-          }
           case 'clear-storage': {
             localStorage.clear();
             location.reload();
@@ -388,9 +352,6 @@ export function CommandPalette() {
       activeTabId,
       openTab,
       navigateTo,
-      has7zip,
-      loadDir,
-      showHidden,
       addBookmark,
       setLanguage,
       setTheme,

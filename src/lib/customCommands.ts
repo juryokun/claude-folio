@@ -20,13 +20,16 @@ export interface PlaceholderContext {
   file: string;
   dir: string;
   name: string;
+  /** Space-separated shell-quoted paths of selected files. Falls back to {file} when nothing is selected. */
+  selected: string;
 }
 
 export function substitutePlaceholders(command: string, ctx: PlaceholderContext): string {
   return command
     .replace(/\{file\}/g, ctx.file)
     .replace(/\{dir\}/g, ctx.dir)
-    .replace(/\{name\}/g, ctx.name);
+    .replace(/\{name\}/g, ctx.name)
+    .replace(/\{selected\}/g, ctx.selected);
 }
 
 const OUTPUT_MODAL_LINE_THRESHOLD = 5;

@@ -61,15 +61,13 @@ const ja = {
   },
   commandPalette: {
     placeholder: ':コマンド  (Tab で補完)',
-    help: ':q :tabnew :cd :bm :filter :zip :unzip :init-config :reload-config :clear-storage',
+    help: ':q :tabnew :cd :bm :filter :init-config :reload-config :clear-storage',
     cmd: {
       q: 'タブを閉じる',
       tabnew: '新規タブを開く',
       cd: 'ディレクトリを移動 (zoxide 対応)',
       bm: '現在のディレクトリをブックマーク',
       filter: 'ファイルを拡張子でフィルタ',
-      zip: '選択ファイルを ZIP 圧縮 (7zip)',
-      unzip: '選択アーカイブを展開 (7zip)',
       initConfig: '設定ファイルを初期作成',
       reloadConfig: '設定ファイルを再読み込み',
       clearStorage: 'LocalStorage をクリアしてアプリを再起動',
@@ -80,7 +78,6 @@ const ja = {
     err: {
       notFound: '見つかりません: {{target}}',
       unknown: '不明なコマンド: {{command}}',
-      no7zip: '7zipがインストールされていません',
       langUsage: '使い方: :lang ja または :lang en',
       themeUsage:
         '使い方: :theme dark|light|monokai|nord|dracula|gruvbox|ayu-dark|solarized-light|one-light|catppuccin-latte|papercolor',
@@ -146,6 +143,7 @@ const ja = {
   commandPaletteHint: {
     shellMode: '! プレフィックス: シェルコマンドを直接実行',
     history: '履歴',
+    placeholders: '{file} {dir} {name} {selected}',
   },
   searchBar: {
     placeholder: '検索... (/ で始めると正規表現)',

@@ -61,15 +61,13 @@ const en = {
   },
   commandPalette: {
     placeholder: ':command  (Tab to complete)',
-    help: ':q :tabnew :cd :bm :filter :zip :unzip :init-config :reload-config :clear-storage',
+    help: ':q :tabnew :cd :bm :filter :init-config :reload-config :clear-storage',
     cmd: {
       q: 'Close tab',
       tabnew: 'Open new tab',
       cd: 'Change directory (zoxide support)',
       bm: 'Bookmark current directory',
       filter: 'Filter files by extension',
-      zip: 'Compress selected files to ZIP (7zip)',
-      unzip: 'Extract selected archive (7zip)',
       initConfig: 'Initialize config file',
       reloadConfig: 'Reload config file',
       clearStorage: 'Clear LocalStorage and restart',
@@ -80,7 +78,6 @@ const en = {
     err: {
       notFound: 'Not found: {{target}}',
       unknown: 'Unknown command: {{command}}',
-      no7zip: '7zip is not installed',
       langUsage: 'Usage: :lang ja or :lang en',
       themeUsage:
         'Usage: :theme dark|light|monokai|nord|dracula|gruvbox|ayu-dark|solarized-light|one-light|catppuccin-latte|papercolor',
@@ -146,6 +143,7 @@ const en = {
   commandPaletteHint: {
     shellMode: '! prefix: run shell command directly',
     history: 'history',
+    placeholders: '{file} {dir} {name} {selected}',
   },
   searchBar: {
     placeholder: 'Search... (prefix / for regex)',
