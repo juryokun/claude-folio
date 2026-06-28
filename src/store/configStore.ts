@@ -14,6 +14,7 @@ export interface AppearanceConfig {
   dateModified: DateColumnConfig;
   dateCreated: DateColumnConfig;
   dateAccessed: DateColumnConfig;
+  gitStatus: { show: boolean };
   sizeUnit: 'binary' | 'decimal';
 }
 
@@ -60,6 +61,7 @@ const DEFAULT_APPEARANCE: AppearanceConfig = {
   dateModified: { show: true, format: 'auto' },
   dateCreated: { show: false, format: 'auto' },
   dateAccessed: { show: false, format: 'auto' },
+  gitStatus: { show: true },
   sizeUnit: 'binary',
 };
 
@@ -93,10 +95,12 @@ export const useConfigStore = create<ConfigStore>((set) => ({
         const v = ra?.[key] as { show?: boolean; format?: string } | undefined;
         return { show: v?.show ?? defaultShow, format: v?.format ?? 'auto' };
       };
+      const gs = ra?.git_status as { show?: boolean } | undefined;
       const appearance: AppearanceConfig = {
         dateModified: parseDateCol('date_modified', true),
         dateCreated: parseDateCol('date_created', false),
         dateAccessed: parseDateCol('date_accessed', false),
+        gitStatus: { show: gs?.show ?? true },
         sizeUnit: ((ra?.size_unit as string) ?? 'binary') as 'binary' | 'decimal',
       };
       const keymap = buildKeymap(raw.keymap ?? {});

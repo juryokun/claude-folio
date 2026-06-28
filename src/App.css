@@ -534,6 +534,18 @@ body {
   text-align: center;
   font-size: 12px;
 }
+.file-git-status {
+  width: 14px;
+  text-align: center;
+  font-size: 11px;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+.git-modified  { color: #e5a000; }
+.git-added     { color: #4caf50; }
+.git-deleted   { color: #f44336; }
+.git-untracked { color: #4caf50; }
+.git-unmerged  { color: #e53935; }
 .file-icon.dir {
   filter: sepia(1) saturate(3) hue-rotate(5deg) brightness(0.9);
 }

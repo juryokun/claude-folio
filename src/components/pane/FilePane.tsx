@@ -31,9 +31,11 @@ interface ContextMenuState {
 export function FilePane({ tabId }: Props) {
   const { t } = useTranslation();
   const { tabs, activeTabId, navigateTo } = useTabStore();
-  const { getPane, filteredEntries, setCursor, loadDir, setSort, clipboard } = useFileStore();
+  const { getPane, filteredEntries, setCursor, loadDir, setSort, clipboard, loadGitStatus } =
+    useFileStore();
   const { showHidden, columnWidths, setColumnWidths } = useUiStore();
   const visibleDateCols = useConfigStore((s) => s.visibleDateCols);
+  const showGitStatus = useConfigStore((s) => s.appearance.gitStatus.show);
   const fileOps = useFileOps();
   const { terminalApp, terminalCommand, showStatusMessage } = useUiStore();
   const { addBookmark } = useBookmarkStore();
@@ -105,6 +107,11 @@ export function FilePane({ tabId }: Props) {
       virtualizer.scrollToIndex(pane.cursor, { align: 'auto' });
     }
   }, [pane.cursor, isActive, virtualizer, entries.length]);
+
+  // Load git status whenever the directory changes
+  useEffect(() => {
+    if (tab?.path) loadGitStatus(tabId, tab.path);
+  }, [tabId, tab?.path, loadGitStatus]);
 
   // Drop target handler
   const handleDrop = async (e: React.DragEvent) => {
@@ -334,6 +341,7 @@ export function FilePane({ tabId }: Props) {
       <div className="file-list-header">
         <span className="file-select-indicator" />
         <span className="file-icon" />
+        {showGitStatus && <span className="file-git-status" />}
         <span className="file-name header-col sortable" onClick={() => handleSortClick('name')}>
           {t('filePane.colName')}{' '}
           <SortIndicator active={pane.sortKey === 'name'} desc={pane.sortDesc} />
@@ -378,6 +386,7 @@ export function FilePane({ tabId }: Props) {
                 isSelected={pane.selected.has(entry.path)}
                 colSizeWidth={columnWidths.size}
                 dateCols={dateCols}
+                gitSymbol={showGitStatus ? pane.gitStatus[entry.name] : undefined}
                 subLabel={inFindMode ? path.dirname(entry.path) : undefined}
                 dragPaths={
                   pane.selected.size > 0 && pane.selected.has(entry.path)

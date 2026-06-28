@@ -16,6 +16,7 @@ export interface FindMode {
 interface PaneState {
   entries: FileEntry[];
   displayEntries: FileEntry[]; // pre-computed: sorted + filtered (or findMode results)
+  gitStatus: Record<string, string>; // filename → symbol (M/A/D/U/?)
   loading: boolean;
   error: string | null;
   cursor: number;
@@ -46,6 +47,7 @@ interface FileStore {
   setSort: (tabId: string, key: SortKey, desc: boolean) => void;
   setClipboard: (state: ClipboardState | null) => void;
   filteredEntries: (tabId: string) => FileEntry[];
+  loadGitStatus: (tabId: string, path: string) => Promise<void>;
   startFind: (
     tabId: string,
     query: string,
@@ -78,6 +80,7 @@ function computeDisplayEntries(pane: PaneState): FileEntry[] {
 const defaultPane = (): PaneState => ({
   entries: [],
   displayEntries: [],
+  gitStatus: {},
   loading: false,
   error: null,
   cursor: 0,
@@ -250,6 +253,19 @@ export const useFileStore = create<FileStore>((set, get) => ({
 
   // Thin getter — display list is pre-computed in each setter
   filteredEntries: (tabId) => get().panes[tabId]?.displayEntries ?? [],
+
+  loadGitStatus: async (tabId, path) => {
+    try {
+      const status = await tauriApi.getGitStatus(path);
+      set((s) => {
+        const pane = s.panes[tabId];
+        if (!pane) return s;
+        return { panes: { ...s.panes, [tabId]: { ...pane, gitStatus: status } } };
+      });
+    } catch {
+      // not a git repo or git not available — leave gitStatus empty
+    }
+  },
 
   startFind: async (tabId, query, type, root) => {
     set((s) => {

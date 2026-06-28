@@ -23,6 +23,7 @@ interface Props {
   dateCols: DateColDef[];
   dragPaths: string[];
   subLabel?: string;
+  gitSymbol?: string;
 }
 
 function formatSize(
@@ -145,6 +146,7 @@ export const FileRow = React.memo(function FileRow({
   dateCols,
   dragPaths,
   subLabel,
+  gitSymbol,
 }: Props) {
   const { t } = useTranslation();
   const sizeUnit = useConfigStore((s) => s.appearance.sizeUnit);
@@ -171,6 +173,13 @@ export const FileRow = React.memo(function FileRow({
     >
       <span className="file-select-indicator">{isSelected ? '✓' : ' '}</span>
       <FileIcon entry={entry} />
+      {gitSymbol !== undefined && (
+        <span
+          className={`file-git-status git-${gitSymbol === '?' ? 'untracked' : gitSymbol === 'M' ? 'modified' : gitSymbol === 'A' ? 'added' : gitSymbol === 'D' ? 'deleted' : gitSymbol === 'U' ? 'unmerged' : 'clean'}`}
+        >
+          {gitSymbol ?? ' '}
+        </span>
+      )}
       <span className="file-name">
         {entry.name}
         {entry.is_symlink && (

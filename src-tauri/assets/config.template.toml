@@ -43,6 +43,10 @@ format = "auto"
 show = false
 format = "auto"
 
+# Git status column — shows M/A/D/? symbols next to file names
+[appearance.git_status]
+show = true
+
 # File size unit
 #   "binary"  → KiB / MiB / GiB (1024-based)
 #   "decimal" → KB / MB / GB  (1000-based)

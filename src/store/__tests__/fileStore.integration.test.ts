@@ -36,6 +36,7 @@ function resetPane() {
         sortDesc: false,
         findMode: null,
         displayEntries: [],
+        gitStatus: {},
       },
     },
     clipboard: null,

@@ -1,4 +1,5 @@
 pub mod bookmarks;
+pub mod git;
 pub mod cli;
 pub mod clipboard;
 pub mod config;

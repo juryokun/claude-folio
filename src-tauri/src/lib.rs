@@ -6,6 +6,7 @@ use tauri::{Emitter, Manager};
 #[cfg(not(test))]
 use commands::{
     bookmarks::{load_bookmarks, save_bookmarks},
+        git::get_git_status,
     cli::{get_startup_path, install_cli},
     clipboard::{copy_name_to_clipboard, copy_path_to_clipboard},
     config::{init_config, load_config, save_language},
@@ -118,6 +119,7 @@ pub fn run() {
             save_bookmarks,
             load_custom_commands,
             run_shell_command,
+            get_git_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
