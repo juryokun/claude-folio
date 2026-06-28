@@ -113,8 +113,9 @@ export default function App() {
   }, [loadConfig, loadBookmarks, loadCustomCommands, navigateTo, openTab]);
 
   // Load directory when active tab path changes
-  const currentTabPath = activeTab().path;
-  const currentTabId = activeTab().id;
+  const currentTab = activeTab();
+  const currentTabPath = currentTab.path;
+  const currentTabId = currentTab.id;
   useEffect(() => {
     loadDir(currentTabId, currentTabPath, showHidden);
   }, [currentTabId, currentTabPath, showHidden, loadDir]);

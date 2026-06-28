@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import type { KeyBinding, VimAction } from '../lib/vim/keymap';
 import { useUiStore } from '../store/uiStore';
 import { useCustomCommandStore } from '../store/customCommandStore';
@@ -9,6 +9,7 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
   const vimMode = useUiStore((s) => s.vimMode);
   const setPendingKey = useUiStore((s) => s.setPendingKey);
   const hasOutput = useCustomCommandStore((s) => s.output !== null);
+  const keymapKeySet = useMemo(() => new Set(keymap.flatMap((kb) => kb.keys)), [keymap]);
   const bufferRef = useRef<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -116,8 +117,7 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
       }
 
       const key = e.key;
-      const isHandled = keymap.some((kb) => kb.keys.includes(key));
-      if (isHandled || bufferRef.current.length > 0) e.preventDefault();
+      if (keymapKeySet.has(key) || bufferRef.current.length > 0) e.preventDefault();
 
       bufferRef.current = [...bufferRef.current, key];
       tryMatch([...bufferRef.current]);
@@ -125,5 +125,5 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [vimMode, hasOutput, onAction, clearBuffer, tryMatch, keymap]);
+  }, [vimMode, hasOutput, onAction, clearBuffer, tryMatch, keymapKeySet]);
 }

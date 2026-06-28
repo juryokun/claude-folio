@@ -91,7 +91,15 @@ export function FilePane({ tabId }: Props) {
     [visibleDateCols, columnWidths, t],
   );
 
-  const totalDateWidth = dateCols.reduce((s, c) => s + c.width, 0);
+  const { totalDateWidth, dateColSuffixWidths } = useMemo(() => {
+    const suffixes: number[] = new Array(dateCols.length);
+    let running = 0;
+    for (let i = dateCols.length - 1; i >= 0; i--) {
+      running += dateCols[i].width;
+      suffixes[i] = running;
+    }
+    return { totalDateWidth: running, dateColSuffixWidths: suffixes };
+  }, [dateCols]);
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -325,7 +333,7 @@ export function FilePane({ tabId }: Props) {
         <div
           key={col.key}
           className="col-line"
-          style={{ right: dateCols.slice(i).reduce((s, c) => s + c.width, 0) + 11 }}
+          style={{ right: dateColSuffixWidths[i] + 11 }}
         />
       ))}
       {pane.findMode && (

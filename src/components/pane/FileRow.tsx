@@ -85,53 +85,70 @@ function formatDateParts(
   return { label: date, time: hms };
 }
 
+const FILE_ICONS: Record<string, string> = {
+  png: '🖼️',
+  jpg: '🖼️',
+  jpeg: '🖼️',
+  gif: '🖼️',
+  webp: '🖼️',
+  svg: '🖼️',
+  mp4: '🎬',
+  mov: '🎬',
+  avi: '🎬',
+  mkv: '🎬',
+  mp3: '🎵',
+  wav: '🎵',
+  flac: '🎵',
+  aac: '🎵',
+  pdf: '📄',
+  doc: '📝',
+  docx: '📝',
+  xls: '📊',
+  xlsx: '📊',
+  ppt: '📊',
+  pptx: '📊',
+  zip: '🗜️',
+  tar: '🗜️',
+  gz: '🗜️',
+  '7z': '🗜️',
+  rar: '🗜️',
+  js: '💻',
+  ts: '💻',
+  tsx: '💻',
+  jsx: '💻',
+  rs: '💻',
+  py: '💻',
+  go: '💻',
+  json: '📋',
+  yaml: '📋',
+  yml: '📋',
+  toml: '📋',
+  md: '📖',
+  txt: '📄',
+  sh: '⚙️',
+  bash: '⚙️',
+};
+
+const GIT_BADGE_CLASS: Record<string, string> = {
+  '=': 'clean',
+  M: 'modified',
+  A: 'added',
+  D: 'deleted',
+  '?': 'untracked',
+};
+
+const GIT_BADGE_SYMBOL: Record<string, string> = {
+  '=': '✓',
+  M: '!',
+  A: '+',
+  D: '×',
+  '?': '?',
+};
+
 function FileIcon({ entry }: { entry: FileEntry }) {
   if (entry.is_dir) return <span className="file-icon dir">📁</span>;
   const ext = entry.extension?.toLowerCase();
-  const icons: Record<string, string> = {
-    png: '🖼️',
-    jpg: '🖼️',
-    jpeg: '🖼️',
-    gif: '🖼️',
-    webp: '🖼️',
-    svg: '🖼️',
-    mp4: '🎬',
-    mov: '🎬',
-    avi: '🎬',
-    mkv: '🎬',
-    mp3: '🎵',
-    wav: '🎵',
-    flac: '🎵',
-    aac: '🎵',
-    pdf: '📄',
-    doc: '📝',
-    docx: '📝',
-    xls: '📊',
-    xlsx: '📊',
-    ppt: '📊',
-    pptx: '📊',
-    zip: '🗜️',
-    tar: '🗜️',
-    gz: '🗜️',
-    '7z': '🗜️',
-    rar: '🗜️',
-    js: '💻',
-    ts: '💻',
-    tsx: '💻',
-    jsx: '💻',
-    rs: '💻',
-    py: '💻',
-    go: '💻',
-    json: '📋',
-    yaml: '📋',
-    yml: '📋',
-    toml: '📋',
-    md: '📖',
-    txt: '📄',
-    sh: '⚙️',
-    bash: '⚙️',
-  };
-  return <span className="file-icon">{ext && icons[ext] ? icons[ext] : '📄'}</span>;
+  return <span className="file-icon">{(ext && FILE_ICONS[ext]) || '📄'}</span>;
 }
 
 export const FileRow = React.memo(function FileRow({
@@ -176,21 +193,9 @@ export const FileRow = React.memo(function FileRow({
         <FileIcon entry={entry} />
         {gitSymbol && (
           <span
-            className={`file-git-badge git-badge-${
-              gitSymbol === '='
-                ? 'clean'
-                : gitSymbol === 'M'
-                  ? 'modified'
-                  : gitSymbol === 'A'
-                    ? 'added'
-                    : gitSymbol === 'D'
-                      ? 'deleted'
-                      : gitSymbol === '?'
-                        ? 'untracked'
-                        : 'unmerged'
-            }`}
+            className={`file-git-badge git-badge-${GIT_BADGE_CLASS[gitSymbol] ?? 'unmerged'}`}
           >
-            {gitSymbol === '=' ? '✓' : gitSymbol === 'M' ? '!' : gitSymbol === 'A' ? '+' : gitSymbol === 'D' ? '×' : gitSymbol === '?' ? '?' : '!'}
+            {GIT_BADGE_SYMBOL[gitSymbol] ?? '!'}
           </span>
         )}
       </span>

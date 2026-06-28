@@ -1,5 +1,5 @@
 export type FilterResult =
-  | { type: 'partial'; query: string }
+  | { type: 'partial'; query: string; queryLower: string }
   | { type: 'regex'; regex: RegExp }
   | { type: 'invalid_regex'; raw: string };
 
@@ -14,14 +14,14 @@ export function parseFilterQuery(query: string): FilterResult | null {
       return { type: 'invalid_regex', raw: pattern };
     }
   }
-  return { type: 'partial', query };
+  return { type: 'partial', query, queryLower: query.toLowerCase() };
 }
 
 /** Return true if the filename matches the parsed filter. */
 export function matchesFilter(name: string, filter: FilterResult): boolean {
   switch (filter.type) {
     case 'partial':
-      return name.toLowerCase().includes(filter.query.toLowerCase());
+      return name.toLowerCase().includes(filter.queryLower);
     case 'regex':
       return filter.regex.test(name);
     case 'invalid_regex':
