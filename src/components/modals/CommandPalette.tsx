@@ -144,7 +144,7 @@ export function CommandPalette() {
         }
         if (!shouldShowOutputModal(result.stdout)) {
           const brief = result.stdout.trim() || t('commandPalette.msg.customDone', { name: cmd.name });
-          showStatusMessage(brief);
+          showStatusMessage(brief, 5000);
           useCustomCommandStore.getState().clearOutput();
         }
         if (cmd.reload) {
@@ -175,7 +175,7 @@ export function CommandPalette() {
       const result = await runCommand(resolved, '', tab.path, `:!${rawCommand}`);
       if (!shouldShowOutputModal(result.stdout) && result.exit_code === 0) {
         const brief = result.stdout.trim() || '✅ Done';
-        showStatusMessage(brief);
+        showStatusMessage(brief, 5000);
         useCustomCommandStore.getState().clearOutput();
       }
     } catch (e) {
