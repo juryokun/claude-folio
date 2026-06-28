@@ -1,12 +1,22 @@
 import { create } from 'zustand';
-import type { FileEntry, ClipboardState } from '../types';
-import { tauriApi, isTauri } from '../lib/tauri';
+import { matchesFilter, parseFilterQuery } from '../lib/searchFilter';
+import { isTauri, tauriApi } from '../lib/tauri';
+import type { ClipboardState, FileEntry } from '../types';
 import { useTabStore } from './tabStore';
 
 export type SortKey = 'name' | 'time';
 
+export interface FindMode {
+  query: string;
+  type: 'file' | 'dir' | 'all';
+  results: FileEntry[];
+  loading: boolean;
+}
+
 interface PaneState {
   entries: FileEntry[];
+  displayEntries: FileEntry[]; // pre-computed: sorted + filtered (or findMode results)
+  gitStatus: Record<string, string>; // filename → symbol (M/A/D/U/?)
   loading: boolean;
   error: string | null;
   cursor: number;
@@ -15,6 +25,7 @@ interface PaneState {
   pendingFocusName: string | null; // entry name to focus after next load
   sortKey: SortKey;
   sortDesc: boolean;
+  findMode: FindMode | null;
 }
 
 interface FileStore {
@@ -22,7 +33,12 @@ interface FileStore {
   clipboard: ClipboardState | null;
 
   getPane: (tabId: string) => PaneState;
-  loadDir: (tabId: string, path: string, showHidden: boolean, preserveCursor?: boolean) => Promise<void>;
+  loadDir: (
+    tabId: string,
+    path: string,
+    showHidden: boolean,
+    preserveCursor?: boolean,
+  ) => Promise<void>;
   setPendingFocusName: (tabId: string, name: string | null) => void;
   setCursor: (tabId: string, index: number) => void;
   toggleSelect: (tabId: string, path: string) => void;
@@ -31,10 +47,40 @@ interface FileStore {
   setSort: (tabId: string, key: SortKey, desc: boolean) => void;
   setClipboard: (state: ClipboardState | null) => void;
   filteredEntries: (tabId: string) => FileEntry[];
+  loadGitStatus: (tabId: string, path: string) => Promise<void>;
+  startFind: (
+    tabId: string,
+    query: string,
+    type: 'file' | 'dir' | 'all',
+    root: string,
+  ) => Promise<void>;
+  clearFind: (tabId: string) => void;
+}
+
+function sortEntries(entries: FileEntry[], sortKey: SortKey, sortDesc: boolean): FileEntry[] {
+  return [...entries].sort((a, b) => {
+    if (a.is_dir !== b.is_dir) return a.is_dir ? -1 : 1;
+    const cmp =
+      sortKey === 'name'
+        ? a.name.localeCompare(b.name, 'ja')
+        : (a.modified ?? 0) - (b.modified ?? 0);
+    return sortDesc ? -cmp : cmp;
+  });
+}
+
+function computeDisplayEntries(pane: PaneState): FileEntry[] {
+  if (pane.findMode) return pane.findMode.results;
+  const filter = parseFilterQuery(pane.filterQuery);
+  const filtered = filter
+    ? pane.entries.filter((e) => matchesFilter(e.name, filter))
+    : pane.entries;
+  return sortEntries(filtered, pane.sortKey, pane.sortDesc);
 }
 
 const defaultPane = (): PaneState => ({
   entries: [],
+  displayEntries: [],
+  gitStatus: {},
   loading: false,
   error: null,
   cursor: 0,
@@ -43,6 +89,7 @@ const defaultPane = (): PaneState => ({
   pendingFocusName: null,
   sortKey: 'name',
   sortDesc: false,
+  findMode: null,
 });
 
 export const useFileStore = create<FileStore>((set, get) => ({
@@ -67,34 +114,37 @@ export const useFileStore = create<FileStore>((set, get) => ({
       set((s) => {
         const pane = s.panes[tabId] ?? defaultPane();
         if (preserveCursor) {
-          // Keep cursor, selection, and filter as-is; just update the entries
           const clampedCursor = Math.min(pane.cursor, Math.max(0, entries.length - 1));
+          const newPane: PaneState = {
+            ...pane,
+            entries,
+            loading: false,
+            error: null,
+            cursor: clampedCursor,
+          };
           return {
             panes: {
               ...s.panes,
-              [tabId]: { ...pane, entries, loading: false, error: null, cursor: clampedCursor },
+              [tabId]: { ...newPane, displayEntries: computeDisplayEntries(newPane) },
             },
           };
         }
         const focusName = pane.pendingFocusName;
-        // Find cursor in the sorted order, not raw order
-        const { sortKey, sortDesc } = pane;
-        const sorted = [...entries].sort((a, b) => {
-          if (a.is_dir !== b.is_dir) return a.is_dir ? -1 : 1;
-          const cmp = sortKey === 'name'
-            ? a.name.localeCompare(b.name, 'ja')
-            : (a.modified ?? 0) - (b.modified ?? 0);
-          return sortDesc ? -cmp : cmp;
-        });
+        const sorted = sortEntries(entries, pane.sortKey, pane.sortDesc);
         const cursor = focusName
-          ? Math.max(0, sorted.findIndex((e) => e.name === focusName))
+          ? Math.max(
+              0,
+              sorted.findIndex((e) => e.name === focusName),
+            )
           : 0;
+        // filter is reset on navigation, so displayEntries = sorted
         return {
           panes: {
             ...s.panes,
             [tabId]: {
               ...pane,
               entries,
+              displayEntries: sorted,
               loading: false,
               error: null,
               cursor,
@@ -105,7 +155,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
           },
         };
       });
-
     } catch (e) {
       const errStr = String(e);
       // If the directory was deleted, navigate up to the nearest existing parent
@@ -115,12 +164,14 @@ export const useFileStore = create<FileStore>((set, get) => ({
           const parts = path.split('/').filter(Boolean);
           while (parts.length > 0) {
             parts.pop();
-            const parent = '/' + parts.join('/') || '/';
+            const parent = `/${parts.join('/')}` || '/';
             try {
               await tauriApi.listDir(parent, false);
               navigateTo(parent);
               return;
-            } catch { /* keep going up */ }
+            } catch {
+              /* keep going up */
+            }
           }
           navigateTo('/');
         }
@@ -168,8 +219,12 @@ export const useFileStore = create<FileStore>((set, get) => ({
   setFilter: (tabId, query) => {
     set((s) => {
       const pane = s.panes[tabId] ?? defaultPane();
+      const newPane: PaneState = { ...pane, filterQuery: query, cursor: 0 };
       return {
-        panes: { ...s.panes, [tabId]: { ...pane, filterQuery: query, cursor: 0 } },
+        panes: {
+          ...s.panes,
+          [tabId]: { ...newPane, displayEntries: computeDisplayEntries(newPane) },
+        },
       };
     });
   },
@@ -184,30 +239,81 @@ export const useFileStore = create<FileStore>((set, get) => ({
   setSort: (tabId, key, desc) => {
     set((s) => {
       const pane = s.panes[tabId] ?? defaultPane();
-      return { panes: { ...s.panes, [tabId]: { ...pane, sortKey: key, sortDesc: desc, cursor: 0 } } };
+      const newPane: PaneState = { ...pane, sortKey: key, sortDesc: desc, cursor: 0 };
+      return {
+        panes: {
+          ...s.panes,
+          [tabId]: { ...newPane, displayEntries: computeDisplayEntries(newPane) },
+        },
+      };
     });
   },
 
   setClipboard: (state) => set({ clipboard: state }),
 
-  filteredEntries: (tabId) => {
-    const pane = get().panes[tabId] ?? defaultPane();
-    let entries = pane.filterQuery
-      ? pane.entries.filter((e) => e.name.toLowerCase().includes(pane.filterQuery.toLowerCase()))
-      : pane.entries;
+  // Thin getter — display list is pre-computed in each setter
+  filteredEntries: (tabId) => get().panes[tabId]?.displayEntries ?? [],
 
-    const { sortKey, sortDesc } = pane;
-    entries = [...entries].sort((a, b) => {
-      // Directories always first
-      if (a.is_dir !== b.is_dir) return a.is_dir ? -1 : 1;
-      let cmp = 0;
-      if (sortKey === 'name') {
-        cmp = a.name.localeCompare(b.name, 'ja');
-      } else {
-        cmp = (a.modified ?? 0) - (b.modified ?? 0);
-      }
-      return sortDesc ? -cmp : cmp;
+  loadGitStatus: async (tabId, path) => {
+    try {
+      const status = await tauriApi.getGitStatus(path);
+      set((s) => {
+        const pane = s.panes[tabId];
+        if (!pane) return s;
+        return { panes: { ...s.panes, [tabId]: { ...pane, gitStatus: status } } };
+      });
+    } catch {
+      // not a git repo or git not available — leave gitStatus empty
+    }
+  },
+
+  startFind: async (tabId, query, type, root) => {
+    set((s) => {
+      const pane = s.panes[tabId] ?? defaultPane();
+      const findMode: FindMode = { query, type, results: [], loading: true };
+      return {
+        panes: {
+          ...s.panes,
+          [tabId]: { ...pane, findMode, displayEntries: [], cursor: 0 },
+        },
+      };
     });
-    return entries;
+    try {
+      const results = await tauriApi.searchWithFd(root, query, type);
+      set((s) => {
+        const pane = s.panes[tabId] ?? defaultPane();
+        const findMode: FindMode = { query, type, results, loading: false };
+        return {
+          panes: {
+            ...s.panes,
+            [tabId]: { ...pane, findMode, displayEntries: results, cursor: 0 },
+          },
+        };
+      });
+    } catch {
+      set((s) => {
+        const pane = s.panes[tabId] ?? defaultPane();
+        const findMode: FindMode = { query, type, results: [], loading: false };
+        return {
+          panes: {
+            ...s.panes,
+            [tabId]: { ...pane, findMode, displayEntries: [] },
+          },
+        };
+      });
+    }
+  },
+
+  clearFind: (tabId) => {
+    set((s) => {
+      const pane = s.panes[tabId] ?? defaultPane();
+      const newPane: PaneState = { ...pane, findMode: null, cursor: 0 };
+      return {
+        panes: {
+          ...s.panes,
+          [tabId]: { ...newPane, displayEntries: computeDisplayEntries(newPane) },
+        },
+      };
+    });
   },
 }));

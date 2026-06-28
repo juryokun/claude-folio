@@ -1,19 +1,40 @@
+import path from 'path-browserify';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import path from 'path-browserify';
 import { tauriApi } from '../lib/tauri';
-import { useTabStore } from '../store/tabStore';
-import { useFileStore } from '../store/fileStore';
-import { useUiStore } from '../store/uiStore';
 import { useBookmarkStore } from '../store/bookmarkStore';
+import { useFileStore } from '../store/fileStore';
+import { useTabStore } from '../store/tabStore';
+import { useUiStore } from '../store/uiStore';
 
 export function useFileOps() {
   const { t } = useTranslation();
   const { activeTab, navigateTo } = useTabStore();
-  const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
-    useFileStore();
-  const { showHidden, terminalApp, terminalCommand, setShowRename, setShowNewDir, setShowNewFile, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage, setShowOpenWith, showCopyConflict } =
-    useUiStore();
+  const {
+    getPane,
+    filteredEntries,
+    setClipboard,
+    clipboard,
+    loadDir,
+    setCursor,
+    toggleSelect,
+    setPendingFocusName,
+    clearFind,
+  } = useFileStore();
+  const {
+    showHidden,
+    terminalApp,
+    terminalCommand,
+    setShowRename,
+    setShowNewDir,
+    setShowNewFile,
+    showConfirmDialog,
+    setShowCommandPalette,
+    setVimMode,
+    showStatusMessage,
+    setShowOpenWith,
+    showCopyConflict,
+  } = useUiStore();
   const { addBookmark } = useBookmarkStore();
 
   const tab = activeTab();
@@ -30,15 +51,28 @@ export function useFileOps() {
     return [];
   }, [pane.selected, cursorEntry]);
 
-  const reload = useCallback((preserveCursor = false) => {
-    loadDir(tabId, currentPath, showHidden, preserveCursor);
-  }, [tabId, currentPath, showHidden, loadDir]);
+  const reload = useCallback(
+    (preserveCursor = false) => {
+      loadDir(tabId, currentPath, showHidden, preserveCursor);
+    },
+    [tabId, currentPath, showHidden, loadDir],
+  );
 
   const handleNavigateInto = useCallback(() => {
-    // l / Enter / ArrowRight — directories only; files are ignored
-    if (!cursorEntry || !cursorEntry.is_dir) return;
+    if (!cursorEntry) return;
+    const findMode = getPane(tabId).findMode;
+    if (findMode) {
+      // In find mode: navigate to the entry's parent dir and focus the entry
+      const parentDir = cursorEntry.is_dir ? cursorEntry.path : path.dirname(cursorEntry.path);
+      setPendingFocusName(tabId, cursorEntry.name);
+      clearFind(tabId);
+      navigateTo(parentDir);
+      return;
+    }
+    // Normal mode: directories only
+    if (!cursorEntry.is_dir) return;
     navigateTo(cursorEntry.path);
-  }, [cursorEntry, navigateTo]);
+  }, [cursorEntry, tabId, getPane, navigateTo, setPendingFocusName, clearFind]);
 
   const handleNavigateUp = useCallback(() => {
     const parent = path.dirname(currentPath);
@@ -52,33 +86,30 @@ export function useFileOps() {
   const handleDelete = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
-    showConfirmDialog(
-      t('fileOps.confirmDelete', { count: targets.length }),
-      async () => {
-        try {
-          await tauriApi.moveToTrash(targets);
-          reload();
-          showStatusMessage(t('fileOps.deleted', { count: targets.length }));
-        } catch (e) {
-          console.error('削除に失敗しました:', e);
-        }
+    showConfirmDialog(t('fileOps.confirmDelete', { count: targets.length }), async () => {
+      try {
+        await tauriApi.moveToTrash(targets);
+        reload();
+        showStatusMessage(t('fileOps.deleted', { count: targets.length }));
+      } catch (e) {
+        console.error('削除に失敗しました:', e);
       }
-    );
-  }, [getTargetPaths, showConfirmDialog, reload, showStatusMessage]);
+    });
+  }, [getTargetPaths, showConfirmDialog, reload, showStatusMessage, t]);
 
   const handleCut = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
     setClipboard({ paths: targets, mode: 'cut' });
     showStatusMessage(t('fileOps.cut', { count: targets.length }));
-  }, [getTargetPaths, setClipboard, showStatusMessage]);
+  }, [getTargetPaths, setClipboard, showStatusMessage, t]);
 
   const handleYank = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
     setClipboard({ paths: targets, mode: 'copy' });
     showStatusMessage(t('fileOps.copied', { count: targets.length }));
-  }, [getTargetPaths, setClipboard, showStatusMessage]);
+  }, [getTargetPaths, setClipboard, showStatusMessage, t]);
 
   const handlePaste = useCallback(async () => {
     if (!clipboard) return;
@@ -110,37 +141,39 @@ export function useFileOps() {
         console.error(t('fileOps.pasteError', { error: String(e) }));
       }
     }
-  }, [clipboard, currentPath, setClipboard, reload, showStatusMessage, showCopyConflict]);
+  }, [clipboard, currentPath, setClipboard, reload, showStatusMessage, showCopyConflict, t]);
 
   const handleCopyPath = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
-    tauriApi.copyPathToClipboard(targets)
+    tauriApi
+      .copyPathToClipboard(targets)
       .then(() => showStatusMessage(t('fileOps.pathCopied')))
       .catch(console.error);
-  }, [getTargetPaths, showStatusMessage]);
+  }, [getTargetPaths, showStatusMessage, t]);
 
   const handleCopyName = useCallback(() => {
     const targets = getTargetPaths();
     if (!targets.length) return;
-    tauriApi.copyNameToClipboard(targets)
+    tauriApi
+      .copyNameToClipboard(targets)
       .then(() => showStatusMessage(t('fileOps.nameCopied')))
       .catch(console.error);
-  }, [getTargetPaths, showStatusMessage]);
+  }, [getTargetPaths, showStatusMessage, t]);
 
-  const handleOpenTerminal = useCallback(() => {
-    if (cursorEntry && !cursorEntry.is_dir) {
-      // o on a file → open with OS default app
-      tauriApi.openFile(cursorEntry.path).catch(console.error);
-    } else {
-      // o on a directory (or no selection) → open terminal
-      tauriApi.openTerminalAt(currentPath, terminalApp, terminalCommand).catch(console.error);
-    }
-  }, [cursorEntry, currentPath, terminalApp, terminalCommand]);
+  const handleOpenDefault = useCallback(() => {
+    if (!cursorEntry) return;
+    tauriApi.openFile(cursorEntry.path).catch(console.error);
+  }, [cursorEntry]);
 
   const handleOpenTerminalHere = useCallback(() => {
     tauriApi.openTerminalAt(currentPath, terminalApp, terminalCommand).catch(console.error);
   }, [currentPath, terminalApp, terminalCommand]);
+
+  const handleQuickLook = useCallback(() => {
+    if (!cursorEntry) return;
+    tauriApi.quickLook(cursorEntry.path).catch(console.error);
+  }, [cursorEntry]);
 
   const handleOpenEditor = useCallback(() => {
     if (!cursorEntry || cursorEntry.is_dir) return;
@@ -191,7 +224,7 @@ export function useFileOps() {
     const label = path.basename(currentPath) || currentPath;
     await addBookmark(label, currentPath);
     showStatusMessage(t('fileOps.bookmarkAdded', { label }));
-  }, [currentPath, addBookmark, showStatusMessage]);
+  }, [currentPath, addBookmark, showStatusMessage, t]);
 
   return {
     cursorEntry,
@@ -205,8 +238,9 @@ export function useFileOps() {
     handlePaste,
     handleCopyPath,
     handleCopyName,
-    handleOpenTerminal,
+    handleOpenDefault,
     handleOpenTerminalHere,
+    handleQuickLook,
     handleOpenWith,
     handleOpenEditor,
     handleRename,

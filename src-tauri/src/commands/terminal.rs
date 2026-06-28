@@ -1,3 +1,14 @@
+/// Open a file with Quick Look (macOS `qlmanage -p`).
+#[tauri::command]
+pub fn quick_look(path: String) -> Result<(), String> {
+    std::process::Command::new("qlmanage")
+        .arg("-p")
+        .arg(&path)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /// Open a file with the default application (macOS `open` command).
 #[tauri::command]
 pub fn open_file(path: String) -> Result<(), String> {
@@ -17,8 +28,8 @@ fn resolve_binary(name: &str) -> String {
     }
     // Check flat directories first
     let dirs = [
-        "/opt/homebrew/bin",   // Apple Silicon Homebrew
-        "/usr/local/bin",      // Intel Homebrew / manual installs
+        "/opt/homebrew/bin", // Apple Silicon Homebrew
+        "/usr/local/bin",    // Intel Homebrew / manual installs
         "/usr/bin",
         "/bin",
     ];
@@ -73,7 +84,11 @@ fn expand_placeholder(cmd: &str, file_path: Option<&str>) -> String {
 /// Falls back to zsh login shell if the binary is not found in known locations.
 /// `{}` in the command is replaced with `file_path`; if absent, path is appended.
 /// `cwd` sets the working directory of the spawned process.
-fn spawn_command(cmd: &str, file_path: Option<&str>, cwd: Option<&std::path::Path>) -> Result<(), String> {
+fn spawn_command(
+    cmd: &str,
+    file_path: Option<&str>,
+    cwd: Option<&std::path::Path>,
+) -> Result<(), String> {
     let expanded = expand_placeholder(cmd, file_path);
     let mut parts = expanded.split_whitespace();
     let binary = parts.next().ok_or("command is empty")?;
@@ -89,7 +104,9 @@ fn spawn_command(cmd: &str, file_path: Option<&str>, cwd: Option<&std::path::Pat
     if let Some(dir) = cwd {
         command.current_dir(dir);
     }
-    command.spawn().map_err(|e| format!("{}: {}", binary_path, e))?;
+    command
+        .spawn()
+        .map_err(|e| format!("{}: {}", binary_path, e))?;
     Ok(())
 }
 
@@ -103,7 +120,9 @@ pub fn list_applications() -> Vec<String> {
     ];
     let mut apps: Vec<String> = Vec::new();
     for dir in &dirs {
-        let Ok(entries) = std::fs::read_dir(dir) else { continue };
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            continue;
+        };
         for entry in entries.flatten() {
             let name = entry.file_name().to_string_lossy().to_string();
             if name.ends_with(".app") {
@@ -111,7 +130,7 @@ pub fn list_applications() -> Vec<String> {
             }
         }
     }
-    apps.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+    apps.sort_by_key(|a| a.to_lowercase());
     apps.dedup();
     apps
 }

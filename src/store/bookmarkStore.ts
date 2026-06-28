@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { Bookmark } from '../types';
 import { tauriApi } from '../lib/tauri';
+import type { Bookmark } from '../types';
 
 interface BookmarkStore {
   bookmarks: Bookmark[];
@@ -19,7 +19,11 @@ export const useBookmarkStore = create<BookmarkStore>((set, get) => ({
 
   loadBookmarks: async () => {
     const entries = await tauriApi.loadBookmarks();
-    const bookmarks = entries.map((e) => ({ id: crypto.randomUUID(), label: e.label, path: e.path }));
+    const bookmarks = entries.map((e) => ({
+      id: crypto.randomUUID(),
+      label: e.label,
+      path: e.path,
+    }));
     set({ bookmarks });
   },
 

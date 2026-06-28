@@ -1,26 +1,31 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { type KeyBinding, type VimAction } from '../lib/vim/keymap';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import type { KeyBinding, VimAction } from '../lib/vim/keymap';
+import { useCustomCommandStore } from '../store/customCommandStore';
 import { useUiStore } from '../store/uiStore';
 
 const SEQUENCE_TIMEOUT = 500;
 
 export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBinding[]) {
   const vimMode = useUiStore((s) => s.vimMode);
+  const setPendingKey = useUiStore((s) => s.setPendingKey);
+  const hasOutput = useCustomCommandStore((s) => s.output !== null);
+  const keymapKeySet = useMemo(() => new Set(keymap.flatMap((kb) => kb.keys)), [keymap]);
   const bufferRef = useRef<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearBuffer = useCallback(() => {
     bufferRef.current = [];
+    setPendingKey(null);
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-  }, []);
+  }, [setPendingKey]);
 
   const tryMatch = useCallback(
     (buffer: string[]) => {
       const exact = keymap.find(
-        (kb) => kb.keys.length === buffer.length && kb.keys.every((k, i) => k === buffer[i])
+        (kb) => kb.keys.length === buffer.length && kb.keys.every((k, i) => k === buffer[i]),
       );
       if (exact) {
         onAction(exact.action);
@@ -29,21 +34,25 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
       }
 
       const hasPrefix = keymap.some(
-        (kb) => kb.keys.length > buffer.length && kb.keys.every((k, i) => i >= buffer.length || k === buffer[i])
+        (kb) =>
+          kb.keys.length > buffer.length &&
+          kb.keys.every((k, i) => i >= buffer.length || k === buffer[i]),
       );
 
       if (!hasPrefix) {
         clearBuffer();
       } else {
+        setPendingKey(buffer[0]);
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(clearBuffer, SEQUENCE_TIMEOUT);
       }
     },
-    [onAction, clearBuffer, keymap]
+    [onAction, clearBuffer, keymap, setPendingKey],
   );
 
   useEffect(() => {
     if (vimMode !== 'NORMAL') return;
+    if (hasOutput) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -59,11 +68,36 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
 
       // Cmd+C / Cmd+X / Cmd+V / Cmd+Delete — macOS-style shortcuts
       if (e.metaKey && !e.ctrlKey && !e.altKey) {
-        if (e.key === 'c') { e.preventDefault(); onAction('yank_selected'); clearBuffer(); return; }
-        if (e.key === 'x') { e.preventDefault(); onAction('cut_selected'); clearBuffer(); return; }
-        if (e.key === 'v') { e.preventDefault(); onAction('paste'); clearBuffer(); return; }
-        if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); onAction('delete_selected'); clearBuffer(); return; }
-        if (e.key === 'w') { e.preventDefault(); onAction('close_tab'); clearBuffer(); return; }
+        if (e.key === 'c') {
+          e.preventDefault();
+          onAction('yank_selected');
+          clearBuffer();
+          return;
+        }
+        if (e.key === 'x') {
+          e.preventDefault();
+          onAction('cut_selected');
+          clearBuffer();
+          return;
+        }
+        if (e.key === 'v') {
+          e.preventDefault();
+          onAction('paste');
+          clearBuffer();
+          return;
+        }
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+          e.preventDefault();
+          onAction('delete_selected');
+          clearBuffer();
+          return;
+        }
+        if (e.key === 'w') {
+          e.preventDefault();
+          onAction('close_tab');
+          clearBuffer();
+          return;
+        }
       }
 
       // ArrowLeft → navigate to parent
@@ -83,8 +117,7 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
       }
 
       const key = e.key;
-      const isHandled = keymap.some((kb) => kb.keys.includes(key));
-      if (isHandled || bufferRef.current.length > 0) e.preventDefault();
+      if (keymapKeySet.has(key) || bufferRef.current.length > 0) e.preventDefault();
 
       bufferRef.current = [...bufferRef.current, key];
       tryMatch([...bufferRef.current]);
@@ -92,5 +125,5 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [vimMode, onAction, clearBuffer, tryMatch]);
+  }, [vimMode, hasOutput, onAction, clearBuffer, tryMatch, keymapKeySet]);
 }

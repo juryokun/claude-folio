@@ -1,9 +1,12 @@
 pub mod bookmarks;
-pub mod config;
-pub mod fs;
-pub mod trash;
+pub mod cli;
 pub mod clipboard;
-pub mod terminal;
+pub mod config;
+pub mod custom_commands;
+pub mod fs;
+pub mod git;
 pub mod search;
 pub mod system;
+pub mod terminal;
+pub mod trash;
 pub mod watch;

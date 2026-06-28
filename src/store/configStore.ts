@@ -1,62 +1,111 @@
 import { create } from 'zustand';
 import { tauriApi } from '../lib/tauri';
-import type { KeyBinding, VimAction } from '../lib/vim/keymap';
+import type { KeyBinding } from '../lib/vim/keymap';
 import { NORMAL_KEYMAP } from '../lib/vim/keymap';
+import { buildKeymap } from '../lib/vim/keymapUtils';
+
+export interface DateColumnConfig {
+  show: boolean;
+  /** "auto" = today/yesterday logic, otherwise strftime-like format string */
+  format: string;
+}
 
 export interface AppearanceConfig {
-  dateFormat: string;  // e.g. "%Y/%m/%d"
-  sizeUnit: 'binary' | 'decimal';
+  dateModified: DateColumnConfig;
+  dateCreated: DateColumnConfig;
+  dateAccessed: DateColumnConfig;
+  gitStatus: { show: boolean };
+  size: { show: boolean; unit: 'binary' | 'decimal' };
 }
+
+/** Config-time shape of a visible date column (no width — that's UI state) */
+export interface VisibleDateCol {
+  key: 'modified' | 'created' | 'accessed';
+  format: string;
+  colKey: 'date' | 'dateCreated' | 'dateAccessed';
+  labelKey: string;
+}
+
+export type FavoriteKey =
+  | 'home'
+  | 'desktop'
+  | 'documents'
+  | 'downloads'
+  | 'pictures'
+  | 'music'
+  | 'movies'
+  | 'applications'
+  | 'public';
+
+const DEFAULT_FAVORITES: FavoriteKey[] = [
+  'home',
+  'desktop',
+  'documents',
+  'downloads',
+  'pictures',
+  'music',
+  'movies',
+  'applications',
+];
 
 interface ConfigStore {
   appearance: AppearanceConfig;
+  visibleDateCols: VisibleDateCol[];
   keymap: KeyBinding[];
+  favorites: FavoriteKey[];
   loaded: boolean;
   load: () => Promise<void>;
 }
 
 const DEFAULT_APPEARANCE: AppearanceConfig = {
-  dateFormat: '%Y/%m/%d',
-  sizeUnit: 'binary',
+  dateModified: { show: true, format: 'auto' },
+  dateCreated: { show: false, format: 'auto' },
+  dateAccessed: { show: false, format: 'auto' },
+  gitStatus: { show: true },
+  size: { show: true, unit: 'binary' },
 };
 
-/** Parse "d d" → ['d','d'], "j" → ['j'] */
-function parseSequence(seq: string): string[] {
-  return seq.trim().split(/\s+/);
-}
-
-/** Merge config keymap overrides into the default keymap */
-function buildKeymap(overrides: Record<string, string[]>): KeyBinding[] {
-  if (!overrides || Object.keys(overrides).length === 0) return NORMAL_KEYMAP;
-
-  // Start from defaults, drop any actions that are being overridden
-  const actionsOverridden = new Set(Object.keys(overrides) as VimAction[]);
-  const base = NORMAL_KEYMAP.filter((kb) => !actionsOverridden.has(kb.action));
-
-  // Add the new bindings from config
-  const additions: KeyBinding[] = [];
-  for (const [action, sequences] of Object.entries(overrides)) {
-    for (const seq of sequences) {
-      additions.push({ keys: parseSequence(seq), action: action as VimAction });
-    }
-  }
-
-  return [...base, ...additions];
+function buildVisibleDateCols(appearance: AppearanceConfig): VisibleDateCol[] {
+  const defs: Array<[DateColumnConfig, Omit<VisibleDateCol, 'format'>]> = [
+    [appearance.dateModified, { key: 'modified', colKey: 'date', labelKey: 'filePane.colDate' }],
+    [
+      appearance.dateCreated,
+      { key: 'created', colKey: 'dateCreated', labelKey: 'filePane.colDateCreated' },
+    ],
+    [
+      appearance.dateAccessed,
+      { key: 'accessed', colKey: 'dateAccessed', labelKey: 'filePane.colDateAccessed' },
+    ],
+  ];
+  return defs.filter(([cfg]) => cfg.show).map(([cfg, col]) => ({ ...col, format: cfg.format }));
 }
 
 export const useConfigStore = create<ConfigStore>((set) => ({
   appearance: DEFAULT_APPEARANCE,
+  visibleDateCols: buildVisibleDateCols(DEFAULT_APPEARANCE),
   keymap: NORMAL_KEYMAP,
+  favorites: DEFAULT_FAVORITES,
   loaded: false,
 
   load: async () => {
     try {
       const raw = await tauriApi.loadConfig();
+      const ra = raw.appearance as Record<string, unknown> | undefined;
+      const parseDateCol = (key: string, defaultShow: boolean): DateColumnConfig => {
+        const v = ra?.[key] as { show?: boolean; format?: string } | undefined;
+        return { show: v?.show ?? defaultShow, format: v?.format ?? 'auto' };
+      };
+      const gs = ra?.git_status as { show?: boolean } | undefined;
+      const sz = ra?.size as { show?: boolean; unit?: string } | undefined;
       const appearance: AppearanceConfig = {
-        dateFormat: raw.appearance?.date_format ?? DEFAULT_APPEARANCE.dateFormat,
-        sizeUnit: (raw.appearance?.size_unit ?? 'binary') as 'binary' | 'decimal',
+        dateModified: parseDateCol('date_modified', true),
+        dateCreated: parseDateCol('date_created', false),
+        dateAccessed: parseDateCol('date_accessed', false),
+        gitStatus: { show: gs?.show ?? true },
+        size: { show: sz?.show ?? true, unit: (sz?.unit ?? 'binary') as 'binary' | 'decimal' },
       };
       const keymap = buildKeymap(raw.keymap ?? {});
+      const favorites = (raw.sidebar?.favorites ?? DEFAULT_FAVORITES) as FavoriteKey[];
       const { useUiStore } = await import('./uiStore');
       const editorCommand = raw.editor?.command ?? '';
       if (editorCommand) useUiStore.getState().setEditorCommand(editorCommand);
@@ -66,7 +115,13 @@ export const useConfigStore = create<ConfigStore>((set) => ({
       if (terminalCommand) useUiStore.getState().setTerminalCommand(terminalCommand);
       const language = (raw.language ?? 'ja') as 'ja' | 'en';
       useUiStore.getState().setLanguage(language);
-      set({ appearance, keymap, loaded: true });
+      set({
+        appearance,
+        visibleDateCols: buildVisibleDateCols(appearance),
+        keymap,
+        favorites,
+        loaded: true,
+      });
     } catch {
       set({ loaded: true }); // use defaults on error
     }

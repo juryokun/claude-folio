@@ -7,7 +7,17 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome lint ./src",
+    "lint:fix": "biome lint --write ./src",
+    "format": "biome format ./src",
+    "format:fix": "biome format --write ./src",
+    "check": "biome check ./src",
+    "check:fix": "biome check --write ./src",
+    "clippy": "cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings",
+    "clippy:fix": "cargo clippy --manifest-path src-tauri/Cargo.toml --fix --allow-dirty"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.14.4",
@@ -22,11 +32,14 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.1",
     "@tauri-apps/cli": "^2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "@vitest/coverage-v8": "^4.1.9",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4"
+    "vite": "^7.0.4",
+    "vitest": "^4.1.9"
   }
 }

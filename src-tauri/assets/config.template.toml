@@ -6,18 +6,53 @@
 language = "en"
 
 # -------------------------
+# Sidebar
+# -------------------------
+[sidebar]
+
+# Items shown in the Favorites section.
+# Available values: home, desktop, documents, downloads, pictures, music, movies, applications, public
+favorites = [
+  "home",
+  "desktop",
+  "documents",
+  "downloads",
+  "pictures",
+  "music",
+  "movies",
+  "applications",
+]
+
+# -------------------------
 # Appearance
 # -------------------------
 [appearance]
 
-# Date format for the "Modified" column.
-# Tokens: %Y=year %m=month %d=day %H=hour %M=minute %S=second
-date_format = "%Y/%m/%d %H:%M:%S"
+# Date columns — each can be shown/hidden independently with its own format.
+# format: "auto" = today/yesterday labels (今日 12:34:56), or strftime e.g. "%Y/%m/%d %H:%M:%S"
 
-# File size unit
+[appearance.date_modified]
+show = true
+format = "auto"
+
+[appearance.date_created]
+show = false
+format = "auto"
+
+[appearance.date_accessed]
+show = false
+format = "auto"
+
+# Git status column — shows M/A/D/? symbols next to file names
+[appearance.git_status]
+show = true
+
+# File size column
+[appearance.size]
+show = true
 #   "binary"  → KiB / MiB / GiB (1024-based)
 #   "decimal" → KB / MB / GB  (1000-based)
-size_unit = "binary"
+unit = "binary"
 
 # -------------------------
 # Editor

@@ -1121,6 +1121,7 @@ dependencies = [
  "tauri-plugin-drag",
  "tauri-plugin-opener",
  "tauri-plugin-shell",
+ "tempfile",
  "toml 0.8.2",
  "trash",
  "walkdir",

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { Tab } from '../types';
 import { tauriApi } from '../lib/tauri';
+import type { Tab } from '../types';
 
 // Resolved home directory. Updated by App.tsx on mount via setHomeDir().
 let resolvedHome = '/Users';
@@ -64,9 +64,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
       const idx = s.tabs.findIndex((t) => t.id === id);
       const newTabs = s.tabs.filter((t) => t.id !== id);
       const newActive =
-        s.activeTabId === id
-          ? (newTabs[Math.max(0, idx - 1)]?.id ?? newTabs[0].id)
-          : s.activeTabId;
+        s.activeTabId === id ? (newTabs[Math.max(0, idx - 1)]?.id ?? newTabs[0].id) : s.activeTabId;
       return { tabs: newTabs, activeTabId: newActive };
     });
   },

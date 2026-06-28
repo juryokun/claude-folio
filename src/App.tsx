@@ -1,29 +1,33 @@
-import { useEffect, useCallback, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { TabBar } from './components/tabs/TabBar';
-import { Sidebar } from './components/sidebar/Sidebar';
+import { useCallback, useEffect, useRef } from 'react';
+import { KeybindingsHelp } from './components/help/KeybindingsHelp';
+import { CommandOutputModal } from './components/modals/CommandOutputModal';
+import { CommandPalette } from './components/modals/CommandPalette';
+import { ConfirmModal } from './components/modals/ConfirmModal';
+import { CopyConflictModal } from './components/modals/CopyConflictModal';
+import { NewDirModal } from './components/modals/NewDirModal';
+import { NewFileModal } from './components/modals/NewFileModal';
+import { OpenWithModal } from './components/modals/OpenWithModal';
+import { RenameModal } from './components/modals/RenameModal';
 import { FilePane } from './components/pane/FilePane';
 import { PathBar } from './components/pane/PathBar';
 import { StatusBar } from './components/pane/StatusBar';
-import { SearchBar } from './components/search/SearchBar';
-import { RenameModal } from './components/modals/RenameModal';
-import { NewDirModal } from './components/modals/NewDirModal';
-import { NewFileModal } from './components/modals/NewFileModal';
-import { ConfirmModal } from './components/modals/ConfirmModal';
-import { CommandPalette } from './components/modals/CommandPalette';
-import { OpenWithModal } from './components/modals/OpenWithModal';
-import { CopyConflictModal } from './components/modals/CopyConflictModal';
 import { PreviewPanel } from './components/preview/PreviewPanel';
-import { KeybindingsHelp } from './components/help/KeybindingsHelp';
-import { useTabStore, setHomeDir } from './store/tabStore';
-import { useFileStore } from './store/fileStore';
-import { useUiStore } from './store/uiStore';
-import { useConfigStore } from './store/configStore';
-import { useBookmarkStore } from './store/bookmarkStore';
-import { useVimKeys } from './hooks/useVimKeys';
+import { FindBar } from './components/search/FindBar';
+import { SearchBar } from './components/search/SearchBar';
+import { Sidebar } from './components/sidebar/Sidebar';
+import { TabBar } from './components/tabs/TabBar';
 import { useFileOps } from './hooks/useFileOps';
+import { useVimKeys } from './hooks/useVimKeys';
 import { tauriApi } from './lib/tauri';
+import { applyTheme } from './lib/themes';
 import type { VimAction } from './lib/vim/keymap';
+import { useBookmarkStore } from './store/bookmarkStore';
+import { useConfigStore } from './store/configStore';
+import { useCustomCommandStore } from './store/customCommandStore';
+import { useFileStore } from './store/fileStore';
+import { setHomeDir, useTabStore } from './store/tabStore';
+import { useUiStore } from './store/uiStore';
 import './App.css';
 
 async function getHomeDir(): Promise<string> {
@@ -36,12 +40,29 @@ async function getHomeDir(): Promise<string> {
 }
 
 export default function App() {
-  const { tabs, activeTab, navigateTo, openTab, closeTab, nextTab, prevTab, activeTabId, goBack, goForward } =
-    useTabStore();
-  const { loadDir, setCursor, getPane, filteredEntries, setSort } = useFileStore();
   const {
-    showHidden, toggleHidden, setShowHelp, setVimMode, toggleSidebar, showSidebar,
-    showPreview, togglePreview,
+    tabs,
+    activeTab,
+    navigateTo,
+    openTab,
+    closeTab,
+    nextTab,
+    prevTab,
+    activeTabId,
+    goBack,
+    goForward,
+  } = useTabStore();
+  const { loadDir, setCursor, getPane, filteredEntries, setSort, clearFind } = useFileStore();
+  const {
+    showHidden,
+    toggleHidden,
+    setShowHelp,
+    setVimMode,
+    toggleSidebar,
+    showSidebar,
+    showPreview,
+    togglePreview,
+    openFind,
   } = useUiStore();
 
   const fileOps = useFileOps();
@@ -51,28 +72,53 @@ export default function App() {
   const loadConfig = useConfigStore((s) => s.load);
   const keymap = useConfigStore((s) => s.keymap);
   const loadBookmarks = useBookmarkStore((s) => s.loadBookmarks);
+  const loadCustomCommands = useCustomCommandStore((s) => s.loadCommands);
 
-  // Resolve real home dir and navigate there on startup
+  // Resolve real home dir, then navigate to startup path arg (or home)
   useEffect(() => {
-    getHomeDir().then((home) => {
-      (window as any).__macFilerUsername = home.split('/').pop();
+    getHomeDir().then(async (home) => {
+      window.__macFilerUsername = home.split('/').pop();
+      window.__macFilerHome = home;
       setHomeDir(home);
-      navigateTo(home);
+      const startupPath = await tauriApi.getStartupPath().catch(() => null);
+      navigateTo(startupPath ?? home);
     });
 
+    applyTheme(useUiStore.getState().theme);
     loadConfig();
     loadBookmarks().catch(() => {});
     tauriApi.suppressDsStore().catch(() => {});
-    tauriApi.check7zipInstalled().then(useUiStore.getState().setHas7zip).catch(() => {});
-    tauriApi.checkZoxideInstalled().then(useUiStore.getState().setHasZoxide).catch(() => {});
-  }, []);
+    tauriApi
+      .check7zipInstalled()
+      .then(useUiStore.getState().setHas7zip)
+      .catch(() => {});
+    tauriApi
+      .checkZoxideInstalled()
+      .then(useUiStore.getState().setHasZoxide)
+      .catch(() => {});
+    tauriApi
+      .checkFdInstalled()
+      .then(useUiStore.getState().setHasFd)
+      .catch(() => {});
+    loadCustomCommands().catch(() => {});
+
+    // When a second CLI launch targets this already-running instance, open a new tab.
+    const unlisten = listen<string | null>('folio:open-tab', (event) => {
+      const path = event.payload;
+      openTab(path ?? undefined);
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [loadConfig, loadBookmarks, loadCustomCommands, navigateTo, openTab]);
 
   // Load directory when active tab path changes
-  const currentTabPath = activeTab().path;
-  const currentTabId = activeTab().id;
+  const currentTab = activeTab();
+  const currentTabPath = currentTab.path;
+  const currentTabId = currentTab.id;
   useEffect(() => {
     loadDir(currentTabId, currentTabPath, showHidden);
-  }, [currentTabId, currentTabPath, showHidden]);
+  }, [currentTabId, currentTabPath, showHidden, loadDir]);
 
   // Watch active directory for external changes; debounce to avoid rapid reloads
   const reloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -93,7 +139,10 @@ export default function App() {
         loadDir(tab.id, tab.path, showHiddenRef.current, true);
       }, 300);
     }).then((fn) => {
-      if (cancelled) { fn(); return; }
+      if (cancelled) {
+        fn();
+        return;
+      }
       unlistenFn = fn;
     });
 
@@ -102,7 +151,7 @@ export default function App() {
       unlistenFn?.();
       if (reloadTimerRef.current) clearTimeout(reloadTimerRef.current);
     };
-  }, [currentTabPath]);
+  }, [currentTabPath, loadDir]);
 
   const handleVimAction = useCallback(
     (action: VimAction) => {
@@ -159,8 +208,11 @@ export default function App() {
         case 'copy_name':
           ops.handleCopyName();
           break;
-        case 'open_terminal':
-          ops.handleOpenTerminal();
+        case 'open_default':
+          ops.handleOpenDefault();
+          break;
+        case 'quick_look':
+          ops.handleQuickLook();
           break;
         case 'open_terminal_here':
           ops.handleOpenTerminalHere();
@@ -201,8 +253,12 @@ export default function App() {
         case 'focus_zoxide':
           window.dispatchEvent(new CustomEvent('mac-filer:focus-zoxide'));
           break;
-        case 'go_back': goBack(); break;
-        case 'go_forward': goForward(); break;
+        case 'go_back':
+          goBack();
+          break;
+        case 'go_forward':
+          goForward();
+          break;
         case 'reload':
           ops.reload(true);
           useUiStore.getState().showStatusMessage('再読み込みしました');
@@ -221,6 +277,15 @@ export default function App() {
           break;
         case 'toggle_preview':
           togglePreview();
+          break;
+        case 'find_files':
+          openFind('file');
+          break;
+        case 'find_dirs':
+          openFind('dir');
+          break;
+        case 'find_all':
+          openFind('all');
           break;
         case 'sort_name':
           setSort(activeTabId, 'name', false);
@@ -241,8 +306,25 @@ export default function App() {
         }
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeTabId]
+    [
+      activeTabId,
+      activeTab,
+      setCursor,
+      getPane,
+      filteredEntries,
+      toggleSidebar,
+      openTab,
+      closeTab,
+      nextTab,
+      prevTab,
+      goBack,
+      goForward,
+      toggleHidden,
+      togglePreview,
+      setShowHelp,
+      openFind,
+      setSort,
+    ],
   );
 
   useVimKeys(handleVimAction, keymap);
@@ -253,12 +335,14 @@ export default function App() {
       if (e.key === 'Escape' && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
         setVimMode('NORMAL');
         setShowHelp(false);
+        const tab = useTabStore.getState().activeTab();
+        clearFind(tab.id);
         useFileStore.getState().setClipboard(null);
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [setVimMode, setShowHelp]);
+  }, [setVimMode, setShowHelp, clearFind]);
 
   return (
     <div className="app">
@@ -272,13 +356,19 @@ export default function App() {
               <div
                 key={t.id}
                 className="tab-content"
-                style={{ display: t.id === activeTabId ? 'flex' : 'none', flex: 1, minHeight: 0, overflow: 'hidden' }}
+                style={{
+                  display: t.id === activeTabId ? 'flex' : 'none',
+                  flex: 1,
+                  minHeight: 0,
+                  overflow: 'hidden',
+                }}
               >
                 <FilePane tabId={t.id} />
               </div>
             ))}
           </div>
           <SearchBar />
+          <FindBar />
           <StatusBar />
         </div>
         {showPreview && <PreviewPanel />}
@@ -289,6 +379,7 @@ export default function App() {
       <NewFileModal />
       <ConfirmModal />
       <CommandPalette />
+      <CommandOutputModal />
       <OpenWithModal />
       <CopyConflictModal />
       <KeybindingsHelp />

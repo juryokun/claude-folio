@@ -24,3 +24,6 @@ toml = "0.8"
 trash = "3"
 walkdir = "2"
 notify = "6"
+
+[dev-dependencies]
+tempfile = "3"

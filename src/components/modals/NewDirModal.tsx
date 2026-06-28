@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 import { tauriApi } from '../../lib/tauri';
-import { useUiStore } from '../../store/uiStore';
-import { useTabStore } from '../../store/tabStore';
 import { useFileStore } from '../../store/fileStore';
+import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
 
 export function NewDirModal() {
   const { t } = useTranslation();
@@ -27,7 +27,10 @@ export function NewDirModal() {
 
   const handleCreate = async () => {
     const trimmed = name.trim();
-    if (!trimmed) { setShowNewDir(false); return; }
+    if (!trimmed) {
+      setShowNewDir(false);
+      return;
+    }
     const tab = activeTab();
     try {
       await tauriApi.createDir(`${tab.path}/${trimmed}`);
@@ -56,7 +59,9 @@ export function NewDirModal() {
         />
         <div className="modal-actions">
           <button onClick={() => setShowNewDir(false)}>{t('newDirModal.cancel')}</button>
-          <button className="primary" onClick={handleCreate}>{t('newDirModal.create')}</button>
+          <button className="primary" onClick={handleCreate}>
+            {t('newDirModal.create')}
+          </button>
         </div>
       </div>
     </div>

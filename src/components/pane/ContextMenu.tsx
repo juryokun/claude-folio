@@ -57,13 +57,16 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
       onContextMenu={(e) => e.preventDefault()}
     >
       {items.map((item, i) => {
-        if ('kind' in item) return <div key={i} className="context-menu-sep" />;
+        if ('kind' in item) return <div key={`sep-${i}`} className="context-menu-sep" />;
         return (
           <button
-            key={i}
+            key={item.label}
             className={`context-menu-item${item.dim ? ' context-menu-item--dim' : ''}`}
             disabled={item.disabled}
-            onClick={() => { onClose(); item.action(); }}
+            onClick={() => {
+              onClose();
+              item.action();
+            }}
           >
             <span className="context-menu-icon">{item.icon}</span>
             <span className="context-menu-label">{item.label}</span>

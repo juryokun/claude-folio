@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { tauriApi } from '../../lib/tauri';
-import { useUiStore } from '../../store/uiStore';
 import { useFileStore } from '../../store/fileStore';
 import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
 import type { FileEntry } from '../../types';
 
 type PreviewState =
@@ -18,18 +18,84 @@ type PreviewState =
   | { kind: 'binary' }
   | { kind: 'error'; message: string };
 
-const IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'tif', 'avif', 'heic', 'heif']);
+const IMAGE_EXTS = new Set([
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'webp',
+  'svg',
+  'bmp',
+  'ico',
+  'tiff',
+  'tif',
+  'avif',
+  'heic',
+  'heif',
+]);
 const VIDEO_EXTS = new Set(['mp4', 'mov', 'avi', 'mkv', 'webm', 'm4v', 'flv']);
 const AUDIO_EXTS = new Set(['mp3', 'wav', 'aac', 'flac', 'm4a', 'ogg', 'opus']);
 const TEXT_EXTS = new Set([
-  'txt', 'md', 'markdown', 'rst', 'log', 'csv', 'tsv',
-  'json', 'jsonc', 'json5', 'yaml', 'yml', 'toml', 'ini', 'env',
-  'js', 'jsx', 'ts', 'tsx', 'mjs', 'cjs',
-  'html', 'htm', 'xml', 'svg', 'css', 'scss', 'less',
-  'rs', 'py', 'rb', 'go', 'java', 'kt', 'swift', 'c', 'cpp', 'cc', 'h', 'hpp',
-  'sh', 'bash', 'zsh', 'fish', 'ps1', 'bat',
-  'sql', 'graphql', 'proto', 'dockerfile', 'gitignore', 'editorconfig',
-  'vue', 'svelte', 'astro', 'php', 'lua', 'r', 'dart', 'cs',
+  'txt',
+  'md',
+  'markdown',
+  'rst',
+  'log',
+  'csv',
+  'tsv',
+  'json',
+  'jsonc',
+  'json5',
+  'yaml',
+  'yml',
+  'toml',
+  'ini',
+  'env',
+  'js',
+  'jsx',
+  'ts',
+  'tsx',
+  'mjs',
+  'cjs',
+  'html',
+  'htm',
+  'xml',
+  'svg',
+  'css',
+  'scss',
+  'less',
+  'rs',
+  'py',
+  'rb',
+  'go',
+  'java',
+  'kt',
+  'swift',
+  'c',
+  'cpp',
+  'cc',
+  'h',
+  'hpp',
+  'sh',
+  'bash',
+  'zsh',
+  'fish',
+  'ps1',
+  'bat',
+  'sql',
+  'graphql',
+  'proto',
+  'dockerfile',
+  'gitignore',
+  'editorconfig',
+  'vue',
+  'svelte',
+  'astro',
+  'php',
+  'lua',
+  'r',
+  'dart',
+  'cs',
 ]);
 
 function getExt(name: string): string {
@@ -39,17 +105,45 @@ function getExt(name: string): string {
 
 function guessLanguage(ext: string): string {
   const map: Record<string, string> = {
-    js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
-    ts: 'typescript', tsx: 'typescript',
-    py: 'python', rb: 'ruby', go: 'go', rs: 'rust',
-    java: 'java', kt: 'kotlin', swift: 'swift',
-    c: 'c', cpp: 'cpp', cc: 'cpp', h: 'c', hpp: 'cpp',
-    sh: 'bash', bash: 'bash', zsh: 'bash', fish: 'fish',
-    html: 'html', htm: 'html', xml: 'xml', svg: 'xml',
-    css: 'css', scss: 'scss', less: 'less',
-    json: 'json', jsonc: 'json', yaml: 'yaml', yml: 'yaml',
-    toml: 'toml', sql: 'sql', md: 'markdown',
-    vue: 'vue', svelte: 'svelte', php: 'php',
+    js: 'javascript',
+    jsx: 'javascript',
+    mjs: 'javascript',
+    cjs: 'javascript',
+    ts: 'typescript',
+    tsx: 'typescript',
+    py: 'python',
+    rb: 'ruby',
+    go: 'go',
+    rs: 'rust',
+    java: 'java',
+    kt: 'kotlin',
+    swift: 'swift',
+    c: 'c',
+    cpp: 'cpp',
+    cc: 'cpp',
+    h: 'c',
+    hpp: 'cpp',
+    sh: 'bash',
+    bash: 'bash',
+    zsh: 'bash',
+    fish: 'fish',
+    html: 'html',
+    htm: 'html',
+    xml: 'xml',
+    svg: 'xml',
+    css: 'css',
+    scss: 'scss',
+    less: 'less',
+    json: 'json',
+    jsonc: 'json',
+    yaml: 'yaml',
+    yml: 'yaml',
+    toml: 'toml',
+    sql: 'sql',
+    md: 'markdown',
+    vue: 'vue',
+    svelte: 'svelte',
+    php: 'php',
   };
   return map[ext] ?? 'plaintext';
 }
@@ -66,13 +160,17 @@ export function PreviewPanel() {
   const prevPathRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!entry) { setPreview({ kind: 'none' }); return; }
+    if (!entry) {
+      setPreview({ kind: 'none' });
+      return;
+    }
     if (entry.path === prevPathRef.current) return;
     prevPathRef.current = entry.path;
 
     if (entry.is_dir) {
       setPreview({ kind: 'loading' });
-      tauriApi.listDir(entry.path, false)
+      tauriApi
+        .listDir(entry.path, false)
         .then((entries) => {
           if (entry.path !== prevPathRef.current) return;
           const sorted = [...entries].sort((a, b) => {
@@ -104,7 +202,8 @@ export function PreviewPanel() {
     }
     if (TEXT_EXTS.has(ext) || ext === '') {
       setPreview({ kind: 'loading' });
-      tauriApi.readTextFile(entry.path)
+      tauriApi
+        .readTextFile(entry.path)
         .then((content) => {
           if (entry.path !== prevPathRef.current) return;
           setPreview({ kind: 'text', content, language: guessLanguage(ext) });
@@ -150,18 +249,14 @@ export function PreviewPanel() {
     <div className="preview-panel" style={{ width: previewWidth }}>
       <div className="preview-resizer" onMouseDown={startResize} />
       <div className="preview-content">
-        {!entry && (
-          <div className="preview-empty">{t('previewPanel.noSelection')}</div>
-        )}
+        {!entry && <div className="preview-empty">{t('previewPanel.noSelection')}</div>}
 
         {entry && (
           <>
             <div className="preview-header">
               <div className="preview-filename">{entry.name}</div>
               <div className="preview-meta">
-                {!entry.is_dir && entry.size != null && (
-                  <span>{formatSize(entry.size)}</span>
-                )}
+                {!entry.is_dir && entry.size != null && <span>{formatSize(entry.size)}</span>}
               </div>
             </div>
 
@@ -176,18 +271,15 @@ export function PreviewPanel() {
                     src={preview.src}
                     alt={entry.name}
                     className="preview-image"
-                    onError={() => setPreview({ kind: 'error', message: t('previewPanel.imageLoadError') })}
+                    onError={() =>
+                      setPreview({ kind: 'error', message: t('previewPanel.imageLoadError') })
+                    }
                   />
                 </div>
               )}
 
               {preview.kind === 'video' && (
-                <video
-                  key={preview.src}
-                  src={preview.src}
-                  controls
-                  className="preview-video"
-                />
+                <video key={preview.src} src={preview.src} controls className="preview-video" />
               )}
 
               {preview.kind === 'audio' && (
@@ -198,14 +290,18 @@ export function PreviewPanel() {
               )}
 
               {preview.kind === 'text' && (
-                <pre className="preview-text"><code>{preview.content}</code></pre>
+                <pre className="preview-text">
+                  <code>{preview.content}</code>
+                </pre>
               )}
 
               {preview.kind === 'binary' && (
                 <div className="preview-empty">
                   <div className="preview-binary-icon">📄</div>
                   <div>{t('previewPanel.binaryFile')}</div>
-                  {entry.size != null && <div className="preview-meta">{formatSize(entry.size)}</div>}
+                  {entry.size != null && (
+                    <div className="preview-meta">{formatSize(entry.size)}</div>
+                  )}
                 </div>
               )}
 
@@ -225,7 +321,12 @@ export function PreviewPanel() {
                             )}
                             {e.modified != null && (
                               <span className="preview-dir-date">
-                                {new Date(e.modified * 1000).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                {new Date(e.modified * 1000).toLocaleDateString('ja-JP', {
+                                  month: '2-digit',
+                                  day: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
                               </span>
                             )}
                           </span>

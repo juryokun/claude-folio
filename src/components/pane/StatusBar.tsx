@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useTabStore } from '../../store/tabStore';
 import { useFileStore } from '../../store/fileStore';
+import { useTabStore } from '../../store/tabStore';
 import { useUiStore } from '../../store/uiStore';
 
 export function StatusBar() {
@@ -24,20 +24,17 @@ export function StatusBar() {
         {cursor}/{totalCount}
         {selectedCount > 0 && ` ${t('statusBar.selected', { count: selectedCount })}`}
       </span>
-      {pane.filterQuery && (
-        <span className="status-filter">🔍 {pane.filterQuery}</span>
-      )}
+      {pane.filterQuery && <span className="status-filter">🔍 {pane.filterQuery}</span>}
       {clipboard && (
         <span className="status-clipboard">
-          {t('statusBar.clipboardItems', { mode: clipboard.mode === 'copy' ? t('statusBar.modeCopy') : t('statusBar.modeCut'), count: clipboard.paths.length })}
+          {t('statusBar.clipboardItems', {
+            mode: clipboard.mode === 'copy' ? t('statusBar.modeCopy') : t('statusBar.modeCut'),
+            count: clipboard.paths.length,
+          })}
         </span>
       )}
-      {showHidden && (
-        <span className="status-hidden">{t('statusBar.hiddenFiles')}</span>
-      )}
-      {statusMessage && (
-        <span className="status-message">{statusMessage}</span>
-      )}
+      {showHidden && <span className="status-hidden">{t('statusBar.hiddenFiles')}</span>}
+      {statusMessage && <span className="status-message">{statusMessage}</span>}
     </div>
   );
 }

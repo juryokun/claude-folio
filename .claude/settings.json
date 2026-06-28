@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc --noEmit *)",
+      "Bash(cargo check *)",
+      "Bash(npm run lint *)",
+      "Bash(cargo clippy *)",
+      "mcp__computer-use__screenshot",
+      "mcp__computer-use__request_access",
+      "mcp__computer-use__wait",
+      "mcp__computer-use__zoom"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); if [ -n \"$f\" ]; then case \"$f\" in *.ts|*.tsx|*.css) npx biome check --write \"$f\" 2>/dev/null ;; *.rs) cargo fmt --manifest-path src-tauri/Cargo.toml 2>/dev/null ;; esac; fi; true",
+            "timeout": 30,
+            "statusMessage": "フォーマット中..."
+          }
+        ]
+      }
+    ]
+  }
+}

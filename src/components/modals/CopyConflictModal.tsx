@@ -23,17 +23,27 @@ export function CopyConflictModal() {
           </p>
           <ul className="conflict-list">
             {conflicts.slice(0, 8).map((name) => (
-              <li key={name} className="conflict-item">{name}</li>
+              <li key={name} className="conflict-item">
+                {name}
+              </li>
             ))}
             {conflicts.length > 8 && (
-              <li className="conflict-item conflict-more">{t('copyConflictModal.more', { count: conflicts.length - 8 })}</li>
+              <li className="conflict-item conflict-more">
+                {t('copyConflictModal.more', { count: conflicts.length - 8 })}
+              </li>
             )}
           </ul>
         </div>
         <div className="modal-actions">
-          <button className="modal-btn" onClick={closeCopyConflict}>{t('copyConflictModal.cancel')}</button>
-          <button className="modal-btn" onClick={() => handle('rename')}>{t('copyConflictModal.rename')}</button>
-          <button className="modal-btn modal-btn--danger" onClick={() => handle('overwrite')}>{t('copyConflictModal.overwrite')}</button>
+          <button className="modal-btn" onClick={closeCopyConflict}>
+            {t('copyConflictModal.cancel')}
+          </button>
+          <button className="modal-btn" onClick={() => handle('rename')}>
+            {t('copyConflictModal.rename')}
+          </button>
+          <button className="modal-btn modal-btn--danger" onClick={() => handle('overwrite')}>
+            {t('copyConflictModal.overwrite')}
+          </button>
         </div>
       </div>
     </div>

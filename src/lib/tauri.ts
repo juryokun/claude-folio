@@ -1,4 +1,4 @@
-import { invoke, isTauri, Channel } from '@tauri-apps/api/core';
+import { Channel, invoke, isTauri } from '@tauri-apps/api/core';
 import type { FileEntry } from '../types';
 
 export { isTauri };
@@ -7,8 +7,7 @@ export const tauriApi = {
   listDir: (path: string, showHidden: boolean) =>
     invoke<FileEntry[]>('list_dir', { path, showHidden }),
 
-  renameFile: (from: string, to: string) =>
-    invoke<void>('rename_file', { from, to }),
+  renameFile: (from: string, to: string) => invoke<void>('rename_file', { from, to }),
 
   checkCopyConflicts: (sources: string[], dest: string) =>
     invoke<string[]>('check_copy_conflicts', { sources, dest }),
@@ -16,38 +15,26 @@ export const tauriApi = {
   copyFiles: (sources: string[], dest: string, strategy: 'overwrite' | 'rename' = 'rename') =>
     invoke<void>('copy_files', { sources, dest, strategy }),
 
-  moveFiles: (sources: string[], dest: string) =>
-    invoke<void>('move_files', { sources, dest }),
+  moveFiles: (sources: string[], dest: string) => invoke<void>('move_files', { sources, dest }),
 
-  createDir: (path: string) =>
-    invoke<void>('create_dir', { path }),
+  createDir: (path: string) => invoke<void>('create_dir', { path }),
 
-  createFile: (path: string) =>
-    invoke<void>('create_file', { path }),
+  createFile: (path: string) => invoke<void>('create_file', { path }),
 
   readTextFile: (path: string, maxBytes = 262144) =>
     invoke<string>('read_text_file', { path, maxBytes }),
 
-  moveToTrash: (paths: string[]) =>
-    invoke<void>('move_to_trash', { paths }),
+  moveToTrash: (paths: string[]) => invoke<void>('move_to_trash', { paths }),
 
-  copyPathToClipboard: (paths: string[]) =>
-    invoke<void>('copy_path_to_clipboard', { paths }),
+  copyPathToClipboard: (paths: string[]) => invoke<void>('copy_path_to_clipboard', { paths }),
 
-  copyNameToClipboard: (paths: string[]) =>
-    invoke<void>('copy_name_to_clipboard', { paths }),
+  copyNameToClipboard: (paths: string[]) => invoke<void>('copy_name_to_clipboard', { paths }),
 
-  openFile: (path: string) =>
-    invoke<void>('open_file', { path }),
+  openFile: (path: string) => invoke<void>('open_file', { path }),
 
-  openWithApp: (path: string, app: string) =>
-    invoke<void>('open_with_app', { path, app }),
+  openWithApp: (path: string, app: string) => invoke<void>('open_with_app', { path, app }),
 
-  listApplications: () =>
-    invoke<string[]>('list_applications'),
-
-  openWithCommand: (path: string, cmd: string) =>
-    invoke<void>('open_with_editor', { path, editorCmd: cmd }),
+  listApplications: () => invoke<string[]>('list_applications'),
 
   openWithEditor: (path: string, editorCmd: string) =>
     invoke<void>('open_with_editor', { path, editorCmd }),
@@ -55,53 +42,73 @@ export const tauriApi = {
   openTerminalAt: (path: string, app: string, command: string) =>
     invoke<void>('open_terminal_at', { path, app, command }),
 
-  detectGoogleDrive: () =>
-    invoke<string[]>('detect_google_drive'),
+  quickLook: (path: string) => invoke<void>('quick_look', { path }),
 
-  suppressDsStore: () =>
-    invoke<void>('suppress_ds_store'),
+  listDirCompletions: (partial: string) => invoke<string[]>('list_dir_completions', { partial }),
 
-  checkZoxideInstalled: () =>
-    invoke<boolean>('check_zoxide_installed'),
+  checkFdInstalled: () => invoke<boolean>('check_fd_installed'),
 
-  zoxideQuery: (query: string) =>
-    invoke<string[]>('zoxide_query', { query }),
+  searchWithFd: (root: string, query: string, fdType: 'file' | 'dir' | 'all') =>
+    invoke<FileEntry[]>('search_with_fd', { root, query, fdType }),
 
-  zoxideAdd: (path: string) =>
-    invoke<void>('zoxide_add', { path }),
+  detectGoogleDrive: () => invoke<string[]>('detect_google_drive'),
+
+  suppressDsStore: () => invoke<void>('suppress_ds_store'),
+
+  checkZoxideInstalled: () => invoke<boolean>('check_zoxide_installed'),
+
+  zoxideQuery: (query: string) => invoke<string[]>('zoxide_query', { query }),
+
+  zoxideAdd: (path: string) => invoke<void>('zoxide_add', { path }),
 
   searchFiles: (root: string, query: string, maxResults = 500) =>
     invoke<FileEntry[]>('search_files', { root, query, maxResults }),
 
-  check7zipInstalled: () =>
-    invoke<boolean>('check_7zip_installed'),
+  check7zipInstalled: () => invoke<boolean>('check_7zip_installed'),
 
   compress7zip: (paths: string[], dest: string, windowsCompat = true) =>
     invoke<void>('compress_7zip', { paths, dest, windowsCompat }),
 
-  extract7zip: (archive: string, dest: string) =>
-    invoke<void>('extract_7zip', { archive, dest }),
+  extract7zip: (archive: string, dest: string) => invoke<void>('extract_7zip', { archive, dest }),
 
-  watchDir: (path: string) =>
-    invoke<void>('watch_dir', { path }),
+  watchDir: (path: string) => invoke<void>('watch_dir', { path }),
 
-  unwatchDir: () =>
-    invoke<void>('unwatch_dir'),
+  unwatchDir: () => invoke<void>('unwatch_dir'),
 
-  loadBookmarks: () =>
-    invoke<{ label: string; path: string }[]>('load_bookmarks'),
+  loadBookmarks: () => invoke<{ label: string; path: string }[]>('load_bookmarks'),
 
   saveBookmarks: (bookmarks: { label: string; path: string }[]) =>
     invoke<void>('save_bookmarks', { bookmarks }),
 
   loadConfig: () =>
-    invoke<{ appearance?: { date_format?: string; size_unit?: string }; editor?: { command?: string }; terminal?: { app?: string; command?: string }; keymap?: Record<string, string[]>; language?: string }>('load_config'),
+    invoke<{
+      appearance?: Record<string, unknown>;
+      editor?: { command?: string };
+      terminal?: { app?: string; command?: string };
+      keymap?: Record<string, string[]>;
+      sidebar?: { favorites?: string[] };
+      language?: string;
+    }>('load_config'),
 
-  initConfig: () =>
-    invoke<string>('init_config'),
+  initConfig: () => invoke<string>('init_config'),
 
-  saveLanguage: (language: string) =>
-    invoke<void>('save_language', { language }),
+  saveLanguage: (language: string) => invoke<void>('save_language', { language }),
+
+  getStartupPath: () => invoke<string | null>('get_startup_path'),
+
+  installCli: () => invoke<void>('install_cli'),
+
+  loadCustomCommands: () =>
+    invoke<import('../lib/customCommands').CustomCommand[]>('load_custom_commands'),
+
+  runShellCommand: (shell: string, command: string, cwd: string) =>
+    invoke<import('../lib/customCommands').ShellOutput>('run_shell_command', {
+      shell,
+      command,
+      cwd,
+    }),
+
+  getGitStatus: (path: string) => invoke<Record<string, string>>('get_git_status', { path }),
 
   startNativeDrag: (paths: string[], label: string): Promise<void> => {
     // Build a simple PNG drag image via canvas
@@ -112,7 +119,8 @@ export const tauriApi = {
     canvas.height = 28 * scale;
     canvas.style.width = `${w}px`;
     canvas.style.height = '28px';
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return Promise.reject(new Error('Canvas 2D context unavailable'));
     ctx.scale(scale, scale);
     ctx.fillStyle = 'rgba(30, 30, 30, 0.85)';
     ctx.roundRect(0, 0, w, 28, 6);

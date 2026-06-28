@@ -1,0 +1,54 @@
+direction: down
+
+keydown: keydown イベント {
+  shape: oval
+}
+
+modifier: 修飾キー判定 {
+  shape: diamond
+}
+
+direct: アクション直接発火 {
+  shape: rectangle
+  style.fill: "#dcfce7"
+}
+
+buffer: キーバッファへ追加 {
+  shape: rectangle
+}
+
+match: キーマップ照合 {
+  shape: diamond
+}
+
+exact: アクション発火 {
+  shape: rectangle
+  style.fill: "#dcfce7"
+}
+
+prefix: プレフィックス一致・次キー待ち {
+  shape: rectangle
+  style.fill: "#fef9c3"
+}
+
+timeout: 500ms タイムアウト {
+  shape: rectangle
+  style.stroke-dash: 4
+}
+
+clear: バッファクリア {
+  shape: rectangle
+  style.fill: "#fee2e2"
+}
+
+keydown -> modifier
+modifier -> direct: Cmd・Ctrl+L など
+modifier -> buffer: 通常キー
+buffer -> match
+match -> exact: 完全一致
+match -> prefix: プレフィックス一致
+match -> clear: 一致なし
+prefix -> buffer: 次のキー入力
+prefix -> timeout
+timeout -> clear: タイムアウト
+exact -> clear

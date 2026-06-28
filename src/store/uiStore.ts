@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { VimMode } from '../types';
-import { setLanguage, type Language } from '../lib/i18n';
+import { type Language, setLanguage } from '../lib/i18n';
 import { tauriApi } from '../lib/tauri';
+import { applyTheme, type ThemeId } from '../lib/themes';
+import type { VimMode } from '../types';
 
 interface UiStore {
   vimMode: VimMode;
@@ -20,21 +21,31 @@ interface UiStore {
   openWithTarget: string | null;
   has7zip: boolean;
   hasZoxide: boolean;
+  hasFd: boolean;
+  showFind: boolean;
+  findType: 'file' | 'dir' | 'all';
   terminalApp: string;
   terminalCommand: string;
   googleDrivePaths: string[];
   sidebarWidth: number;
-  columnWidths: { size: number; date: number };
+  columnWidths: { size: number; date: number; dateCreated: number; dateAccessed: number };
   statusMessage: string | null;
   editorCommand: string;
   showSidebar: boolean;
   showPreview: boolean;
   previewWidth: number;
-  copyConflict: { conflicts: string[]; onResolve: (strategy: 'overwrite' | 'rename') => void } | null;
+  copyConflict: {
+    conflicts: string[];
+    onResolve: (strategy: 'overwrite' | 'rename') => void;
+  } | null;
   language: Language;
+  theme: ThemeId;
+  pendingKey: string | null;
 
   setVimMode: (mode: VimMode) => void;
+  setPendingKey: (key: string | null) => void;
   setLanguage: (lang: Language) => void;
+  setTheme: (id: ThemeId) => void;
   setEditorCommand: (cmd: string) => void;
   setTerminalApp: (app: string) => void;
   setTerminalCommand: (cmd: string) => void;
@@ -51,12 +62,20 @@ interface UiStore {
   setShowOpenWith: (v: boolean, target?: string) => void;
   setHas7zip: (v: boolean) => void;
   setHasZoxide: (v: boolean) => void;
+  setHasFd: (v: boolean) => void;
+  openFind: (type: 'file' | 'dir' | 'all') => void;
+  closeFind: () => void;
   setGoogleDrivePaths: (paths: string[]) => void;
   setSidebarWidth: (w: number) => void;
-  setColumnWidths: (w: Partial<{ size: number; date: number }>) => void;
+  setColumnWidths: (
+    w: Partial<{ size: number; date: number; dateCreated: number; dateAccessed: number }>,
+  ) => void;
   togglePreview: () => void;
   setPreviewWidth: (w: number) => void;
-  showCopyConflict: (conflicts: string[], onResolve: (strategy: 'overwrite' | 'rename') => void) => void;
+  showCopyConflict: (
+    conflicts: string[],
+    onResolve: (strategy: 'overwrite' | 'rename') => void,
+  ) => void;
   closeCopyConflict: () => void;
 }
 
@@ -64,6 +83,7 @@ export const useUiStore = create<UiStore>()(
   persist(
     (set) => ({
       vimMode: 'NORMAL',
+      pendingKey: null,
       showHidden: false,
       showHelp: false,
       showRename: false,
@@ -78,11 +98,14 @@ export const useUiStore = create<UiStore>()(
       openWithTarget: null,
       has7zip: false,
       hasZoxide: false,
+      hasFd: false,
+      showFind: false,
+      findType: 'file' as 'file' | 'dir',
       terminalApp: '',
       terminalCommand: '',
       googleDrivePaths: [],
       sidebarWidth: 220,
-      columnWidths: { size: 90, date: 140 },
+      columnWidths: { size: 90, date: 140, dateCreated: 140, dateAccessed: 140 },
       statusMessage: null,
       editorCommand: '',
       showSidebar: true,
@@ -90,9 +113,19 @@ export const useUiStore = create<UiStore>()(
       previewWidth: 320,
       copyConflict: null,
       language: 'en' as Language,
+      theme: 'dark' as ThemeId,
 
       setVimMode: (mode) => set({ vimMode: mode }),
-      setLanguage: (lang) => { setLanguage(lang); set({ language: lang }); tauriApi.saveLanguage(lang).catch(console.error); },
+      setPendingKey: (key) => set({ pendingKey: key }),
+      setLanguage: (lang) => {
+        setLanguage(lang);
+        set({ language: lang });
+        tauriApi.saveLanguage(lang).catch(console.error);
+      },
+      setTheme: (id) => {
+        applyTheme(id);
+        set({ theme: id });
+      },
       setEditorCommand: (cmd) => set({ editorCommand: cmd }),
       setTerminalApp: (app) => set({ terminalApp: app }),
       setTerminalCommand: (cmd) => set({ terminalCommand: cmd }),
@@ -113,6 +146,9 @@ export const useUiStore = create<UiStore>()(
       setShowOpenWith: (v, target) => set({ showOpenWith: v, openWithTarget: target ?? null }),
       setHas7zip: (v) => set({ has7zip: v }),
       setHasZoxide: (v) => set({ hasZoxide: v }),
+      setHasFd: (v) => set({ hasFd: v }),
+      openFind: (type) => set({ showFind: true, findType: type }),
+      closeFind: () => set({ showFind: false }),
       setGoogleDrivePaths: (paths) => set({ googleDrivePaths: paths }),
       setSidebarWidth: (w) => set({ sidebarWidth: w }),
       setColumnWidths: (w) => set((s) => ({ columnWidths: { ...s.columnWidths, ...w } })),
@@ -130,7 +166,8 @@ export const useUiStore = create<UiStore>()(
         columnWidths: s.columnWidths,
         showPreview: s.showPreview,
         previewWidth: s.previewWidth,
+        theme: s.theme,
       }),
-    }
-  )
+    },
+  ),
 );

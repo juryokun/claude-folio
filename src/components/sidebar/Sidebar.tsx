@@ -1,21 +1,14 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTabStore } from '../../store/tabStore';
-import { useBookmarkStore } from '../../store/bookmarkStore';
-import { useUiStore } from '../../store/uiStore';
+import { favoritePath } from '../../lib/favorites';
 import { tauriApi } from '../../lib/tauri';
-
-const FAVORITES = [
-  { key: 'sidebar.home' as const, path: () => `/Users/${getUsername()}` },
-  { key: 'sidebar.desktop' as const, path: () => `/Users/${getUsername()}/Desktop` },
-  { key: 'sidebar.documents' as const, path: () => `/Users/${getUsername()}/Documents` },
-  { key: 'sidebar.downloads' as const, path: () => `/Users/${getUsername()}/Downloads` },
-  { key: 'sidebar.applications' as const, path: () => '/Applications' },
-];
+import { useBookmarkStore } from '../../store/bookmarkStore';
+import { useConfigStore } from '../../store/configStore';
+import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
 
 function getUsername(): string {
-  // Best effort: parse HOME env or use a placeholder
-  return (window as any).__macFilerUsername ?? 'user';
+  return window.__macFilerUsername ?? 'user';
 }
 
 export function Sidebar() {
@@ -23,6 +16,7 @@ export function Sidebar() {
   const { navigateTo, activeTab } = useTabStore();
   const { bookmarks, addBookmark, removeBookmark } = useBookmarkStore();
   const { googleDrivePaths, setGoogleDrivePaths, sidebarWidth, setSidebarWidth } = useUiStore();
+  const favorites = useConfigStore((s) => s.favorites);
 
   const startResize = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -46,10 +40,11 @@ export function Sidebar() {
   const currentPath = activeTab().path;
 
   useEffect(() => {
-    // Fetch home dir from system
-    fetch('').catch(() => {});
-    tauriApi.detectGoogleDrive().then(setGoogleDrivePaths).catch(() => {});
-  }, []);
+    tauriApi
+      .detectGoogleDrive()
+      .then(setGoogleDrivePaths)
+      .catch(() => {});
+  }, [setGoogleDrivePaths]);
 
   const handleDropOnBookmarks = (e: React.DragEvent) => {
     e.preventDefault();
@@ -68,15 +63,16 @@ export function Sidebar() {
       <div className="sidebar-resizer" onMouseDown={startResize} />
       <section className="sidebar-section">
         <div className="sidebar-section-title">{t('sidebar.favorites')}</div>
-        {FAVORITES.map((fav) => {
-          const p = fav.path();
+        {favorites.map((key) => {
+          const home = `/Users/${getUsername()}`;
+          const p = favoritePath(key, home);
           return (
             <div
-              key={p}
+              key={key}
               className={`sidebar-item${currentPath === p ? ' active' : ''}`}
               onClick={() => navigateTo(p)}
             >
-              {t(fav.key)}
+              {t(`sidebar.${key}`)}
             </div>
           );
         })}

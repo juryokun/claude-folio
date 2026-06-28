@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 /**
  * Returns event handlers to attach to an <input> so that Enter during IME
@@ -26,12 +26,15 @@ export function useImeAwareEnter(onEnter: () => void) {
       composingRef.current = false;
       endedAtRef.current = Date.now();
     }, []),
-    onKeyDown: useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        const justFinishedIme = composingRef.current || (Date.now() - endedAtRef.current < 50);
-        if (!justFinishedIme) onEnter();
-      }
-    }, [onEnter]),
+    onKeyDown: useCallback(
+      (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+          const justFinishedIme = composingRef.current || Date.now() - endedAtRef.current < 50;
+          if (!justFinishedIme) onEnter();
+        }
+      },
+      [onEnter],
+    ),
   };
 
   return { handlers };
