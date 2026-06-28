@@ -33,7 +33,7 @@ export function FilePane({ tabId }: Props) {
   const { tabs, activeTabId, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setCursor, loadDir, setSort, clipboard } = useFileStore();
   const { showHidden, columnWidths, setColumnWidths } = useUiStore();
-  const { dateModified, dateCreated, dateAccessed } = useConfigStore((s) => s.appearance);
+  const visibleDateCols = useConfigStore((s) => s.visibleDateCols);
   const fileOps = useFileOps();
   const { terminalApp, terminalCommand, showStatusMessage } = useUiStore();
   const { addBookmark } = useBookmarkStore();
@@ -77,42 +77,17 @@ export function FilePane({ tabId }: Props) {
   const isActive = activeTabId === tabId;
   const inFindMode = !!pane.findMode;
 
-  // Build ordered list of visible date columns
-  const dateCols = [
-    dateModified.show
-      ? {
-          key: 'modified' as const,
-          width: columnWidths.date,
-          format: dateModified.format,
-          colKey: 'date' as const,
-          label: t('filePane.colDate'),
-        }
-      : null,
-    dateCreated.show
-      ? {
-          key: 'created' as const,
-          width: columnWidths.dateCreated,
-          format: dateCreated.format,
-          colKey: 'dateCreated' as const,
-          label: t('filePane.colDateCreated'),
-        }
-      : null,
-    dateAccessed.show
-      ? {
-          key: 'accessed' as const,
-          width: columnWidths.dateAccessed,
-          format: dateAccessed.format,
-          colKey: 'dateAccessed' as const,
-          label: t('filePane.colDateAccessed'),
-        }
-      : null,
-  ].filter(Boolean) as {
-    key: 'modified' | 'created' | 'accessed';
-    width: number;
-    format: string;
-    colKey: 'date' | 'dateCreated' | 'dateAccessed';
-    label: string;
-  }[];
+  // Merge config-time column defs with UI column widths
+  const widthMap: Record<string, number> = {
+    date: columnWidths.date,
+    dateCreated: columnWidths.dateCreated,
+    dateAccessed: columnWidths.dateAccessed,
+  };
+  const dateCols = visibleDateCols.map((col) => ({
+    ...col,
+    width: widthMap[col.colKey],
+    label: t(col.labelKey),
+  }));
 
   const totalDateWidth = dateCols.reduce((s, c) => s + c.width, 0);
 

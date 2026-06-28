@@ -17,6 +17,14 @@ export interface AppearanceConfig {
   sizeUnit: 'binary' | 'decimal';
 }
 
+/** Config-time shape of a visible date column (no width — that's UI state) */
+export interface VisibleDateCol {
+  key: 'modified' | 'created' | 'accessed';
+  format: string;
+  colKey: 'date' | 'dateCreated' | 'dateAccessed';
+  labelKey: string;
+}
+
 export type FavoriteKey =
   | 'home'
   | 'desktop'
@@ -41,6 +49,7 @@ const DEFAULT_FAVORITES: FavoriteKey[] = [
 
 interface ConfigStore {
   appearance: AppearanceConfig;
+  visibleDateCols: VisibleDateCol[];
   keymap: KeyBinding[];
   favorites: FavoriteKey[];
   loaded: boolean;
@@ -54,8 +63,24 @@ const DEFAULT_APPEARANCE: AppearanceConfig = {
   sizeUnit: 'binary',
 };
 
+function buildVisibleDateCols(appearance: AppearanceConfig): VisibleDateCol[] {
+  const defs: Array<[DateColumnConfig, Omit<VisibleDateCol, 'format'>]> = [
+    [appearance.dateModified, { key: 'modified', colKey: 'date', labelKey: 'filePane.colDate' }],
+    [
+      appearance.dateCreated,
+      { key: 'created', colKey: 'dateCreated', labelKey: 'filePane.colDateCreated' },
+    ],
+    [
+      appearance.dateAccessed,
+      { key: 'accessed', colKey: 'dateAccessed', labelKey: 'filePane.colDateAccessed' },
+    ],
+  ];
+  return defs.filter(([cfg]) => cfg.show).map(([cfg, col]) => ({ ...col, format: cfg.format }));
+}
+
 export const useConfigStore = create<ConfigStore>((set) => ({
   appearance: DEFAULT_APPEARANCE,
+  visibleDateCols: buildVisibleDateCols(DEFAULT_APPEARANCE),
   keymap: NORMAL_KEYMAP,
   favorites: DEFAULT_FAVORITES,
   loaded: false,
@@ -85,7 +110,13 @@ export const useConfigStore = create<ConfigStore>((set) => ({
       if (terminalCommand) useUiStore.getState().setTerminalCommand(terminalCommand);
       const language = (raw.language ?? 'ja') as 'ja' | 'en';
       useUiStore.getState().setLanguage(language);
-      set({ appearance, keymap, favorites, loaded: true });
+      set({
+        appearance,
+        visibleDateCols: buildVisibleDateCols(appearance),
+        keymap,
+        favorites,
+        loaded: true,
+      });
     } catch {
       set({ loaded: true }); // use defaults on error
     }
