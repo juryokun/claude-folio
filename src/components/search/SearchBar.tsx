@@ -4,6 +4,7 @@ import { useTabStore } from '../../store/tabStore';
 import { useFileStore } from '../../store/fileStore';
 import { useUiStore } from '../../store/uiStore';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
+import { parseFilterQuery } from '../../lib/searchFilter';
 
 export function SearchBar() {
   const { t } = useTranslation();
@@ -15,6 +16,9 @@ export function SearchBar() {
   const pane = getPane(tab.id);
   const inputRef = useRef<HTMLInputElement>(null);
   const ime = useImeAwareEnter(() => setVimMode('NORMAL'));
+  const parsedFilter = parseFilterQuery(pane.filterQuery);
+  const isInvalidRegex = parsedFilter?.type === 'invalid_regex';
+  const isRegexMode = parsedFilter?.type === 'regex';
 
   useEffect(() => {
     if (vimMode === 'SEARCH') {
@@ -25,8 +29,9 @@ export function SearchBar() {
   if (vimMode !== 'SEARCH') {
     if (!pane.filterQuery) return null;
     return (
-      <div className="search-bar inactive">
+      <div className={`search-bar inactive${isInvalidRegex ? ' search-bar--error' : ''}`}>
         <span>🔍</span>
+        {isRegexMode && <span className="search-mode-badge">regex</span>}
         <span className="search-query">{pane.filterQuery}</span>
         <button onClick={() => { setFilter(tab.id, ''); }}>✕</button>
       </div>
@@ -34,8 +39,9 @@ export function SearchBar() {
   }
 
   return (
-    <div className="search-bar active">
+    <div className={`search-bar active${isInvalidRegex ? ' search-bar--error' : ''}`}>
       <span>/</span>
+      {isRegexMode && <span className="search-mode-badge">regex</span>}
       <input
         ref={inputRef}
         className="search-input"

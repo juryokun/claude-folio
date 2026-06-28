@@ -138,7 +138,7 @@ const ja = {
     error: 'フォルダ作成に失敗しました: {{error}}',
   },
   searchBar: {
-    placeholder: '検索...',
+    placeholder: '検索... (/ で始めると正規表現)',
   },
   previewPanel: {
     noSelection: 'ファイルを選択してください',

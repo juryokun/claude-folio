@@ -390,6 +390,9 @@ body {
 
 .search-query { color: var(--text-accent); }
 .search-bar button { background: none; border: none; color: var(--text-dim); cursor: pointer; }
+.search-bar--error { background: color-mix(in srgb, var(--bg-secondary) 70%, #f44 30%); }
+.search-bar--error .search-input { color: #f66; }
+.search-mode-badge { font-size: 10px; padding: 1px 4px; border-radius: 3px; background: var(--text-accent); color: var(--bg); font-family: monospace; flex-shrink: 0; }
 
 /* Status bar */
 .status-bar {

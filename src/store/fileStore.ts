@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { FileEntry, ClipboardState } from '../types';
 import { tauriApi, isTauri } from '../lib/tauri';
 import { useTabStore } from './tabStore';
+import { parseFilterQuery, matchesFilter } from '../lib/searchFilter';
 
 export type SortKey = 'name' | 'time';
 
@@ -192,8 +193,9 @@ export const useFileStore = create<FileStore>((set, get) => ({
 
   filteredEntries: (tabId) => {
     const pane = get().panes[tabId] ?? defaultPane();
-    let entries = pane.filterQuery
-      ? pane.entries.filter((e) => e.name.toLowerCase().includes(pane.filterQuery.toLowerCase()))
+    const filter = parseFilterQuery(pane.filterQuery);
+    let entries = filter
+      ? pane.entries.filter((e) => matchesFilter(e.name, filter))
       : pane.entries;
 
     const { sortKey, sortDesc } = pane;

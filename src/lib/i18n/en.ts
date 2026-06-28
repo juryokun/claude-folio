@@ -138,7 +138,7 @@ const en = {
     error: 'Failed to create folder: {{error}}',
   },
   searchBar: {
-    placeholder: 'Search...',
+    placeholder: 'Search... (prefix / for regex)',
   },
   previewPanel: {
     noSelection: 'Select a file',
