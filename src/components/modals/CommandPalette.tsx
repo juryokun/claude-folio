@@ -65,7 +65,7 @@ export function CommandPalette() {
   const { addBookmark } = useBookmarkStore();
   const loadConfig = useConfigStore((s) => s.load);
   const loadBookmarks = useBookmarkStore((s) => s.loadBookmarks);
-  const loadCustomCommands = useCustomCommandStore((s) => s.loadCustomCommands);
+  const loadCustomCommands = useCustomCommandStore((s) => s.loadCommands);
   const { commands: customCommands, runCommand, pushHistory, history } = useCustomCommandStore();
 
   const [input, setInput] = useState('');
