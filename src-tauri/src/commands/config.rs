@@ -278,6 +278,22 @@ mod tests {
         );
     }
 
+    // ── AppearanceConfig デフォルト値 ─────────────────────────────────────────
+
+    #[test]
+    fn appearance_default_date_modified_show_true() {
+        let cfg = AppConfig::default();
+        assert!(cfg.appearance.date_modified.show);
+        assert_eq!(cfg.appearance.date_modified.format, "auto");
+    }
+
+    #[test]
+    fn appearance_default_date_created_and_accessed_hidden() {
+        let cfg = AppConfig::default();
+        assert!(!cfg.appearance.date_created.show);
+        assert!(!cfg.appearance.date_accessed.show);
+    }
+
     // ── load_config_from ─────────────────────────────────────────────────────
 
     #[test]
@@ -303,6 +319,45 @@ mod tests {
         std::fs::write(&path, "NOT VALID TOML :::").unwrap();
         let cfg = load_config_from(&path);
         assert_eq!(cfg.language, "en");
+    }
+
+    #[test]
+    fn load_config_from_parses_date_modified_show_false() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("config.toml");
+        std::fs::write(
+            &path,
+            "[appearance.date_modified]\nshow = false\nformat = \"%Y-%m-%d\"\n",
+        )
+        .unwrap();
+        let cfg = load_config_from(&path);
+        assert!(!cfg.appearance.date_modified.show);
+        assert_eq!(cfg.appearance.date_modified.format, "%Y-%m-%d");
+    }
+
+    #[test]
+    fn load_config_from_parses_date_created_show_true() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("config.toml");
+        std::fs::write(&path, "[appearance.date_created]\nshow = true\n").unwrap();
+        let cfg = load_config_from(&path);
+        assert!(cfg.appearance.date_created.show);
+        // date_modified default stays true even when date_created is specified
+        assert!(cfg.appearance.date_modified.show);
+    }
+
+    #[test]
+    fn load_config_from_parses_date_accessed() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("config.toml");
+        std::fs::write(
+            &path,
+            "[appearance.date_accessed]\nshow = true\nformat = \"%H:%M\"\n",
+        )
+        .unwrap();
+        let cfg = load_config_from(&path);
+        assert!(cfg.appearance.date_accessed.show);
+        assert_eq!(cfg.appearance.date_accessed.format, "%H:%M");
     }
 
     // ── save_language_to ─────────────────────────────────────────────────────

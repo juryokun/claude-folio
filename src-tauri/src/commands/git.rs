@@ -120,3 +120,156 @@ pub fn get_git_status(path: String) -> HashMap<String, String> {
 
     map
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── symbol_priority ──────────────────────────────────────────────────────
+
+    #[test]
+    fn symbol_priority_full_order() {
+        let ordered = ["U", "D", "M", "A", "?", "="];
+        for i in 0..ordered.len() - 1 {
+            assert!(
+                symbol_priority(ordered[i]) < symbol_priority(ordered[i + 1]),
+                "{} should have lower priority number than {}",
+                ordered[i],
+                ordered[i + 1]
+            );
+        }
+    }
+
+    #[test]
+    fn symbol_priority_unknown_returns_9() {
+        assert_eq!(symbol_priority("X"), 9);
+        assert_eq!(symbol_priority(""), 9);
+    }
+
+    // ── derive_symbol ────────────────────────────────────────────────────────
+
+    #[test]
+    fn derive_symbol_untracked_is_question_mark() {
+        assert_eq!(derive_symbol("??"), Some("?"));
+    }
+
+    #[test]
+    fn derive_symbol_ignored_returns_none() {
+        assert_eq!(derive_symbol("!!"), None);
+    }
+
+    #[test]
+    fn derive_symbol_unmerged_uu() {
+        assert_eq!(derive_symbol("UU"), Some("U"));
+    }
+
+    #[test]
+    fn derive_symbol_unmerged_u_prefix() {
+        assert_eq!(derive_symbol("U "), Some("U"));
+    }
+
+    #[test]
+    fn derive_symbol_unmerged_u_suffix() {
+        assert_eq!(derive_symbol(" U"), Some("U"));
+    }
+
+    #[test]
+    fn derive_symbol_both_added_is_unmerged() {
+        // git porcelain "AA" = both sides added (merge conflict)
+        assert_eq!(derive_symbol("AA"), Some("U"));
+    }
+
+    #[test]
+    fn derive_symbol_both_deleted_is_unmerged() {
+        // git porcelain "DD" = both sides deleted (merge conflict)
+        assert_eq!(derive_symbol("DD"), Some("U"));
+    }
+
+    #[test]
+    fn derive_symbol_staged_deletion_is_d() {
+        assert_eq!(derive_symbol("D "), Some("D"));
+    }
+
+    #[test]
+    fn derive_symbol_worktree_deletion_is_d() {
+        assert_eq!(derive_symbol(" D"), Some("D"));
+    }
+
+    #[test]
+    fn derive_symbol_staged_modification_is_m() {
+        assert_eq!(derive_symbol("M "), Some("M"));
+    }
+
+    #[test]
+    fn derive_symbol_worktree_modification_is_m() {
+        assert_eq!(derive_symbol(" M"), Some("M"));
+    }
+
+    #[test]
+    fn derive_symbol_both_modified_is_m() {
+        assert_eq!(derive_symbol("MM"), Some("M"));
+    }
+
+    #[test]
+    fn derive_symbol_staged_addition_is_m() {
+        // x='A', y=' ': staged new file shows as M (modified index)
+        assert_eq!(derive_symbol("A "), Some("M"));
+    }
+
+    #[test]
+    fn derive_symbol_rename_staged_is_m() {
+        assert_eq!(derive_symbol("R "), Some("M"));
+    }
+
+    #[test]
+    fn derive_symbol_clean_returns_none() {
+        assert_eq!(derive_symbol("  "), None);
+    }
+
+    // ── merge_symbol ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn merge_symbol_inserts_new_entry() {
+        let mut map = HashMap::new();
+        merge_symbol(&mut map, "file.rs".to_string(), "M");
+        assert_eq!(map.get("file.rs").map(String::as_str), Some("M"));
+    }
+
+    #[test]
+    fn merge_symbol_higher_priority_replaces_existing() {
+        // U(0) beats M(2) because lower number = higher priority
+        let mut map = HashMap::new();
+        merge_symbol(&mut map, "file.rs".to_string(), "M");
+        merge_symbol(&mut map, "file.rs".to_string(), "U");
+        assert_eq!(map.get("file.rs").map(String::as_str), Some("U"));
+    }
+
+    #[test]
+    fn merge_symbol_lower_priority_does_not_replace() {
+        // =(5) cannot displace U(0)
+        let mut map = HashMap::new();
+        merge_symbol(&mut map, "file.rs".to_string(), "U");
+        merge_symbol(&mut map, "file.rs".to_string(), "=");
+        assert_eq!(map.get("file.rs").map(String::as_str), Some("U"));
+    }
+
+    #[test]
+    fn merge_symbol_equal_or_lower_priority_keeps_first() {
+        // M(2) already set; A(3) is lower priority, so M stays
+        let mut map = HashMap::new();
+        merge_symbol(&mut map, "file.rs".to_string(), "M");
+        merge_symbol(&mut map, "file.rs".to_string(), "A");
+        assert_eq!(map.get("file.rs").map(String::as_str), Some("M"));
+    }
+
+    #[test]
+    fn merge_symbol_multiple_files_independent() {
+        let mut map = HashMap::new();
+        merge_symbol(&mut map, "a.rs".to_string(), "M");
+        merge_symbol(&mut map, "b.rs".to_string(), "U");
+        // Try to downgrade a.rs — M(2) beats =(5), so M stays
+        merge_symbol(&mut map, "a.rs".to_string(), "=");
+        assert_eq!(map.get("a.rs").map(String::as_str), Some("M"));
+        assert_eq!(map.get("b.rs").map(String::as_str), Some("U"));
+    }
+}

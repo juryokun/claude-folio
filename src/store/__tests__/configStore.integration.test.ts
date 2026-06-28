@@ -149,6 +149,41 @@ describe('configStore 統合テスト', () => {
       expect(cols).toHaveLength(1);
       expect(cols[0].key).toBe('modified');
     });
+
+    it('date_accessed.show=true のとき visibleDateCols に accessed が含まれる', async () => {
+      mockLoadConfig.mockResolvedValue({
+        appearance: { date_accessed: { show: true, format: '%H:%M' } },
+      });
+      await useConfigStore.getState().load();
+      const cols = useConfigStore.getState().visibleDateCols;
+      const col = cols.find((c) => c.key === 'accessed');
+      expect(col).toBeDefined();
+      expect(col?.format).toBe('%H:%M');
+    });
+
+    it('3 つの日付列すべて show=true のとき visibleDateCols が 3 件になる', async () => {
+      mockLoadConfig.mockResolvedValue({
+        appearance: {
+          date_modified: { show: true, format: 'auto' },
+          date_created: { show: true, format: 'auto' },
+          date_accessed: { show: true, format: 'auto' },
+        },
+      });
+      await useConfigStore.getState().load();
+      expect(useConfigStore.getState().visibleDateCols).toHaveLength(3);
+    });
+
+    it('gitStatus.show=false で gitStatus が非表示になる', async () => {
+      mockLoadConfig.mockResolvedValue({ appearance: { git_status: { show: false } } });
+      await useConfigStore.getState().load();
+      expect(useConfigStore.getState().appearance.gitStatus.show).toBe(false);
+    });
+
+    it('git_status が未指定の場合は show=true のまま', async () => {
+      mockLoadConfig.mockResolvedValue({ appearance: {} });
+      await useConfigStore.getState().load();
+      expect(useConfigStore.getState().appearance.gitStatus.show).toBe(true);
+    });
   });
 
   // ── keymap 設定 ────────────────────────────────────────────────────────────
