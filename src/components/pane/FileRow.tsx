@@ -154,7 +154,7 @@ export const FileRow = React.memo(function FileRow({
   const pendingKey = isCursor ? rawPendingKey : null;
   return (
     <div
-      className={`file-row${isCursor ? ' cursor' : ''}${isSelected ? ' selected' : ''}`}
+      className={`file-row${isCursor ? ' cursor' : ''}${isSelected ? ' selected' : ''}${entry.name.startsWith('.') ? ' hidden' : ''}`}
       style={style}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
