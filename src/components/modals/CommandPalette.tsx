@@ -377,11 +377,11 @@ export function CommandPalette() {
   );
 
   const selectCustomCandidate = useCallback(
-    (cmd: (typeof customCommands)[0]) => {
+    (cmd: (typeof customCommands)[0], execute = true) => {
       setInput(`:${cmd.name}`);
       setCycleIndex(-1);
       inputRef.current?.focus();
-      executeCustomCommand(cmd);
+      if (execute) executeCustomCommand(cmd);
     },
     [executeCustomCommand],
   );
@@ -445,7 +445,11 @@ export function CommandPalette() {
           setInput(`:${cmdCandidates[next].name}`);
         }
       } else if (customCandidates.length === 1) {
-        selectCustomCandidate(customCandidates[0]);
+        selectCustomCandidate(customCandidates[0], false);
+      } else if (customCandidates.length > 1) {
+        const next = (cycleIndex + 1) % customCandidates.length;
+        setCycleIndex(next);
+        selectCustomCandidate(customCandidates[next], false);
       } else if (argCandidates.length > 0) {
         const next = (cycleIndex + 1) % argCandidates.length;
         setCycleIndex(next);
