@@ -24,3 +24,7 @@ test-results/
 *.sln
 *.sw?
 .zed/
+
+# Claude Code (personal/local files only)
+.claude/settings.local.json
+.claude/agent-memory/
