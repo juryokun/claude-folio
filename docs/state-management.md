@@ -70,7 +70,7 @@ localStorage のキー名は `folio-ui` です。
 
 ### configStore（`src/store/configStore.ts`）
 
-`~/.config/mac-filer/config.toml` から読み込んだ設定を保持します。
+`~/.config/folio/config.toml` から読み込んだ設定を保持します。
 
 | 状態 | 説明 |
 |---|---|

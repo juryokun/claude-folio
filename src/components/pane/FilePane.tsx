@@ -125,7 +125,7 @@ export function FilePane({ tabId }: Props) {
   // Drop target handler
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
-    const paths = e.dataTransfer.getData('application/x-mac-filer-paths');
+    const paths = e.dataTransfer.getData('application/x-folio-paths');
     if (paths) {
       const srcPaths: string[] = JSON.parse(paths);
       const dest = tab.path;

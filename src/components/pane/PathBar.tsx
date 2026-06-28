@@ -85,13 +85,13 @@ export function PathBar() {
     const handler = () => startMode('path', currentPath);
     const zoxideHandler = () => startMode('path', '');
     const bookmarkHandler = () => startMode('bookmark', '');
-    window.addEventListener('mac-filer:focus-path-bar', handler);
-    window.addEventListener('mac-filer:focus-zoxide', zoxideHandler);
-    window.addEventListener('mac-filer:focus-bookmarks', bookmarkHandler);
+    window.addEventListener('folio:focus-path-bar', handler);
+    window.addEventListener('folio:focus-zoxide', zoxideHandler);
+    window.addEventListener('folio:focus-bookmarks', bookmarkHandler);
     return () => {
-      window.removeEventListener('mac-filer:focus-path-bar', handler);
-      window.removeEventListener('mac-filer:focus-zoxide', zoxideHandler);
-      window.removeEventListener('mac-filer:focus-bookmarks', bookmarkHandler);
+      window.removeEventListener('folio:focus-path-bar', handler);
+      window.removeEventListener('folio:focus-zoxide', zoxideHandler);
+      window.removeEventListener('folio:focus-bookmarks', bookmarkHandler);
     };
   }, [currentPath, startMode]);
 

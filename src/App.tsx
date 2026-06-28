@@ -131,7 +131,7 @@ export default function App() {
     let cancelled = false;
     let unlistenFn: (() => void) | null = null;
 
-    listen('mac-filer:dir-changed', () => {
+    listen('folio:dir-changed', () => {
       if (cancelled) return;
       if (reloadTimerRef.current) clearTimeout(reloadTimerRef.current);
       reloadTimerRef.current = setTimeout(() => {
@@ -248,10 +248,10 @@ export default function App() {
           prevTab();
           break;
         case 'focus_path_bar':
-          window.dispatchEvent(new CustomEvent('mac-filer:focus-path-bar'));
+          window.dispatchEvent(new CustomEvent('folio:focus-path-bar'));
           break;
         case 'focus_zoxide':
-          window.dispatchEvent(new CustomEvent('mac-filer:focus-zoxide'));
+          window.dispatchEvent(new CustomEvent('folio:focus-zoxide'));
           break;
         case 'go_back':
           goBack();
@@ -273,7 +273,7 @@ export default function App() {
           ops.handleAddBookmark();
           break;
         case 'open_bookmark_picker':
-          window.dispatchEvent(new CustomEvent('mac-filer:focus-bookmarks'));
+          window.dispatchEvent(new CustomEvent('folio:focus-bookmarks'));
           break;
         case 'toggle_preview':
           togglePreview();

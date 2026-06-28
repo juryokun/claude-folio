@@ -15,7 +15,7 @@ pub fn watch_dir(path: String, app: AppHandle, state: State<WatcherState>) -> Re
             EventKind::Create(_) | EventKind::Remove(_) | EventKind::Modify(_)
         );
         if relevant {
-            let _ = app_clone.emit("mac-filer:dir-changed", ());
+            let _ = app_clone.emit("folio:dir-changed", ());
         }
     })
     .map_err(|e| e.to_string())?;

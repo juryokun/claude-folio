@@ -164,7 +164,7 @@ pub(crate) fn load_config_from(path: &std::path::Path) -> AppConfig {
         return AppConfig::default();
     };
     toml::from_str(&content).unwrap_or_else(|e| {
-        eprintln!("[mac-filer] config parse error: {e}");
+        eprintln!("[folio] config parse error: {e}");
         AppConfig::default()
     })
 }
@@ -177,7 +177,7 @@ pub fn load_config() -> AppConfig {
     load_config_from(&path)
 }
 
-/// Write a sample config to ~/.config/mac-filer/config.toml.
+/// Write a sample config to ~/.config/folio/config.toml.
 /// Returns Ok(path) on success, Err("exists") if the file already exists.
 #[tauri::command]
 pub fn init_config() -> Result<String, String> {

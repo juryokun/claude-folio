@@ -2,7 +2,7 @@
 
 ## 概要
 
-mac-filer は Vim ライクなキー操作を実装しています。`useVimKeys` フックがキーイベントを処理し、`VimAction` を発火させます。アクションは `useFileOps` フックで実際の処理に変換されます。
+folio は Vim ライクなキー操作を実装しています。`useVimKeys` フックがキーイベントを処理し、`VimAction` を発火させます。アクションは `useFileOps` フックで実際の処理に変換されます。
 
 ## Vim モード
 
