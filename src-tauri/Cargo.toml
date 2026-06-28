@@ -1,6 +1,6 @@
 [package]
 name = "folio"
-version = "0.2.0"
+version = "0.2.1"
 description = "Claude Folio - A Vim-like file manager for macOS"
 authors = []
 edition = "2021"
