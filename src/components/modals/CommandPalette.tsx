@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 import path from 'path-browserify';
@@ -14,12 +14,13 @@ interface CommandDef {
   name: string;
   args?: string;
   desc: string;
+  argValues?: string[];
 }
 
 export function CommandPalette() {
   const { t } = useTranslation();
 
-  const COMMANDS: CommandDef[] = [
+  const COMMANDS: CommandDef[] = useMemo(() => [
     { name: 'q',             desc: t('commandPalette.cmd.q') },
     { name: 'tabnew',        args: '[path]',    desc: t('commandPalette.cmd.tabnew') },
     { name: 'cd',            args: '<path|keyword>', desc: t('commandPalette.cmd.cd') },
@@ -30,10 +31,15 @@ export function CommandPalette() {
     { name: 'init-config',    desc: t('commandPalette.cmd.initConfig') },
     { name: 'reload-config',  desc: t('commandPalette.cmd.reloadConfig') },
     { name: 'clear-storage',  desc: t('commandPalette.cmd.clearStorage') },
-    { name: 'lang',           args: '<ja|en>',   desc: t('commandPalette.cmd.lang') },
-    { name: 'theme',          args: `<${THEMES.map((th) => th.id).join('|')}>`, desc: t('commandPalette.cmd.theme') },
+    { name: 'lang',           args: '<ja|en>',   desc: t('commandPalette.cmd.lang'), argValues: ['ja', 'en'] },
+    { name: 'theme',
+      args: `<${THEMES.map((th) => th.id).join('|')}>`,
+      desc: t('commandPalette.cmd.theme'),
+      argValues: THEMES.map((th) => th.id),
+    },
     { name: 'install-cli',    desc: t('commandPalette.cmd.installCli') },
-  ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t]);
 
   const { showCommandPalette, setShowCommandPalette, setVimMode, has7zip, setLanguage, setTheme } =
     useUiStore();
@@ -47,7 +53,6 @@ export function CommandPalette() {
   const [error, setError] = useState('');
   const [cycleIndex, setCycleIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
-  const ime = useImeAwareEnter(() => runCommand(input));
 
   useEffect(() => {
     if (showCommandPalette) {
@@ -61,53 +66,39 @@ export function CommandPalette() {
     }
   }, [showCommandPalette]);
 
-  // Parse current typed command name (after the leading ':')
   const typedCommand = input.slice(1).split(/\s/)[0];
   const hasArgs = input.slice(1).includes(' ');
+  const typedArg = hasArgs ? input.slice(1).split(/\s+/).slice(1).join(' ') : '';
 
-  // Candidates: commands that start with what's been typed (only when no args yet)
-  const candidates = useMemo(() => {
-    if (hasArgs || !typedCommand) return [];
-    return COMMANDS.filter((c) => c.name.startsWith(typedCommand) && c.name !== typedCommand);
+  // Command-level candidates (before the first space)
+  const cmdCandidates = useMemo((): CommandDef[] => {
+    if (hasArgs) return [];
+    if (!typedCommand) return COMMANDS;
+    const exact = COMMANDS.find((c) => c.name === typedCommand);
+    if (exact) return [];
+    return COMMANDS.filter((c) => c.name.startsWith(typedCommand));
   }, [typedCommand, hasArgs, COMMANDS]);
 
-  if (!showCommandPalette) return null;
+  // Argument-level candidates (after the first space, for commands with known values)
+  const argCandidates = useMemo((): string[] => {
+    if (!hasArgs) return [];
+    const cmd = COMMANDS.find((c) => c.name === typedCommand);
+    if (!cmd?.argValues) return [];
+    return cmd.argValues.filter((v) => v.startsWith(typedArg));
+  }, [hasArgs, typedCommand, typedArg, COMMANDS]);
 
-  const close = () => {
+  const activeList = cmdCandidates.length > 0
+    ? cmdCandidates
+    : argCandidates.length > 0 ? argCandidates : [];
+
+  const close = useCallback(() => {
     setShowCommandPalette(false);
     setVimMode('NORMAL');
     setInput('');
     setCycleIndex(-1);
-  };
+  }, [setShowCommandPalette, setVimMode]);
 
-  const handleTab = (e: React.KeyboardEvent) => {
-    if (e.key !== 'Tab') return;
-    e.preventDefault();
-
-    // Exact match already typed — nothing to complete
-    const exact = COMMANDS.find((c) => c.name === typedCommand);
-
-    // Only one candidate → complete it directly
-    if (candidates.length === 1) {
-      const completed = ':' + candidates[0].name + ' ';
-      setInput(completed);
-      setCycleIndex(-1);
-      return;
-    }
-
-    if (candidates.length === 0) {
-      // If exact match, add a trailing space (ready for args)
-      if (exact) setInput(':' + exact.name + ' ');
-      return;
-    }
-
-    // Multiple candidates → cycle through them
-    const next = (cycleIndex + 1) % candidates.length;
-    setCycleIndex(next);
-    setInput(':' + candidates[next].name);
-  };
-
-  const runCommand = async (cmd: string) => {
+  const runCommand = useCallback(async (cmd: string) => {
     const tab = activeTab();
     const parts = cmd.slice(1).trim().split(/\s+/);
     const command = parts[0];
@@ -245,7 +236,86 @@ export function CommandPalette() {
     } catch (e) {
       setError(String(e));
     }
+  }, [activeTab, closeTab, activeTabId, openTab, navigateTo, has7zip, loadDir, showHidden,
+      addBookmark, setLanguage, setTheme, loadConfig, close, showStatusMessage, t]);
+
+  const ime = useImeAwareEnter(() => runCommand(input));
+
+  // Select a command candidate: fill input with command name (+ space if has args)
+  const selectCmdCandidate = useCallback((cmd: CommandDef) => {
+    const suffix = cmd.args ? ' ' : '';
+    const newInput = ':' + cmd.name + suffix;
+    setInput(newInput);
+    setCycleIndex(-1);
+    inputRef.current?.focus();
+    if (!cmd.args) {
+      runCommand(newInput);
+    }
+  }, [runCommand]);
+
+  // Select an arg candidate: fill input with the selected arg value
+  const selectArgCandidate = useCallback((val: string) => {
+    const newInput = ':' + typedCommand + ' ' + val;
+    setInput(newInput);
+    setCycleIndex(-1);
+    inputRef.current?.focus();
+  }, [typedCommand]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      close();
+      return;
+    }
+
+    const listLen = activeList.length;
+
+    if (e.key === 'ArrowDown' && listLen > 0) {
+      e.preventDefault();
+      setCycleIndex((i) => (i + 1) % listLen);
+      return;
+    }
+    if (e.key === 'ArrowUp' && listLen > 0) {
+      e.preventDefault();
+      setCycleIndex((i) => (i - 1 + listLen) % listLen);
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (cmdCandidates.length > 0) {
+        if (cmdCandidates.length === 1) {
+          selectCmdCandidate(cmdCandidates[0]);
+        } else {
+          const next = (cycleIndex + 1) % cmdCandidates.length;
+          setCycleIndex(next);
+          setInput(':' + cmdCandidates[next].name);
+        }
+      } else if (argCandidates.length > 0) {
+        const next = (cycleIndex + 1) % argCandidates.length;
+        setCycleIndex(next);
+        selectArgCandidate(argCandidates[next]);
+      } else {
+        // Exact match — add trailing space for args
+        const exact = COMMANDS.find((c) => c.name === typedCommand);
+        if (exact?.args) setInput(':' + exact.name + ' ');
+      }
+      return;
+    }
+
+    if (e.key === 'Enter' && cycleIndex >= 0) {
+      e.preventDefault();
+      if (cmdCandidates.length > 0) {
+        selectCmdCandidate(cmdCandidates[cycleIndex] as CommandDef);
+      } else if (argCandidates.length > 0) {
+        selectArgCandidate(argCandidates[cycleIndex] as string);
+      }
+      return;
+    }
+
+    ime.handlers.onKeyDown(e);
   };
+
+  if (!showCommandPalette) return null;
 
   return (
     <div className="modal-overlay" onClick={close}>
@@ -255,32 +325,45 @@ export function CommandPalette() {
           className="command-input"
           value={input}
           onChange={(e) => { setInput(e.target.value); setError(''); setCycleIndex(-1); }}
-          {...ime.handlers}
-          onKeyDown={(e) => {
-            handleTab(e);
-            ime.handlers.onKeyDown(e);
-            if (e.key === 'Escape') close();
-          }}
+          onKeyDown={handleKeyDown}
+          onCompositionStart={ime.handlers.onCompositionStart}
+          onCompositionEnd={ime.handlers.onCompositionEnd}
           placeholder={t('commandPalette.placeholder')}
         />
-        {candidates.length > 0 && (
+
+        {cmdCandidates.length > 0 && (
           <div className="command-completions">
-            {candidates.map((c, i) => (
+            {cmdCandidates.map((c, i) => (
               <span
                 key={c.name}
                 className={`command-completion-item${i === cycleIndex ? ' active' : ''}`}
+                onMouseDown={(e) => { e.preventDefault(); selectCmdCandidate(c); }}
+                onMouseEnter={() => setCycleIndex(i)}
               >
-                {c.name}
+                <span className="command-completion-name">:{c.name}</span>
                 {c.args && <span className="command-completion-args"> {c.args}</span>}
                 <span className="command-completion-desc"> — {c.desc}</span>
               </span>
             ))}
           </div>
         )}
+
+        {argCandidates.length > 0 && (
+          <div className="command-arg-candidates">
+            {argCandidates.map((val, i) => (
+              <span
+                key={val}
+                className={`command-arg-item${i === cycleIndex ? ' active' : ''}`}
+                onMouseDown={(e) => { e.preventDefault(); selectArgCandidate(val); }}
+                onMouseEnter={() => setCycleIndex(i)}
+              >
+                {val}
+              </span>
+            ))}
+          </div>
+        )}
+
         {error && <div className="command-error">{error}</div>}
-        <div className="command-help">
-          {t('commandPalette.help')} :lang :install-cli
-        </div>
       </div>
     </div>
   );
