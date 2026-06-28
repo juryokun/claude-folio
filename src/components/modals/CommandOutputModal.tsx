@@ -13,6 +13,7 @@ export function CommandOutputModal() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === 'Enter') {
         e.preventDefault();
+        e.stopPropagation();
         clearOutput();
         return;
       }
