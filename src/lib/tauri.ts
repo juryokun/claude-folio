@@ -82,7 +82,7 @@ export const tauriApi = {
 
   loadConfig: () =>
     invoke<{
-      appearance?: { date_format?: string; date_column?: string; size_unit?: string };
+      appearance?: Record<string, unknown>;
       editor?: { command?: string };
       terminal?: { app?: string; command?: string };
       keymap?: Record<string, string[]>;

@@ -33,13 +33,13 @@ export function FilePane({ tabId }: Props) {
   const { tabs, activeTabId, navigateTo } = useTabStore();
   const { getPane, filteredEntries, setCursor, loadDir, setSort, clipboard } = useFileStore();
   const { showHidden, columnWidths, setColumnWidths } = useUiStore();
-  const { dateColumn } = useConfigStore((s) => s.appearance);
+  const { dateModified, dateCreated, dateAccessed } = useConfigStore((s) => s.appearance);
   const fileOps = useFileOps();
   const { terminalApp, terminalCommand, showStatusMessage } = useUiStore();
   const { addBookmark } = useBookmarkStore();
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
   const startColResize = useCallback(
-    (e: React.MouseEvent, col: 'size' | 'date') => {
+    (e: React.MouseEvent, col: 'size' | 'date' | 'dateCreated' | 'dateAccessed') => {
       e.preventDefault();
       e.stopPropagation();
       const startX = e.clientX;
@@ -76,6 +76,45 @@ export function FilePane({ tabId }: Props) {
   const entries = filteredEntries(tabId);
   const isActive = activeTabId === tabId;
   const inFindMode = !!pane.findMode;
+
+  // Build ordered list of visible date columns
+  const dateCols = [
+    dateModified.show
+      ? {
+          key: 'modified' as const,
+          width: columnWidths.date,
+          format: dateModified.format,
+          colKey: 'date' as const,
+          label: t('filePane.colDate'),
+        }
+      : null,
+    dateCreated.show
+      ? {
+          key: 'created' as const,
+          width: columnWidths.dateCreated,
+          format: dateCreated.format,
+          colKey: 'dateCreated' as const,
+          label: t('filePane.colDateCreated'),
+        }
+      : null,
+    dateAccessed.show
+      ? {
+          key: 'accessed' as const,
+          width: columnWidths.dateAccessed,
+          format: dateAccessed.format,
+          colKey: 'dateAccessed' as const,
+          label: t('filePane.colDateAccessed'),
+        }
+      : null,
+  ].filter(Boolean) as {
+    key: 'modified' | 'created' | 'accessed';
+    width: number;
+    format: string;
+    colKey: 'date' | 'dateCreated' | 'dateAccessed';
+    label: string;
+  }[];
+
+  const totalDateWidth = dateCols.reduce((s, c) => s + c.width, 0);
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -295,11 +334,15 @@ export function FilePane({ tabId }: Props) {
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
-      {/* Full-height separator lines. Right-side calculation:
-          padding=8, date=W_d → sep2 center = 8 + W_d + 3 = W_d+11
-          + gap=6 + size=W_s       → sep1 center = W_d+11 + 6 + W_s = W_d+W_s+17 */}
-      <div className="col-line" style={{ right: columnWidths.date + columnWidths.size + 17 }} />
-      <div className="col-line" style={{ right: columnWidths.date + 11 }} />
+      {/* Full-height separator lines */}
+      <div className="col-line" style={{ right: totalDateWidth + columnWidths.size + 17 }} />
+      {dateCols.map((col, i) => (
+        <div
+          key={col.key}
+          className="col-line"
+          style={{ right: dateCols.slice(i).reduce((s, c) => s + c.width, 0) + 11 }}
+        />
+      ))}
       {pane.findMode && (
         <div className="find-mode-banner">
           <span className="find-bar-badge">
@@ -325,19 +368,17 @@ export function FilePane({ tabId }: Props) {
           {t('filePane.colSize')}
           <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'size')} />
         </span>
-        <span
-          className="file-date header-col sortable"
-          onClick={() => handleSortClick('time')}
-          style={{ width: columnWidths.date }}
-        >
-          {dateColumn === 'created'
-            ? t('filePane.colDateCreated')
-            : dateColumn === 'accessed'
-              ? t('filePane.colDateAccessed')
-              : t('filePane.colDate')}{' '}
-          <SortIndicator active={pane.sortKey === 'time'} desc={pane.sortDesc} />
-          <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'date')} />
-        </span>
+        {dateCols.map((col) => (
+          <span
+            key={col.key}
+            className="file-date header-col sortable"
+            onClick={() => handleSortClick('time')}
+            style={{ width: col.width }}
+          >
+            {col.label} <SortIndicator active={pane.sortKey === 'time'} desc={pane.sortDesc} />
+            <span className="col-resizer" onMouseDown={(e) => startColResize(e, col.colKey)} />
+          </span>
+        ))}
       </div>
       <div
         className="file-pane"
@@ -362,7 +403,7 @@ export function FilePane({ tabId }: Props) {
                 isCursor={isActive && vItem.index === pane.cursor}
                 isSelected={pane.selected.has(entry.path)}
                 colSizeWidth={columnWidths.size}
-                colDateWidth={columnWidths.date}
+                dateCols={dateCols}
                 subLabel={inFindMode ? path.dirname(entry.path) : undefined}
                 dragPaths={
                   pane.selected.size > 0 && pane.selected.has(entry.path)

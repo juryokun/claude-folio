@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { VimMode } from '../types';
-import { setLanguage, type Language } from '../lib/i18n';
+import { type Language, setLanguage } from '../lib/i18n';
 import { tauriApi } from '../lib/tauri';
 import { applyTheme, type ThemeId } from '../lib/themes';
+import type { VimMode } from '../types';
 
 interface UiStore {
   vimMode: VimMode;
@@ -28,7 +28,7 @@ interface UiStore {
   terminalCommand: string;
   googleDrivePaths: string[];
   sidebarWidth: number;
-  columnWidths: { size: number; date: number };
+  columnWidths: { size: number; date: number; dateCreated: number; dateAccessed: number };
   statusMessage: string | null;
   editorCommand: string;
   showSidebar: boolean;
@@ -67,7 +67,7 @@ interface UiStore {
   closeFind: () => void;
   setGoogleDrivePaths: (paths: string[]) => void;
   setSidebarWidth: (w: number) => void;
-  setColumnWidths: (w: Partial<{ size: number; date: number }>) => void;
+  setColumnWidths: (w: Partial<{ size: number; date: number; dateCreated: number; dateAccessed: number }>) => void;
   togglePreview: () => void;
   setPreviewWidth: (w: number) => void;
   showCopyConflict: (
@@ -103,7 +103,7 @@ export const useUiStore = create<UiStore>()(
       terminalCommand: '',
       googleDrivePaths: [],
       sidebarWidth: 220,
-      columnWidths: { size: 90, date: 140 },
+      columnWidths: { size: 90, date: 140, dateCreated: 140, dateAccessed: 140 },
       statusMessage: null,
       editorCommand: '',
       showSidebar: true,

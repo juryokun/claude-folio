@@ -4,12 +4,16 @@ import type { KeyBinding } from '../lib/vim/keymap';
 import { NORMAL_KEYMAP } from '../lib/vim/keymap';
 import { buildKeymap } from '../lib/vim/keymapUtils';
 
-export type DateColumn = 'modified' | 'created' | 'accessed';
+export interface DateColumnConfig {
+  show: boolean;
+  /** "auto" = today/yesterday logic, otherwise strftime-like format string */
+  format: string;
+}
 
 export interface AppearanceConfig {
-  /** "auto" = today/yesterday logic, otherwise strftime-like format string */
-  dateFormat: string;
-  dateColumn: DateColumn;
+  dateModified: DateColumnConfig;
+  dateCreated: DateColumnConfig;
+  dateAccessed: DateColumnConfig;
   sizeUnit: 'binary' | 'decimal';
 }
 
@@ -44,8 +48,9 @@ interface ConfigStore {
 }
 
 const DEFAULT_APPEARANCE: AppearanceConfig = {
-  dateFormat: 'auto',
-  dateColumn: 'modified',
+  dateModified: { show: true, format: 'auto' },
+  dateCreated: { show: false, format: 'auto' },
+  dateAccessed: { show: false, format: 'auto' },
   sizeUnit: 'binary',
 };
 
@@ -58,10 +63,16 @@ export const useConfigStore = create<ConfigStore>((set) => ({
   load: async () => {
     try {
       const raw = await tauriApi.loadConfig();
+      const ra = raw.appearance as Record<string, unknown> | undefined;
+      const parseDateCol = (key: string, defaultShow: boolean): DateColumnConfig => {
+        const v = ra?.[key] as { show?: boolean; format?: string } | undefined;
+        return { show: v?.show ?? defaultShow, format: v?.format ?? 'auto' };
+      };
       const appearance: AppearanceConfig = {
-        dateFormat: raw.appearance?.date_format ?? 'auto',
-        dateColumn: (raw.appearance?.date_column ?? 'modified') as DateColumn,
-        sizeUnit: (raw.appearance?.size_unit ?? 'binary') as 'binary' | 'decimal',
+        dateModified: parseDateCol('date_modified', true),
+        dateCreated: parseDateCol('date_created', false),
+        dateAccessed: parseDateCol('date_accessed', false),
+        sizeUnit: ((ra?.size_unit as string) ?? 'binary') as 'binary' | 'decimal',
       };
       const keymap = buildKeymap(raw.keymap ?? {});
       const favorites = (raw.sidebar?.favorites ?? DEFAULT_FAVORITES) as FavoriteKey[];

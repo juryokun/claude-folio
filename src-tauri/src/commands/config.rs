@@ -2,21 +2,43 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AppearanceConfig {
+pub struct DateColumnConfig {
+    #[serde(default = "default_true")]
+    pub show: bool,
     #[serde(default = "default_date_format")]
-    pub date_format: String,
-    #[serde(default = "default_date_column")]
-    pub date_column: String,
+    pub format: String,
+}
+
+impl Default for DateColumnConfig {
+    fn default() -> Self {
+        Self { show: false, format: "auto".to_string() }
+    }
+}
+
+fn default_date_modified() -> DateColumnConfig {
+    DateColumnConfig { show: true, format: "auto".to_string() }
+}
+fn default_date_created() -> DateColumnConfig {
+    DateColumnConfig { show: false, format: "auto".to_string() }
+}
+fn default_date_accessed() -> DateColumnConfig {
+    DateColumnConfig { show: false, format: "auto".to_string() }
+}
+fn default_true() -> bool { true }
+fn default_date_format() -> String { "auto".to_string() }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AppearanceConfig {
+    #[serde(default = "default_date_modified")]
+    pub date_modified: DateColumnConfig,
+    #[serde(default = "default_date_created")]
+    pub date_created: DateColumnConfig,
+    #[serde(default = "default_date_accessed")]
+    pub date_accessed: DateColumnConfig,
     #[serde(default = "default_size_unit")]
     pub size_unit: String,
 }
 
-fn default_date_format() -> String {
-    "auto".to_string()
-}
-fn default_date_column() -> String {
-    "modified".to_string()
-}
 fn default_size_unit() -> String {
     "binary".to_string()
 }
@@ -24,8 +46,9 @@ fn default_size_unit() -> String {
 impl Default for AppearanceConfig {
     fn default() -> Self {
         Self {
-            date_format: "auto".to_string(),
-            date_column: "modified".to_string(),
+            date_modified: default_date_modified(),
+            date_created: default_date_created(),
+            date_accessed: default_date_accessed(),
             size_unit: "binary".to_string(),
         }
     }

@@ -28,16 +28,20 @@ favorites = [
 # -------------------------
 [appearance]
 
-# Date display format for the date column.
-#   "auto"         → today/yesterday labels with time (今日 12:34:56 / Yesterday 12:34:56)
-#   strftime-like  → e.g. "%Y/%m/%d %H:%M:%S"  (tokens: %Y %m %d %H %M %S)
-date_format = "auto"
+# Date columns — each can be shown/hidden independently with its own format.
+# format: "auto" = today/yesterday labels (今日 12:34:56), or strftime e.g. "%Y/%m/%d %H:%M:%S"
 
-# Which timestamp to show in the date column.
-#   "modified"  → last modified time (default)
-#   "created"   → creation time
-#   "accessed"  → last accessed time
-date_column = "modified"
+[appearance.date_modified]
+show = true
+format = "auto"
+
+[appearance.date_created]
+show = false
+format = "auto"
+
+[appearance.date_accessed]
+show = false
+format = "auto"
 
 # File size unit
 #   "binary"  → KiB / MiB / GiB (1024-based)

@@ -5,6 +5,12 @@ import { useConfigStore } from '../../store/configStore';
 import { useUiStore } from '../../store/uiStore';
 import type { FileEntry } from '../../types';
 
+export interface DateColDef {
+  key: 'modified' | 'created' | 'accessed';
+  width: number;
+  format: string;
+}
+
 interface Props {
   entry: FileEntry;
   isCursor: boolean;
@@ -14,9 +20,9 @@ interface Props {
   onContextMenu: (e: React.MouseEvent) => void;
   style?: React.CSSProperties;
   colSizeWidth: number;
-  colDateWidth: number;
+  dateCols: DateColDef[];
   dragPaths: string[];
-  subLabel?: string; // shown dimmed under the filename (e.g. parent path in find mode)
+  subLabel?: string;
 }
 
 function formatSize(
@@ -136,12 +142,12 @@ export const FileRow = React.memo(function FileRow({
   onContextMenu,
   style,
   colSizeWidth,
-  colDateWidth,
+  dateCols,
   dragPaths,
   subLabel,
 }: Props) {
   const { t } = useTranslation();
-  const { sizeUnit, dateFormat, dateColumn } = useConfigStore((s) => s.appearance);
+  const { sizeUnit } = useConfigStore((s) => s.appearance);
   const pendingKey = useUiStore((s) => (isCursor ? s.pendingKey : null));
   return (
     <div
@@ -194,28 +200,26 @@ export const FileRow = React.memo(function FileRow({
           })()
         )}
       </span>
-      <span className="file-date" style={{ width: colDateWidth }}>
-        {(() => {
-          const ts =
-            dateColumn === 'created'
-              ? entry.created
-              : dateColumn === 'accessed'
-                ? entry.accessed
-                : entry.modified;
-          const { label, time } = formatDateParts(
-            ts,
-            dateFormat,
-            t('fileDate.today'),
-            t('fileDate.yesterday'),
-          );
-          return (
-            <>
-              <span className="file-date-label">{label}</span>
-              {time && <span className="file-date-time">{time}</span>}
-            </>
-          );
-        })()}
-      </span>
+      {dateCols.map((col) => {
+        const ts =
+          col.key === 'created'
+            ? entry.created
+            : col.key === 'accessed'
+              ? entry.accessed
+              : entry.modified;
+        const { label, time } = formatDateParts(
+          ts,
+          col.format,
+          t('fileDate.today'),
+          t('fileDate.yesterday'),
+        );
+        return (
+          <span key={col.key} className="file-date" style={{ width: col.width }}>
+            <span className="file-date-label">{label}</span>
+            {time && <span className="file-date-time">{time}</span>}
+          </span>
+        );
+      })}
       {pendingKey && <span className="file-prefix-badge">{pendingKey} ▸</span>}
     </div>
   );
