@@ -1,16 +1,16 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import path from 'path-browserify';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
-import path from 'path-browserify';
-import { useUiStore } from '../../store/uiStore';
-import { useTabStore } from '../../store/tabStore';
-import { useFileStore } from '../../store/fileStore';
+import { shouldShowOutputModal, substitutePlaceholders } from '../../lib/customCommands';
+import { tauriApi } from '../../lib/tauri';
+import { isValidThemeId, THEMES } from '../../lib/themes';
 import { useBookmarkStore } from '../../store/bookmarkStore';
 import { useConfigStore } from '../../store/configStore';
 import { useCustomCommandStore } from '../../store/customCommandStore';
-import { tauriApi } from '../../lib/tauri';
-import { THEMES, isValidThemeId } from '../../lib/themes';
-import { substitutePlaceholders, shouldShowOutputModal } from '../../lib/customCommands';
+import { useFileStore } from '../../store/fileStore';
+import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
 
 interface CommandDef {
   name: string;
@@ -64,6 +64,8 @@ export function CommandPalette() {
   const { showHidden } = useUiStore();
   const { addBookmark } = useBookmarkStore();
   const loadConfig = useConfigStore((s) => s.load);
+  const loadBookmarks = useBookmarkStore((s) => s.loadBookmarks);
+  const loadCustomCommands = useCustomCommandStore((s) => s.loadCustomCommands);
   const { commands: customCommands, runCommand, pushHistory, history } = useCustomCommandStore();
 
   const [input, setInput] = useState('');
@@ -309,7 +311,7 @@ export function CommandPalette() {
           }
           case 'reload-config': {
             try {
-              await loadConfig();
+              await Promise.all([loadConfig(), loadBookmarks(), loadCustomCommands()]);
               close();
               showStatusMessage(t('commandPalette.msg.configReloaded'));
             } catch (e) {
