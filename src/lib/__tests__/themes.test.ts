@@ -11,6 +11,10 @@ describe('THEMES', () => {
     expect(ids).toContain('dracula');
     expect(ids).toContain('gruvbox');
     expect(ids).toContain('ayu-dark');
+    expect(ids).toContain('solarized-light');
+    expect(ids).toContain('one-light');
+    expect(ids).toContain('catppuccin-latte');
+    expect(ids).toContain('papercolor');
   });
 
   it('every theme has required CSS variables', () => {
@@ -32,6 +36,10 @@ describe('isValidThemeId', () => {
     expect(isValidThemeId('dracula')).toBe(true);
     expect(isValidThemeId('gruvbox')).toBe(true);
     expect(isValidThemeId('ayu-dark')).toBe(true);
+    expect(isValidThemeId('solarized-light')).toBe(true);
+    expect(isValidThemeId('one-light')).toBe(true);
+    expect(isValidThemeId('catppuccin-latte')).toBe(true);
+    expect(isValidThemeId('papercolor')).toBe(true);
   });
 
   it('returns false for unknown ids', () => {

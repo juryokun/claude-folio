@@ -1,4 +1,4 @@
-export type ThemeId = 'dark' | 'light' | 'monokai' | 'nord' | 'dracula' | 'gruvbox' | 'ayu-dark';
+export type ThemeId = 'dark' | 'light' | 'monokai' | 'nord' | 'dracula' | 'gruvbox' | 'ayu-dark' | 'solarized-light' | 'one-light' | 'catppuccin-latte' | 'papercolor';
 
 export interface Theme {
   id: ThemeId;
@@ -117,6 +117,70 @@ export const THEMES: Theme[] = [
       '--text-accent': '#ff3333',
       '--border': '#1a1f29',
       '--cursor-bg': '#3d1f1f',
+    },
+  },
+  {
+    id: 'solarized-light',
+    label: 'Solarized Light',
+    vars: {
+      '--bg': '#fdf6e3',
+      '--bg-secondary': '#eee8d5',
+      '--bg-hover': '#e8e2cf',
+      '--bg-active': '#c9dde5',
+      '--bg-selected': '#d5e8ed',
+      '--text': '#657b83',
+      '--text-dim': '#93a1a1',
+      '--text-accent': '#268bd2',
+      '--border': '#d1cbb8',
+      '--cursor-bg': '#b3d4df',
+    },
+  },
+  {
+    id: 'one-light',
+    label: 'One Light',
+    vars: {
+      '--bg': '#fafafa',
+      '--bg-secondary': '#f0f0f0',
+      '--bg-hover': '#e8e8e8',
+      '--bg-active': '#f0d0d0',
+      '--bg-selected': '#f5dede',
+      '--text': '#383a42',
+      '--text-dim': '#a0a1a7',
+      '--text-accent': '#e45649',
+      '--border': '#d3d3d3',
+      '--cursor-bg': '#f0d0d0',
+    },
+  },
+  {
+    id: 'catppuccin-latte',
+    label: 'Catppuccin Latte',
+    vars: {
+      '--bg': '#eff1f5',
+      '--bg-secondary': '#e6e9ef',
+      '--bg-hover': '#dce0e8',
+      '--bg-active': '#bcc5e8',
+      '--bg-selected': '#ccd4ed',
+      '--text': '#4c4f69',
+      '--text-dim': '#9ca0b0',
+      '--text-accent': '#1e66f5',
+      '--border': '#ccd0da',
+      '--cursor-bg': '#bcc5e8',
+    },
+  },
+  {
+    id: 'papercolor',
+    label: 'Papercolor Light',
+    vars: {
+      '--bg': '#eeeeee',
+      '--bg-secondary': '#e4e4e4',
+      '--bg-hover': '#d8d8d8',
+      '--bg-active': '#b0cfe0',
+      '--bg-selected': '#c8dfe8',
+      '--text': '#444444',
+      '--text-dim': '#888888',
+      '--text-accent': '#005f87',
+      '--border': '#cccccc',
+      '--cursor-bg': '#b0cfe0',
     },
   },
 ];
