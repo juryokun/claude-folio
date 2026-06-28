@@ -2,6 +2,17 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum OutputMode {
+    Auto,
+    Modal,
+}
+
+impl Default for OutputMode {
+    fn default() -> Self { OutputMode::Auto }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CustomCommand {
     pub name: String,
     #[serde(default)]
@@ -13,6 +24,8 @@ pub struct CustomCommand {
     pub reload: bool,
     #[serde(default)]
     pub confirm: bool,
+    #[serde(default)]
+    pub output: OutputMode,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -139,12 +152,26 @@ command = "rm -f {dir}/*.tmp"
 shell = "/bin/bash"
 reload = true
 confirm = true
+output = "modal"
 "#);
         let cmds = load_custom_commands_from(&path);
         assert_eq!(cmds[0].desc, "Remove temp files");
         assert_eq!(cmds[0].shell, "/bin/bash");
         assert!(cmds[0].reload);
         assert!(cmds[0].confirm);
+        assert_eq!(cmds[0].output, OutputMode::Modal);
+    }
+
+    #[test]
+    fn output_defaults_to_auto() {
+        let dir = TempDir::new().unwrap();
+        let path = write_commands(&dir, r#"
+[[commands]]
+name = "hello"
+command = "echo hello"
+"#);
+        let cmds = load_custom_commands_from(&path);
+        assert_eq!(cmds[0].output, OutputMode::Auto);
     }
 
     #[test]

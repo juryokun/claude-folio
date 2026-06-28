@@ -139,10 +139,10 @@ export function CommandPalette() {
       try {
         const result = await runCommand(resolved, shell, tab.path, `:${cmd.name}`);
         if (result.exit_code !== 0) {
-          // output modal is set by store; nothing extra needed
           return;
         }
-        if (!shouldShowOutputModal(result.stdout)) {
+        const forceModal = cmd.output === 'modal';
+        if (!forceModal && !shouldShowOutputModal(result.stdout)) {
           const brief = result.stdout.trim() || t('commandPalette.msg.customDone', { name: cmd.name });
           showStatusMessage(brief, 5000);
           useCustomCommandStore.getState().clearOutput();

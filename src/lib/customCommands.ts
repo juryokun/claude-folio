@@ -1,3 +1,5 @@
+export type OutputMode = 'auto' | 'modal';
+
 export interface CustomCommand {
   name: string;
   desc: string;
@@ -5,6 +7,7 @@ export interface CustomCommand {
   shell: string;
   reload: boolean;
   confirm: boolean;
+  output: OutputMode;
 }
 
 export interface ShellOutput {
