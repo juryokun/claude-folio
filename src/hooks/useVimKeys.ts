@@ -98,5 +98,5 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [vimMode, onAction, clearBuffer, tryMatch]);
+  }, [vimMode, hasOutput, onAction, clearBuffer, tryMatch]);
 }
