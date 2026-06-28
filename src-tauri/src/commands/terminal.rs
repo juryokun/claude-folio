@@ -175,18 +175,44 @@ pub fn open_terminal_at(path: String, app: String, command: String) -> Result<()
     }
 }
 
+fn zoxide_bin() -> Option<&'static std::path::Path> {
+    use std::sync::OnceLock;
+    static BIN: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
+    BIN.get_or_init(|| {
+        let candidates = [
+            "/opt/homebrew/bin/zoxide",
+            "/usr/local/bin/zoxide",
+            "/usr/bin/zoxide",
+        ];
+        for path in candidates {
+            let p = std::path::Path::new(path);
+            if p.exists() {
+                return Some(p.to_path_buf());
+            }
+        }
+        // フォールバック: PATH 検索
+        if std::process::Command::new("zoxide")
+            .arg("--version")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+        {
+            return Some(std::path::PathBuf::from("zoxide"));
+        }
+        None
+    })
+    .as_deref()
+}
+
 #[tauri::command]
 pub fn check_zoxide_installed() -> bool {
-    std::process::Command::new("which")
-        .arg("zoxide")
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+    zoxide_bin().is_some()
 }
 
 #[tauri::command]
 pub fn zoxide_query(query: String) -> Result<Vec<String>, String> {
-    let output = std::process::Command::new("zoxide")
+    let bin = zoxide_bin().ok_or_else(|| "zoxide not found".to_string())?;
+    let output = std::process::Command::new(bin)
         .args(["query", "--list", &query])
         .output()
         .map_err(|e| e.to_string())?;
@@ -199,15 +225,19 @@ pub fn zoxide_query(query: String) -> Result<Vec<String>, String> {
     Ok(stdout
         .lines()
         .map(|l| l.trim().to_string())
-        .filter(|l| !l.is_empty())
+        .filter(|l| !l.is_empty() && std::path::Path::new(l).is_absolute())
         .collect())
 }
 
 #[tauri::command]
 pub fn zoxide_add(path: String) -> Result<(), String> {
-    std::process::Command::new("zoxide")
+    let bin = zoxide_bin().ok_or_else(|| "zoxide not found".to_string())?;
+    let output = std::process::Command::new(bin)
         .args(["add", &path])
-        .spawn()
+        .output()
         .map_err(|e| e.to_string())?;
+    if !output.status.success() {
+        eprintln!("zoxide add failed: {:?}", output.status);
+    }
     Ok(())
 }
