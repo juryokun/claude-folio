@@ -544,10 +544,10 @@ body {
 }
 .file-git-badge {
   position: absolute;
-  bottom: 0px;
-  right: -3px;
-  width: 6px;
-  height: 6px;
+  bottom: -1px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   border: 1.5px solid var(--bg);
   pointer-events: none;
