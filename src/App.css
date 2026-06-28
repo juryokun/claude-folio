@@ -111,6 +111,15 @@ body {
   color: var(--text);
   border-top: 2px solid var(--text-accent);
 }
+.tab-item {
+  cursor: grab;
+}
+.tab-item:active {
+  cursor: grabbing;
+}
+.tab-item.drag-over {
+  border-left: 2px solid var(--text-accent);
+}
 .tab-label {
   flex: 1;
   overflow: hidden;
