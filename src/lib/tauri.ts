@@ -36,9 +36,6 @@ export const tauriApi = {
 
   listApplications: () => invoke<string[]>('list_applications'),
 
-  openWithCommand: (path: string, cmd: string) =>
-    invoke<void>('open_with_editor', { path, editorCmd: cmd }),
-
   openWithEditor: (path: string, editorCmd: string) =>
     invoke<void>('open_with_editor', { path, editorCmd }),
 

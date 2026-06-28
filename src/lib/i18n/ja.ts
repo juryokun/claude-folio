@@ -100,14 +100,10 @@ const ja = {
   },
   openWithModal: {
     title: 'アプリを指定して開く',
-    placeholder: 'Preview / zip -r / /usr/bin/tool --flag',
-    appModeHint: 'アプリを入力してください',
-    appMode: 'アプリモード — open -a "{{name}}" {{file}}',
-    commandMode: 'コマンドモード — {{command}} <file> として実行',
+    placeholder: 'アプリ名 (例: Preview)',
     cancel: 'キャンセル',
     open: '開く',
     openSuccess: '{{file}} を {{app}} で開きました',
-    executeSuccess: '{{file}} を実行しました',
     error: 'エラー: {{error}}',
   },
   copyConflictModal: {

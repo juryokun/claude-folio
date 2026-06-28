@@ -100,14 +100,10 @@ const en = {
   },
   openWithModal: {
     title: 'Open With',
-    placeholder: 'Preview / zip -r / /usr/bin/tool --flag',
-    appModeHint: 'Enter an application name',
-    appMode: 'App mode — open -a "{{name}}" {{file}}',
-    commandMode: 'Command mode — run as {{command}} <file>',
+    placeholder: 'Application name (e.g. Preview)',
     cancel: 'Cancel',
     open: 'Open',
     openSuccess: 'Opened {{file}} with {{app}}',
-    executeSuccess: 'Executed {{file}}',
     error: 'Error: {{error}}',
   },
   copyConflictModal: {

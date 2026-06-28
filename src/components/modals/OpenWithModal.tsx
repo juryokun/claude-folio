@@ -5,20 +5,6 @@ import { tauriApi } from '../../lib/tauri';
 import { useUiStore } from '../../store/uiStore';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 
-// アプリモードの判定:
-//   アプリ一覧に完全一致（大文字小文字無視）→ アプリモード (open -a)
-//   それ以外 → コマンドモード (直接実行)
-function resolveMode(input: string, apps: string[]): 'app' | 'command' {
-  const lower = input.toLowerCase();
-  if (apps.some((a) => a.toLowerCase() === lower)) return 'app';
-  return 'command';
-}
-
-// 候補を表示するかどうか: / や ~ で始まる場合は補完しない
-function showCandidates(input: string): boolean {
-  return input.length > 0 && !input.startsWith('/') && !input.startsWith('~');
-}
-
 export function OpenWithModal() {
   const { t } = useTranslation();
   const { showOpenWith, openWithTarget, setShowOpenWith, showStatusMessage } = useUiStore();
@@ -42,20 +28,16 @@ export function OpenWithModal() {
   }, [showOpenWith]);
 
   const candidates = useMemo(() => {
-    if (!showCandidates(input)) return [];
+    if (!input) return apps.slice(0, 8);
     const lower = input.toLowerCase();
     return apps.filter((a) => a.toLowerCase().includes(lower)).slice(0, 8);
   }, [input, apps]);
-
-  useEffect(() => {
-    setSelectedIdx(-1);
-  }, []);
 
   if (!showOpenWith || !openWithTarget) return null;
 
   const fileName = path.basename(openWithTarget);
   const trimmed = input.trim();
-  const mode = resolveMode(trimmed, apps);
+  const isValidApp = apps.some((a) => a.toLowerCase() === trimmed.toLowerCase());
 
   const applyCandidate = (name: string) => {
     setInput(name);
@@ -69,13 +51,8 @@ export function OpenWithModal() {
       return;
     }
     try {
-      if (resolveMode(trimmed, apps) === 'app') {
-        await tauriApi.openWithApp(openWithTarget, trimmed);
-        showStatusMessage(t('openWithModal.openSuccess', { file: fileName, app: trimmed }));
-      } else {
-        await tauriApi.openWithCommand(openWithTarget, trimmed);
-        showStatusMessage(t('openWithModal.executeSuccess', { file: fileName }));
-      }
+      await tauriApi.openWithApp(openWithTarget, trimmed);
+      showStatusMessage(t('openWithModal.openSuccess', { file: fileName, app: trimmed }));
     } catch (e) {
       showStatusMessage(t('openWithModal.error', { error: e }));
     }
@@ -104,12 +81,6 @@ export function OpenWithModal() {
     }
   };
 
-  const modeHint = !trimmed
-    ? t('openWithModal.appModeHint')
-    : mode === 'app'
-      ? t('openWithModal.appMode', { name: trimmed, file: fileName })
-      : t('openWithModal.commandMode', { command: trimmed });
-
   return (
     <div className="modal-overlay" onClick={() => setShowOpenWith(false)}>
       <div className="modal open-with-modal" onClick={(e) => e.stopPropagation()}>
@@ -121,7 +92,10 @@ export function OpenWithModal() {
             ref={inputRef}
             className="modal-input"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              setSelectedIdx(-1);
+            }}
             placeholder={t('openWithModal.placeholder')}
             {...ime.handlers}
             onKeyDown={handleKeyDown}
@@ -144,11 +118,9 @@ export function OpenWithModal() {
           )}
         </div>
 
-        <div className="open-with-mode-hint">{modeHint}</div>
-
         <div className="modal-actions">
           <button onClick={() => setShowOpenWith(false)}>{t('openWithModal.cancel')}</button>
-          <button className="primary" onClick={handleOpen} disabled={!trimmed}>
+          <button className="primary" onClick={handleOpen} disabled={!trimmed || !isValidApp}>
             {t('openWithModal.open')}
           </button>
         </div>
