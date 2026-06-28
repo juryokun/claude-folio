@@ -82,7 +82,7 @@ const en = {
       unknown: 'Unknown command: {{command}}',
       no7zip: '7zip is not installed',
       langUsage: 'Usage: :lang ja or :lang en',
-      themeUsage: 'Usage: :theme dark|light|monokai|nord|dracula|gruvbox|rose-pine|ayu-dark|catppuccin',
+      themeUsage: 'Usage: :theme dark|light|monokai|nord|dracula|gruvbox|ayu-dark',
     },
     msg: {
       configReloaded: '✅ Config file reloaded',

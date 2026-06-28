@@ -1,4 +1,4 @@
-export type ThemeId = 'dark' | 'light' | 'monokai' | 'nord' | 'dracula' | 'gruvbox' | 'rose-pine' | 'ayu-dark' | 'catppuccin';
+export type ThemeId = 'dark' | 'light' | 'monokai' | 'nord' | 'dracula' | 'gruvbox' | 'ayu-dark';
 
 export interface Theme {
   id: ThemeId;
@@ -104,22 +104,6 @@ export const THEMES: Theme[] = [
     },
   },
   {
-    id: 'rose-pine',
-    label: 'Rosé Pine',
-    vars: {
-      '--bg': '#191724',
-      '--bg-secondary': '#1f1d2e',
-      '--bg-hover': '#26233a',
-      '--bg-active': '#403d52',
-      '--bg-selected': '#2a2840',
-      '--text': '#e0def4',
-      '--text-dim': '#6e6a86',
-      '--text-accent': '#eb6f92',
-      '--border': '#26233a',
-      '--cursor-bg': '#403d52',
-    },
-  },
-  {
     id: 'ayu-dark',
     label: 'Ayu Dark',
     vars: {
@@ -133,22 +117,6 @@ export const THEMES: Theme[] = [
       '--text-accent': '#ff3333',
       '--border': '#1a1f29',
       '--cursor-bg': '#3d1f1f',
-    },
-  },
-  {
-    id: 'catppuccin',
-    label: 'Catppuccin Mocha',
-    vars: {
-      '--bg': '#1e1e2e',
-      '--bg-secondary': '#181825',
-      '--bg-hover': '#313244',
-      '--bg-active': '#45475a',
-      '--bg-selected': '#2a2a3d',
-      '--text': '#cdd6f4',
-      '--text-dim': '#585b70',
-      '--text-accent': '#eba0ac',
-      '--border': '#313244',
-      '--cursor-bg': '#45475a',
     },
   },
 ];

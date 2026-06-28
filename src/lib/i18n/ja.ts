@@ -82,7 +82,7 @@ const ja = {
       unknown: '不明なコマンド: {{command}}',
       no7zip: '7zipがインストールされていません',
       langUsage: '使い方: :lang ja または :lang en',
-      themeUsage: '使い方: :theme dark|light|monokai|nord|dracula|gruvbox|rose-pine|ayu-dark|catppuccin',
+      themeUsage: '使い方: :theme dark|light|monokai|nord|dracula|gruvbox|ayu-dark',
     },
     msg: {
       configReloaded: '✅ 設定ファイルを再読み込みしました',
