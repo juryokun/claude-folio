@@ -120,7 +120,7 @@ export const tauriApi = {
     canvas.style.width = `${w}px`;
     canvas.style.height = '28px';
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) return Promise.reject(new Error('Canvas 2D context unavailable'));
     ctx.scale(scale, scale);
     ctx.fillStyle = 'rgba(30, 30, 30, 0.85)';
     ctx.roundRect(0, 0, w, 28, 6);

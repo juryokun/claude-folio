@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { substitutePlaceholders, shouldShowOutputModal, pushHistory } from '../customCommands';
+import { describe, expect, it } from 'vitest';
+import { pushHistory, shouldShowOutputModal, substitutePlaceholders } from '../customCommands';
 
 describe('substitutePlaceholders', () => {
-  const ctx = { file: '/home/user/docs/report.pdf', dir: '/home/user/docs', name: 'report.pdf' };
+  const ctx = {
+    file: '/home/user/docs/report.pdf',
+    dir: '/home/user/docs',
+    name: 'report.pdf',
+    selected: '/home/user/docs/report.pdf',
+  };
 
   it('replaces {file}', () => {
     expect(substitutePlaceholders('open {file}', ctx)).toBe('open /home/user/docs/report.pdf');
@@ -34,6 +39,15 @@ describe('substitutePlaceholders', () => {
 
   it('no placeholders returns command unchanged', () => {
     expect(substitutePlaceholders('git status', ctx)).toBe('git status');
+  });
+
+  it('replaces {selected} with single file', () => {
+    expect(substitutePlaceholders('open {selected}', ctx)).toBe('open /home/user/docs/report.pdf');
+  });
+
+  it('replaces {selected} with multiple quoted paths', () => {
+    const multiCtx = { ...ctx, selected: "'/path/a' '/path/b'" };
+    expect(substitutePlaceholders('open {selected}', multiCtx)).toBe("open '/path/a' '/path/b'");
   });
 });
 
