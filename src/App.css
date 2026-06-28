@@ -580,14 +580,15 @@ body {
   gap: 4px;
 }
 .file-date-label {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.file-date-time {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.file-date-time {
-  flex-shrink: 0;
-  white-space: nowrap;
+  min-width: 0;
 }
 .file-prefix-badge {
   margin-left: 6px;
