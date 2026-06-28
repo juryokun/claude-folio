@@ -653,7 +653,13 @@ body {
   overflow-y: scroll;
   color: var(--text);
   margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
+.command-output-body::-webkit-scrollbar { width: 6px; }
+.command-output-body::-webkit-scrollbar-track { background: transparent; }
+.command-output-body::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 3px; }
+.command-output-body::-webkit-scrollbar-thumb:hover { background: var(--text); }
 .command-output-stderr { color: #f48771; }
 
 /* Help modal */

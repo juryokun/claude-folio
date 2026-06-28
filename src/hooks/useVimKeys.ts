@@ -1,12 +1,14 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { type KeyBinding, type VimAction } from '../lib/vim/keymap';
 import { useUiStore } from '../store/uiStore';
+import { useCustomCommandStore } from '../store/customCommandStore';
 
 const SEQUENCE_TIMEOUT = 500;
 
 export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBinding[]) {
   const vimMode = useUiStore((s) => s.vimMode);
   const setPendingKey = useUiStore((s) => s.setPendingKey);
+  const hasOutput = useCustomCommandStore((s) => s.output !== null);
   const bufferRef = useRef<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -47,6 +49,7 @@ export function useVimKeys(onAction: (action: VimAction) => void, keymap: KeyBin
 
   useEffect(() => {
     if (vimMode !== 'NORMAL') return;
+    if (hasOutput) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
