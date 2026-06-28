@@ -26,8 +26,8 @@ export function ConfirmModal() {
         className="modal"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') handleConfirm();
-          if (e.key === 'Escape') closeConfirm();
+          if (e.key === 'Enter' || e.key === 'y' || e.key === 'Y') handleConfirm();
+          if (e.key === 'Escape' || e.key === 'n' || e.key === 'N') closeConfirm();
         }}
       >
         <div className="modal-title">{t('confirmModal.title')}</div>

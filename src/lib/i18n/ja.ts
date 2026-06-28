@@ -97,8 +97,8 @@ const ja = {
   },
   confirmModal: {
     title: '確認',
-    cancel: 'キャンセル',
-    ok: 'OK',
+    cancel: 'キャンセル (n)',
+    ok: 'OK (y)',
   },
   openWithModal: {
     title: 'アプリを指定して開く',

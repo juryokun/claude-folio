@@ -97,8 +97,8 @@ const en = {
   },
   confirmModal: {
     title: 'Confirm',
-    cancel: 'Cancel',
-    ok: 'OK',
+    cancel: 'Cancel (n)',
+    ok: 'OK (y)',
   },
   openWithModal: {
     title: 'Open With',
