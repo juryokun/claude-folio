@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useTabStore } from '../../store/tabStore';
 import { useFileStore } from '../../store/fileStore';
+import { useTabStore } from '../../store/tabStore';
 import { useUiStore } from '../../store/uiStore';
 
 export function StatusBar() {

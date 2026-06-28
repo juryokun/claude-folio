@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { THEMES, isValidThemeId } from '../themes';
+import { describe, expect, it } from 'vitest';
+import { isValidThemeId, THEMES } from '../themes';
 
 describe('THEMES', () => {
   it('contains all expected themes', () => {

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { Bookmark } from '../types';
 import { tauriApi } from '../lib/tauri';
+import type { Bookmark } from '../types';
 
 interface BookmarkStore {
   bookmarks: Bookmark[];

@@ -11,21 +11,37 @@ pub struct DateColumnConfig {
 
 impl Default for DateColumnConfig {
     fn default() -> Self {
-        Self { show: false, format: "auto".to_string() }
+        Self {
+            show: false,
+            format: "auto".to_string(),
+        }
     }
 }
 
 fn default_date_modified() -> DateColumnConfig {
-    DateColumnConfig { show: true, format: "auto".to_string() }
+    DateColumnConfig {
+        show: true,
+        format: "auto".to_string(),
+    }
 }
 fn default_date_created() -> DateColumnConfig {
-    DateColumnConfig { show: false, format: "auto".to_string() }
+    DateColumnConfig {
+        show: false,
+        format: "auto".to_string(),
+    }
 }
 fn default_date_accessed() -> DateColumnConfig {
-    DateColumnConfig { show: false, format: "auto".to_string() }
+    DateColumnConfig {
+        show: false,
+        format: "auto".to_string(),
+    }
 }
-fn default_true() -> bool { true }
-fn default_date_format() -> String { "auto".to_string() }
+fn default_true() -> bool {
+    true
+}
+fn default_date_format() -> String {
+    "auto".to_string()
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppearanceConfig {

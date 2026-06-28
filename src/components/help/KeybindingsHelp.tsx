@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useUiStore } from '../../store/uiStore';
 import { KEYBINDING_DOCS } from '../../lib/vim/keymap';
+import { useUiStore } from '../../store/uiStore';
 
 export function KeybindingsHelp() {
   const { t } = useTranslation();

@@ -67,7 +67,9 @@ interface UiStore {
   closeFind: () => void;
   setGoogleDrivePaths: (paths: string[]) => void;
   setSidebarWidth: (w: number) => void;
-  setColumnWidths: (w: Partial<{ size: number; date: number; dateCreated: number; dateAccessed: number }>) => void;
+  setColumnWidths: (
+    w: Partial<{ size: number; date: number; dateCreated: number; dateAccessed: number }>,
+  ) => void;
   togglePreview: () => void;
   setPreviewWidth: (w: number) => void;
   showCopyConflict: (

@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTabStore } from '../../store/tabStore';
-import { useBookmarkStore } from '../../store/bookmarkStore';
-import { useUiStore } from '../../store/uiStore';
-import { useConfigStore } from '../../store/configStore';
 import { favoritePath } from '../../lib/favorites';
 import { tauriApi } from '../../lib/tauri';
+import { useBookmarkStore } from '../../store/bookmarkStore';
+import { useConfigStore } from '../../store/configStore';
+import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
 
 function getUsername(): string {
   return window.__macFilerUsername ?? 'user';

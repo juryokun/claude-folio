@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../lib/tauri', () => ({
   tauriApi: { zoxideAdd: vi.fn().mockResolvedValue(undefined) },
   isTauri: vi.fn().mockReturnValue(true),
 }));
 
-import { useTabStore, setHomeDir } from '../tabStore';
 import type { Tab } from '../../types';
+import { setHomeDir, useTabStore } from '../tabStore';
 
 function makeTab(path: string): Tab {
   return { id: crypto.randomUUID(), path, history: [path], historyIndex: 0 };

@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { favoritePath } from '../favorites';
+import { describe, expect, it } from 'vitest';
 import type { FavoriteKey } from '../../store/configStore';
+import { favoritePath } from '../favorites';
 
 const HOME = '/Users/testuser';
 

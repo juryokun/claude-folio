@@ -10,9 +10,9 @@ pub struct FileEntry {
     pub is_symlink: bool,
     pub link_target: Option<String>,
     pub size: u64,
-    pub modified: Option<u64>,  // Unix timestamp in seconds
-    pub created: Option<u64>,   // Unix timestamp in seconds
-    pub accessed: Option<u64>,  // Unix timestamp in seconds
+    pub modified: Option<u64>, // Unix timestamp in seconds
+    pub created: Option<u64>,  // Unix timestamp in seconds
+    pub accessed: Option<u64>, // Unix timestamp in seconds
     pub extension: Option<String>,
 }
 

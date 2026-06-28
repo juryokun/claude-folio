@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { parseFilterQuery, matchesFilter } from '../searchFilter';
+import { describe, expect, it } from 'vitest';
+import { matchesFilter, parseFilterQuery } from '../searchFilter';
 
 describe('parseFilterQuery', () => {
   it('returns null for empty string', () => {

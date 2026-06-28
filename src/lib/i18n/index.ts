@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import ja from './ja';
 import en from './en';
+import ja from './ja';
 
 export type Language = 'ja' | 'en';
 

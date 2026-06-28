@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 /**
  * Returns event handlers to attach to an <input> so that Enter during IME

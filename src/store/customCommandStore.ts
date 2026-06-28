@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { CustomCommand, ShellOutput } from '../lib/customCommands';
-import { loadHistory, saveHistory, pushHistory } from '../lib/customCommands';
+import { loadHistory, pushHistory, saveHistory } from '../lib/customCommands';
 import { tauriApi } from '../lib/tauri';
 
 interface CustomCommandStore {

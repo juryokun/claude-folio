@@ -566,12 +566,24 @@ body {
   line-height: 1;
   color: #fff;
 }
-.git-badge-clean     { background: #4caf50; }
-.git-badge-modified  { background: #e5a000; }
-.git-badge-added     { background: #2196f3; }
-.git-badge-deleted   { background: #f44336; }
-.git-badge-untracked { background: #9e9e9e; }
-.git-badge-unmerged  { background: #e53935; }
+.git-badge-clean {
+  background: #4caf50;
+}
+.git-badge-modified {
+  background: #e5a000;
+}
+.git-badge-added {
+  background: #2196f3;
+}
+.git-badge-deleted {
+  background: #f44336;
+}
+.git-badge-untracked {
+  background: #9e9e9e;
+}
+.git-badge-unmerged {
+  background: #e53935;
+}
 .file-icon.dir {
   filter: sepia(1) saturate(3) hue-rotate(5deg) brightness(0.9);
 }

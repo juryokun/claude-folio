@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import path from 'path-browserify';
-import { tauriApi } from '../../lib/tauri';
-import { useUiStore } from '../../store/uiStore';
-import { useTabStore } from '../../store/tabStore';
-import { useFileStore } from '../../store/fileStore';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
+import { tauriApi } from '../../lib/tauri';
+import { useFileStore } from '../../store/fileStore';
+import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
 
 export function RenameModal() {
   const { t } = useTranslation();

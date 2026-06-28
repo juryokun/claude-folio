@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTabStore } from '../../store/tabStore';
-import { useFileStore } from '../../store/fileStore';
-import { useUiStore } from '../../store/uiStore';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 import { parseFilterQuery } from '../../lib/searchFilter';
+import { useFileStore } from '../../store/fileStore';
+import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
 
 export function SearchBar() {
   const { t } = useTranslation();

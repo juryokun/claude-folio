@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { useTabStore } from '../../store/tabStore';
-import { useFileStore } from '../../store/fileStore';
-import { useUiStore } from '../../store/uiStore';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
+import { useFileStore } from '../../store/fileStore';
+import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
 
 export function FindBar() {
   const { activeTab } = useTabStore();

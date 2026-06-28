@@ -1,10 +1,10 @@
 pub mod bookmarks;
-pub mod git;
 pub mod cli;
 pub mod clipboard;
 pub mod config;
 pub mod custom_commands;
 pub mod fs;
+pub mod git;
 pub mod search;
 pub mod system;
 pub mod terminal;

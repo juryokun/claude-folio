@@ -1,7 +1,7 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { KeyBinding, VimAction } from '../lib/vim/keymap';
-import { useUiStore } from '../store/uiStore';
 import { useCustomCommandStore } from '../store/customCommandStore';
+import { useUiStore } from '../store/uiStore';
 
 const SEQUENCE_TIMEOUT = 500;
 

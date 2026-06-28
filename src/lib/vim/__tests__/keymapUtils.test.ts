@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { parseSequence, buildKeymap } from '../keymapUtils';
+import { describe, expect, it } from 'vitest';
 import { NORMAL_KEYMAP } from '../keymap';
+import { buildKeymap, parseSequence } from '../keymapUtils';
 
 describe('parseSequence', () => {
   it('parses a single key', () => {

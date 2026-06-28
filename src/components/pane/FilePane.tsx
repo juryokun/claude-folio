@@ -330,11 +330,7 @@ export function FilePane({ tabId }: Props) {
         style={{ right: totalDateWidth + (showSize ? columnWidths.size : 0) + 17 }}
       />
       {dateCols.map((col, i) => (
-        <div
-          key={col.key}
-          className="col-line"
-          style={{ right: dateColSuffixWidths[i] + 11 }}
-        />
+        <div key={col.key} className="col-line" style={{ right: dateColSuffixWidths[i] + 11 }} />
       ))}
       {pane.findMode && (
         <div className="find-mode-banner">

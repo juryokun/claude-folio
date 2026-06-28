@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTabStore } from '../../store/tabStore';
-import { useUiStore } from '../../store/uiStore';
+import { favoritePath } from '../../lib/favorites';
+import { commonPrefix, expandTilde } from '../../lib/pathCompletion';
+import { tauriApi } from '../../lib/tauri';
 import { useBookmarkStore } from '../../store/bookmarkStore';
 import { useConfigStore } from '../../store/configStore';
-import { favoritePath } from '../../lib/favorites';
-import { tauriApi } from '../../lib/tauri';
-import { commonPrefix, expandTilde } from '../../lib/pathCompletion';
+import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
 
 interface PickerItem {
   id: string;

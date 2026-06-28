@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // vi.mock ファクトリ内では外部変数を参照できないため、
 // モック関数はファクトリ内で vi.fn() として定義し、
@@ -11,8 +11,8 @@ vi.mock('../../lib/tauri', () => ({
   isTauri: vi.fn().mockReturnValue(true),
 }));
 
-import { useBookmarkStore } from '../bookmarkStore';
 import { tauriApi } from '../../lib/tauri';
+import { useBookmarkStore } from '../bookmarkStore';
 
 const mockLoadBookmarks = vi.mocked(tauriApi.loadBookmarks);
 const mockSaveBookmarks = vi.mocked(tauriApi.saveBookmarks);

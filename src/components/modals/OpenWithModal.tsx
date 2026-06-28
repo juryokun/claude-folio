@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import path from 'path-browserify';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 import { tauriApi } from '../../lib/tauri';
 import { useUiStore } from '../../store/uiStore';
-import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
 
 export function OpenWithModal() {
   const { t } = useTranslation();

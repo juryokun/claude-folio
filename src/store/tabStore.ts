@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { Tab } from '../types';
 import { tauriApi } from '../lib/tauri';
+import type { Tab } from '../types';
 
 // Resolved home directory. Updated by App.tsx on mount via setHomeDir().
 let resolvedHome = '/Users';

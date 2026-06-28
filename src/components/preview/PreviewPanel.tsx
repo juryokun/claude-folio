@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { tauriApi } from '../../lib/tauri';
-import { useUiStore } from '../../store/uiStore';
 import { useFileStore } from '../../store/fileStore';
 import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
 import type { FileEntry } from '../../types';
 
 type PreviewState =

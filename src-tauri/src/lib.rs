@@ -6,7 +6,6 @@ use tauri::{Emitter, Manager};
 #[cfg(not(test))]
 use commands::{
     bookmarks::{load_bookmarks, save_bookmarks},
-        git::get_git_status,
     cli::{get_startup_path, install_cli},
     clipboard::{copy_name_to_clipboard, copy_path_to_clipboard},
     config::{init_config, load_config, save_language},
@@ -15,6 +14,7 @@ use commands::{
         check_copy_conflicts, copy_files, create_dir, create_file, detect_google_drive, list_dir,
         list_dir_completions, move_files, read_text_file, rename_file,
     },
+    git::get_git_status,
     search::{
         check_7zip_installed, check_fd_installed, compress_7zip, extract_7zip, search_files,
         search_with_fd,

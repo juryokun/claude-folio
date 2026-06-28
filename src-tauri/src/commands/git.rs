@@ -57,9 +57,7 @@ pub fn get_git_status(path: String) -> HashMap<String, String> {
     if !root_out.status.success() {
         return HashMap::new();
     }
-    let git_root = String::from_utf8_lossy(&root_out.stdout)
-        .trim()
-        .to_string();
+    let git_root = String::from_utf8_lossy(&root_out.stdout).trim().to_string();
 
     let current = Path::new(&path);
     let root = Path::new(&git_root);
@@ -67,9 +65,7 @@ pub fn get_git_status(path: String) -> HashMap<String, String> {
 
     // ── Step 1: mark all tracked direct children as clean ("=") ──────────────
     // `git ls-files` with -C outputs paths relative to <path>
-    let ls_out = Command::new("git")
-        .args(["-C", &path, "ls-files"])
-        .output();
+    let ls_out = Command::new("git").args(["-C", &path, "ls-files"]).output();
     if let Ok(ls_out) = ls_out {
         let text = String::from_utf8_lossy(&ls_out.stdout);
         for line in text.lines() {
