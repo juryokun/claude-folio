@@ -74,6 +74,7 @@ const en = {
       reloadConfig: 'Reload config file',
       clearStorage: 'Clear LocalStorage and restart',
       lang: 'Switch display language (ja / en)',
+      theme: 'Switch theme (dark / light)',
       installCli: 'Install folio CLI to /usr/local/bin/folio',
     },
     err: {
@@ -81,12 +82,14 @@ const en = {
       unknown: 'Unknown command: {{command}}',
       no7zip: '7zip is not installed',
       langUsage: 'Usage: :lang ja or :lang en',
+      themeUsage: 'Usage: :theme dark or :theme light',
     },
     msg: {
       configReloaded: '✅ Config file reloaded',
       configCreated: '✅ Config file created: {{path}}',
       configExists: 'ℹ️ Config file already exists: ~/.config/folio/config.toml',
       langChanged: '🌐 Language switched to {{lang}}',
+      themeChanged: '🎨 Theme switched to {{id}}',
       cliInstalled: '✅ Installed: /usr/local/bin/folio',
     },
   },

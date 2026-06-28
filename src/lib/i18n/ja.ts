@@ -74,6 +74,7 @@ const ja = {
       reloadConfig: '設定ファイルを再読み込み',
       clearStorage: 'LocalStorage をクリアしてアプリを再起動',
       lang: '表示言語を切り替える (ja / en)',
+      theme: 'テーマを切り替える (dark / light)',
       installCli: 'folio CLI を /usr/local/bin/folio にインストール',
     },
     err: {
@@ -81,12 +82,14 @@ const ja = {
       unknown: '不明なコマンド: {{command}}',
       no7zip: '7zipがインストールされていません',
       langUsage: '使い方: :lang ja または :lang en',
+      themeUsage: '使い方: :theme dark または :theme light',
     },
     msg: {
       configReloaded: '✅ 設定ファイルを再読み込みしました',
       configCreated: '✅ 設定ファイルを作成しました: {{path}}',
       configExists: 'ℹ️ 設定ファイルはすでに存在します: ~/.config/folio/config.toml',
       langChanged: '🌐 言語を {{lang}} に切り替えました',
+      themeChanged: '🎨 テーマを {{id}} に切り替えました',
       cliInstalled: '✅ インストールしました: /usr/local/bin/folio',
     },
   },

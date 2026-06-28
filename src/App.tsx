@@ -24,6 +24,7 @@ import { useBookmarkStore } from './store/bookmarkStore';
 import { useVimKeys } from './hooks/useVimKeys';
 import { useFileOps } from './hooks/useFileOps';
 import { tauriApi } from './lib/tauri';
+import { applyTheme } from './lib/themes';
 import type { VimAction } from './lib/vim/keymap';
 import './App.css';
 
@@ -63,6 +64,7 @@ export default function App() {
       navigateTo(startupPath ?? home);
     });
 
+    applyTheme(useUiStore.getState().theme);
     loadConfig();
     loadBookmarks().catch(() => {});
     tauriApi.suppressDsStore().catch(() => {});

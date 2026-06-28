@@ -8,6 +8,7 @@ import { useFileStore } from '../../store/fileStore';
 import { useBookmarkStore } from '../../store/bookmarkStore';
 import { useConfigStore } from '../../store/configStore';
 import { tauriApi } from '../../lib/tauri';
+import { THEMES, isValidThemeId } from '../../lib/themes';
 
 interface CommandDef {
   name: string;
@@ -30,10 +31,11 @@ export function CommandPalette() {
     { name: 'reload-config',  desc: t('commandPalette.cmd.reloadConfig') },
     { name: 'clear-storage',  desc: t('commandPalette.cmd.clearStorage') },
     { name: 'lang',           args: '<ja|en>',   desc: t('commandPalette.cmd.lang') },
+    { name: 'theme',          args: `<${THEMES.map((th) => th.id).join('|')}>`, desc: t('commandPalette.cmd.theme') },
     { name: 'install-cli',    desc: t('commandPalette.cmd.installCli') },
   ];
 
-  const { showCommandPalette, setShowCommandPalette, setVimMode, has7zip, setLanguage } =
+  const { showCommandPalette, setShowCommandPalette, setVimMode, has7zip, setLanguage, setTheme } =
     useUiStore();
   const { activeTab, navigateTo, openTab, closeTab, activeTabId } = useTabStore();
   const { loadDir } = useFileStore();
@@ -197,6 +199,17 @@ export function CommandPalette() {
           setLanguage(lang);
           close();
           showStatusMessage(t('commandPalette.msg.langChanged', { lang }));
+          return;
+        }
+        case 'theme': {
+          const id = args[0];
+          if (!id || !isValidThemeId(id)) {
+            setError(t('commandPalette.err.themeUsage'));
+            return;
+          }
+          setTheme(id);
+          close();
+          showStatusMessage(t('commandPalette.msg.themeChanged', { id }));
           return;
         }
         case 'reload-config': {

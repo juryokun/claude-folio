@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { VimMode } from '../types';
 import { setLanguage, type Language } from '../lib/i18n';
 import { tauriApi } from '../lib/tauri';
+import { applyTheme, type ThemeId } from '../lib/themes';
 
 interface UiStore {
   vimMode: VimMode;
@@ -35,11 +36,13 @@ interface UiStore {
   previewWidth: number;
   copyConflict: { conflicts: string[]; onResolve: (strategy: 'overwrite' | 'rename') => void } | null;
   language: Language;
+  theme: ThemeId;
   pendingKey: string | null;
 
   setVimMode: (mode: VimMode) => void;
   setPendingKey: (key: string | null) => void;
   setLanguage: (lang: Language) => void;
+  setTheme: (id: ThemeId) => void;
   setEditorCommand: (cmd: string) => void;
   setTerminalApp: (app: string) => void;
   setTerminalCommand: (cmd: string) => void;
@@ -102,10 +105,12 @@ export const useUiStore = create<UiStore>()(
       previewWidth: 320,
       copyConflict: null,
       language: 'en' as Language,
+      theme: 'dark' as ThemeId,
 
       setVimMode: (mode) => set({ vimMode: mode }),
       setPendingKey: (key) => set({ pendingKey: key }),
       setLanguage: (lang) => { setLanguage(lang); set({ language: lang }); tauriApi.saveLanguage(lang).catch(console.error); },
+      setTheme: (id) => { applyTheme(id); set({ theme: id }); },
       setEditorCommand: (cmd) => set({ editorCommand: cmd }),
       setTerminalApp: (app) => set({ terminalApp: app }),
       setTerminalCommand: (cmd) => set({ terminalCommand: cmd }),
@@ -146,6 +151,7 @@ export const useUiStore = create<UiStore>()(
         columnWidths: s.columnWidths,
         showPreview: s.showPreview,
         previewWidth: s.previewWidth,
+        theme: s.theme,
       }),
     }
   )

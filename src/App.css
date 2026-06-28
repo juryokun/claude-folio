@@ -94,8 +94,7 @@ body {
 .tab-close:hover { background: var(--bg-hover); color: var(--text); }
 .tab-new { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 0 12px; height: 100%; font-size: 18px; }
 .tab-new:hover { color: var(--text); background: var(--bg-hover); }
-.tab-lang-toggle { background: none; border: 1px solid var(--border); border-radius: 3px; color: var(--text-dim); cursor: pointer; padding: 0 7px; height: 20px; font-size: 10px; margin: auto 8px auto auto; letter-spacing: 0.05em; }
-.tab-lang-toggle:hover { color: var(--text); border-color: var(--text-accent); }
+
 
 /* Main area */
 .main-area {
