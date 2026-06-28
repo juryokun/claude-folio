@@ -141,6 +141,10 @@ const ja = {
     history: '履歴',
     placeholders: '{file} {dir} {name} {selected}',
   },
+  fileDate: {
+    today: '今日',
+    yesterday: '昨日',
+  },
   searchBar: {
     placeholder: '検索... (/ で始めると正規表現)',
   },

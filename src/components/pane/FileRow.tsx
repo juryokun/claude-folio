@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { isTauri, tauriApi } from '../../lib/tauri';
 import { useConfigStore } from '../../store/configStore';
 import { useUiStore } from '../../store/uiStore';
@@ -31,7 +32,11 @@ function formatSize(
   return { value, unit: units[i] };
 }
 
-function formatDateParts(ts: number | undefined): { label: string; time: string } {
+function formatDateParts(
+  ts: number | undefined,
+  todayLabel: string,
+  yesterdayLabel: string,
+): { label: string; time: string } {
   if (!ts) return { label: '—', time: '' };
   const d = new Date(ts * 1000);
   const now = new Date();
@@ -49,8 +54,8 @@ function formatDateParts(ts: number | undefined): { label: string; time: string 
     d.getMonth() === yesterday.getMonth() &&
     d.getDate() === yesterday.getDate();
 
-  if (isToday) return { label: '今日', time: hms };
-  if (isYesterday) return { label: '昨日', time: hms };
+  if (isToday) return { label: todayLabel, time: hms };
+  if (isYesterday) return { label: yesterdayLabel, time: hms };
   const date = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
   return { label: date, time: hms };
 }
@@ -117,6 +122,7 @@ export const FileRow = React.memo(function FileRow({
   dragPaths,
   subLabel,
 }: Props) {
+  const { t } = useTranslation();
   const { sizeUnit } = useConfigStore((s) => s.appearance);
   const pendingKey = useUiStore((s) => (isCursor ? s.pendingKey : null));
   return (
@@ -172,7 +178,11 @@ export const FileRow = React.memo(function FileRow({
       </span>
       <span className="file-date" style={{ width: colDateWidth }}>
         {(() => {
-          const { label, time } = formatDateParts(entry.modified);
+          const { label, time } = formatDateParts(
+            entry.modified,
+            t('fileDate.today'),
+            t('fileDate.yesterday'),
+          );
           return (
             <>
               <span className="file-date-label">{label}</span>

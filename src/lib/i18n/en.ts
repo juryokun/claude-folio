@@ -141,6 +141,10 @@ const en = {
     history: 'history',
     placeholders: '{file} {dir} {name} {selected}',
   },
+  fileDate: {
+    today: 'Today',
+    yesterday: 'Yesterday',
+  },
   searchBar: {
     placeholder: 'Search... (prefix / for regex)',
   },
