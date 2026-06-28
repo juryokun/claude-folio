@@ -176,8 +176,22 @@ export const FileRow = React.memo(function FileRow({
         <FileIcon entry={entry} />
         {gitSymbol && (
           <span
-            className={`file-git-badge git-badge-${gitSymbol === '?' ? 'untracked' : gitSymbol === 'M' ? 'modified' : gitSymbol === 'A' ? 'added' : gitSymbol === 'D' ? 'deleted' : 'unmerged'}`}
-          />
+            className={`file-git-badge git-badge-${
+              gitSymbol === '='
+                ? 'clean'
+                : gitSymbol === 'M'
+                  ? 'modified'
+                  : gitSymbol === 'A'
+                    ? 'added'
+                    : gitSymbol === 'D'
+                      ? 'deleted'
+                      : gitSymbol === '?'
+                        ? 'untracked'
+                        : 'unmerged'
+            }`}
+          >
+            {gitSymbol === '=' ? '✓' : gitSymbol === 'M' ? '!' : gitSymbol === 'A' ? '+' : gitSymbol === 'D' ? '×' : gitSymbol === '?' ? '?' : '!'}
+          </span>
         )}
       </span>
       <span className="file-name">
