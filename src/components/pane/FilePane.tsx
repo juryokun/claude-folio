@@ -345,7 +345,6 @@ export function FilePane({ tabId }: Props) {
       <div className="file-list-header">
         <span className="file-select-indicator" />
         <span className="file-icon" />
-        {showGitStatus && <span className="file-git-status" />}
         <span className="file-name header-col sortable" onClick={() => handleSortClick('name')}>
           {t('filePane.colName')}{' '}
           <SortIndicator active={pane.sortKey === 'name'} desc={pane.sortDesc} />
@@ -392,7 +391,7 @@ export function FilePane({ tabId }: Props) {
                 isSelected={pane.selected.has(entry.path)}
                 colSizeWidth={showSize ? columnWidths.size : undefined}
                 dateCols={dateCols}
-                gitSymbol={showGitStatus ? (pane.gitStatus[entry.name] ?? '') : undefined}
+                gitSymbol={showGitStatus ? pane.gitStatus[entry.name] : undefined}
                 subLabel={inFindMode ? path.dirname(entry.path) : undefined}
                 dragPaths={
                   pane.selected.size > 0 && pane.selected.has(entry.path)

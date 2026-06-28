@@ -534,18 +534,29 @@ body {
   text-align: center;
   font-size: 12px;
 }
-.file-git-status {
-  width: 14px;
-  text-align: center;
-  font-size: 11px;
+.file-icon-wrapper {
+  position: relative;
+  width: 16px;
   flex-shrink: 0;
-  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.git-modified  { color: #e5a000; }
-.git-added     { color: #4caf50; }
-.git-deleted   { color: #f44336; }
-.git-untracked { color: #4caf50; }
-.git-unmerged  { color: #e53935; }
+.file-git-badge {
+  position: absolute;
+  bottom: 0px;
+  right: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--bg);
+  pointer-events: none;
+}
+.git-badge-modified  { background: #e5a000; }
+.git-badge-added     { background: #4caf50; }
+.git-badge-deleted   { background: #f44336; }
+.git-badge-untracked { background: #4caf50; }
+.git-badge-unmerged  { background: #e53935; }
 .file-icon.dir {
   filter: sepia(1) saturate(3) hue-rotate(5deg) brightness(0.9);
 }
