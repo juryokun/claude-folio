@@ -61,6 +61,7 @@ export function FilePane({ tabId }: Props) {
   const pane = getPane(tabId);
   const entries = filteredEntries(tabId);
   const isActive = activeTabId === tabId;
+  const inFindMode = !!pane.findMode;
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -186,6 +187,17 @@ export function FilePane({ tabId }: Props) {
           + gap=6 + size=W_s       → sep1 center = W_d+11 + 6 + W_s = W_d+W_s+17 */}
       <div className="col-line" style={{ right: columnWidths.date + columnWidths.size + 17 }} />
       <div className="col-line" style={{ right: columnWidths.date + 11 }} />
+      {pane.findMode && (
+        <div className="find-mode-banner">
+          <span className="find-bar-badge">{pane.findMode.type === 'file' ? 'ff' : 'fd'}</span>
+          <span>{pane.findMode.query}</span>
+          {pane.findMode.loading
+            ? <span className="find-mode-count">検索中…</span>
+            : <span className="find-mode-count">{pane.findMode.results.length}件</span>
+          }
+          <span className="find-mode-hint">Enter で移動 / Esc でクリア</span>
+        </div>
+      )}
       <div className="file-list-header">
         <span className="file-select-indicator" />
         <span className="file-icon" />
@@ -232,6 +244,7 @@ export function FilePane({ tabId }: Props) {
               isSelected={pane.selected.has(entry.path)}
               colSizeWidth={columnWidths.size}
               colDateWidth={columnWidths.date}
+              subLabel={inFindMode ? path.dirname(entry.path) : undefined}
               dragPaths={
                 pane.selected.size > 0 && pane.selected.has(entry.path)
                   ? [...pane.selected]

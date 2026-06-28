@@ -15,6 +15,7 @@ interface Props {
   colSizeWidth: number;
   colDateWidth: number;
   dragPaths: string[];
+  subLabel?: string; // shown dimmed under the filename (e.g. parent path in find mode)
 }
 
 function formatSize(bytes: number, unit: 'binary' | 'decimal'): { value: string; unit: string } | null {
@@ -60,7 +61,7 @@ function FileIcon({ entry }: { entry: FileEntry }) {
 }
 
 export const FileRow = React.memo(function FileRow({
-  entry, isCursor, isSelected, onClick, onDoubleClick, onContextMenu, style, colSizeWidth, colDateWidth, dragPaths,
+  entry, isCursor, isSelected, onClick, onDoubleClick, onContextMenu, style, colSizeWidth, colDateWidth, dragPaths, subLabel,
 }: Props) {
   const { dateFormat, sizeUnit } = useConfigStore((s) => s.appearance);
   const pendingKey = useUiStore((s) => isCursor ? s.pendingKey : null);
@@ -90,6 +91,7 @@ export const FileRow = React.memo(function FileRow({
         {entry.is_symlink && (
           <span className="file-symlink-target"> → {entry.link_target ?? '?'}</span>
         )}
+        {subLabel && <span className="file-sub-label">{subLabel}</span>}
       </span>
       <span className="file-size" style={{ width: colSizeWidth }}>
         {entry.is_dir ? <><span className="file-size-value">—</span><span className="file-size-unit" /></> : (() => {

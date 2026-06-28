@@ -10,7 +10,7 @@ import { useBookmarkStore } from '../store/bookmarkStore';
 export function useFileOps() {
   const { t } = useTranslation();
   const { activeTab, navigateTo } = useTabStore();
-  const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName } =
+  const { getPane, filteredEntries, setClipboard, clipboard, loadDir, setCursor, toggleSelect, setPendingFocusName, clearFind } =
     useFileStore();
   const { showHidden, terminalApp, terminalCommand, setShowRename, setShowNewDir, setShowNewFile, showConfirmDialog, setShowCommandPalette, setVimMode, showStatusMessage, setShowOpenWith, showCopyConflict } =
     useUiStore();
@@ -35,10 +35,20 @@ export function useFileOps() {
   }, [tabId, currentPath, showHidden, loadDir]);
 
   const handleNavigateInto = useCallback(() => {
-    // l / Enter — directories only; files are ignored
-    if (!cursorEntry || !cursorEntry.is_dir) return;
+    if (!cursorEntry) return;
+    const findMode = getPane(tabId).findMode;
+    if (findMode) {
+      // In find mode: navigate to the entry's parent dir and focus the entry
+      const parentDir = cursorEntry.is_dir ? cursorEntry.path : path.dirname(cursorEntry.path);
+      setPendingFocusName(tabId, cursorEntry.name);
+      clearFind(tabId);
+      navigateTo(parentDir);
+      return;
+    }
+    // Normal mode: directories only
+    if (!cursorEntry.is_dir) return;
     navigateTo(cursorEntry.path);
-  }, [cursorEntry, navigateTo]);
+  }, [cursorEntry, tabId, getPane, navigateTo, setPendingFocusName, clearFind]);
 
   const handleNavigateUp = useCallback(() => {
     const parent = path.dirname(currentPath);

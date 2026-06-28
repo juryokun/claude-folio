@@ -62,6 +62,89 @@ const SEVENZIP_CANDIDATES: &[&str] = &[
     "/usr/bin/7z",
 ];
 
+const FD_CANDIDATES: &[&str] = &[
+    "/opt/homebrew/bin/fd",
+    "/usr/local/bin/fd",
+    "/usr/bin/fd",
+];
+
+fn find_fd() -> Option<&'static str> {
+    FD_CANDIDATES.iter().copied().find(|p| std::path::Path::new(p).exists())
+}
+
+#[tauri::command]
+pub fn check_fd_installed() -> bool {
+    find_fd().is_some()
+}
+
+/// Run `fd` with the given pattern and type, returning up to `max_results` FileEntry items.
+/// `fd_type`: "file" | "dir"
+#[tauri::command]
+pub fn search_with_fd(
+    root: String,
+    query: String,
+    fd_type: String,
+) -> Result<Vec<FileEntry>, String> {
+    let fd = find_fd().ok_or("fd is not installed")?;
+
+    let type_flag = match fd_type.as_str() {
+        "dir" => "d",
+        _ => "f",
+    };
+
+    let output = std::process::Command::new(fd)
+        .args([
+            "--type", type_flag,
+            "--max-results", "500",
+            "--color", "never",
+            "--", &query, &root,
+        ])
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut entries: Vec<FileEntry> = stdout
+        .lines()
+        .filter(|l| !l.is_empty())
+        .filter_map(|path_str| {
+            let path = std::path::Path::new(path_str);
+            let meta = path.metadata().ok()?;
+            let name = path.file_name()?.to_string_lossy().to_string();
+            let is_symlink = path.symlink_metadata().map(|m| m.file_type().is_symlink()).unwrap_or(false);
+            let link_target = if is_symlink {
+                std::fs::read_link(path).ok().map(|t| t.to_string_lossy().to_string())
+            } else {
+                None
+            };
+            let extension = if meta.is_dir() {
+                None
+            } else {
+                path.extension().map(|e| e.to_string_lossy().to_string())
+            };
+            Some(FileEntry {
+                name,
+                path: path_str.to_string(),
+                is_dir: meta.is_dir(),
+                size: if meta.is_file() { meta.len() } else { 0 },
+                modified: meta.modified().ok().map(|t| {
+                    t.duration_since(SystemTime::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+                }),
+                is_symlink,
+                link_target,
+                extension,
+            })
+        })
+        .collect();
+
+    // dirs first, then alphabetical
+    entries.sort_by(|a, b| {
+        if a.is_dir != b.is_dir { return if a.is_dir { std::cmp::Ordering::Less } else { std::cmp::Ordering::Greater }; }
+        a.name.to_lowercase().cmp(&b.name.to_lowercase())
+    });
+
+    Ok(entries)
+}
+
 fn find_7zip() -> Option<&'static str> {
     SEVENZIP_CANDIDATES.iter().copied().find(|p| std::path::Path::new(p).exists())
 }

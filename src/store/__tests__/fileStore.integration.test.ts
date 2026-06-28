@@ -34,6 +34,7 @@ function resetPane() {
         pendingFocusName: null,
         sortKey: 'name',
         sortDesc: false,
+        findMode: null,
       },
     },
     clipboard: null,

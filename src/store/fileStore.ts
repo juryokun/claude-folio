@@ -6,6 +6,13 @@ import { parseFilterQuery, matchesFilter } from '../lib/searchFilter';
 
 export type SortKey = 'name' | 'time';
 
+export interface FindMode {
+  query: string;
+  type: 'file' | 'dir';
+  results: FileEntry[];
+  loading: boolean;
+}
+
 interface PaneState {
   entries: FileEntry[];
   loading: boolean;
@@ -16,6 +23,7 @@ interface PaneState {
   pendingFocusName: string | null; // entry name to focus after next load
   sortKey: SortKey;
   sortDesc: boolean;
+  findMode: FindMode | null;
 }
 
 interface FileStore {
@@ -32,6 +40,8 @@ interface FileStore {
   setSort: (tabId: string, key: SortKey, desc: boolean) => void;
   setClipboard: (state: ClipboardState | null) => void;
   filteredEntries: (tabId: string) => FileEntry[];
+  startFind: (tabId: string, query: string, type: 'file' | 'dir', root: string) => Promise<void>;
+  clearFind: (tabId: string) => void;
 }
 
 const defaultPane = (): PaneState => ({
@@ -44,6 +54,7 @@ const defaultPane = (): PaneState => ({
   pendingFocusName: null,
   sortKey: 'name',
   sortDesc: false,
+  findMode: null,
 });
 
 export const useFileStore = create<FileStore>((set, get) => ({
@@ -193,6 +204,10 @@ export const useFileStore = create<FileStore>((set, get) => ({
 
   filteredEntries: (tabId) => {
     const pane = get().panes[tabId] ?? defaultPane();
+
+    // Find mode: return results directly (already sorted by Rust)
+    if (pane.findMode) return pane.findMode.results;
+
     const filter = parseFilterQuery(pane.filterQuery);
     let entries = filter
       ? pane.entries.filter((e) => matchesFilter(e.name, filter))
@@ -200,7 +215,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
 
     const { sortKey, sortDesc } = pane;
     entries = [...entries].sort((a, b) => {
-      // Directories always first
       if (a.is_dir !== b.is_dir) return a.is_dir ? -1 : 1;
       let cmp = 0;
       if (sortKey === 'name') {
@@ -211,5 +225,31 @@ export const useFileStore = create<FileStore>((set, get) => ({
       return sortDesc ? -cmp : cmp;
     });
     return entries;
+  },
+
+  startFind: async (tabId, query, type, root) => {
+    set((s) => {
+      const pane = s.panes[tabId] ?? defaultPane();
+      return { panes: { ...s.panes, [tabId]: { ...pane, findMode: { query, type, results: [], loading: true }, cursor: 0 } } };
+    });
+    try {
+      const results = await tauriApi.searchWithFd(root, query, type);
+      set((s) => {
+        const pane = s.panes[tabId] ?? defaultPane();
+        return { panes: { ...s.panes, [tabId]: { ...pane, findMode: { query, type, results, loading: false }, cursor: 0 } } };
+      });
+    } catch (e) {
+      set((s) => {
+        const pane = s.panes[tabId] ?? defaultPane();
+        return { panes: { ...s.panes, [tabId]: { ...pane, findMode: { query, type, results: [], loading: false } } } };
+      });
+    }
+  },
+
+  clearFind: (tabId) => {
+    set((s) => {
+      const pane = s.panes[tabId] ?? defaultPane();
+      return { panes: { ...s.panes, [tabId]: { ...pane, findMode: null, cursor: 0 } } };
+    });
   },
 }));

@@ -6,6 +6,7 @@ import { FilePane } from './components/pane/FilePane';
 import { PathBar } from './components/pane/PathBar';
 import { StatusBar } from './components/pane/StatusBar';
 import { SearchBar } from './components/search/SearchBar';
+import { FindBar } from './components/search/FindBar';
 import { RenameModal } from './components/modals/RenameModal';
 import { NewDirModal } from './components/modals/NewDirModal';
 import { NewFileModal } from './components/modals/NewFileModal';
@@ -38,10 +39,10 @@ async function getHomeDir(): Promise<string> {
 export default function App() {
   const { tabs, activeTab, navigateTo, openTab, closeTab, nextTab, prevTab, activeTabId, goBack, goForward } =
     useTabStore();
-  const { loadDir, setCursor, getPane, filteredEntries, setSort } = useFileStore();
+  const { loadDir, setCursor, getPane, filteredEntries, setSort, clearFind } = useFileStore();
   const {
     showHidden, toggleHidden, setShowHelp, setVimMode, toggleSidebar, showSidebar,
-    showPreview, togglePreview,
+    showPreview, togglePreview, openFind,
   } = useUiStore();
 
   const fileOps = useFileOps();
@@ -67,6 +68,7 @@ export default function App() {
     tauriApi.suppressDsStore().catch(() => {});
     tauriApi.check7zipInstalled().then(useUiStore.getState().setHas7zip).catch(() => {});
     tauriApi.checkZoxideInstalled().then(useUiStore.getState().setHasZoxide).catch(() => {});
+    tauriApi.checkFdInstalled().then(useUiStore.getState().setHasFd).catch(() => {});
 
     // When a second CLI launch targets this already-running instance, open a new tab.
     const unlisten = listen<string | null>('folio:open-tab', (event) => {
@@ -234,6 +236,12 @@ export default function App() {
         case 'toggle_preview':
           togglePreview();
           break;
+        case 'find_files':
+          openFind('file');
+          break;
+        case 'find_dirs':
+          openFind('dir');
+          break;
         case 'sort_name':
           setSort(activeTabId, 'name', false);
           break;
@@ -265,6 +273,8 @@ export default function App() {
       if (e.key === 'Escape' && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
         setVimMode('NORMAL');
         setShowHelp(false);
+        const tab = useTabStore.getState().activeTab();
+        clearFind(tab.id);
         useFileStore.getState().setClipboard(null);
       }
     };
@@ -291,6 +301,7 @@ export default function App() {
             ))}
           </div>
           <SearchBar />
+          <FindBar />
           <StatusBar />
         </div>
         {showPreview && <PreviewPanel />}

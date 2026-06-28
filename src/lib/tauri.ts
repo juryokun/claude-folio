@@ -61,6 +61,12 @@ export const tauriApi = {
   listDirCompletions: (partial: string) =>
     invoke<string[]>('list_dir_completions', { partial }),
 
+  checkFdInstalled: () =>
+    invoke<boolean>('check_fd_installed'),
+
+  searchWithFd: (root: string, query: string, fdType: 'file' | 'dir') =>
+    invoke<FileEntry[]>('search_with_fd', { root, query, fdType }),
+
   detectGoogleDrive: () =>
     invoke<string[]>('detect_google_drive'),
 

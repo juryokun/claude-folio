@@ -42,7 +42,9 @@ export type VimAction =
   | 'sort_reverse'
   | 'reload'
   | 'open_bookmark_picker'
-  | 'toggle_preview';
+  | 'toggle_preview'
+  | 'find_files'
+  | 'find_dirs';
 
 export interface KeyBinding {
   keys: string[]; // sequence of key names
@@ -91,6 +93,8 @@ export const NORMAL_KEYMAP: KeyBinding[] = [
   { keys: ['B'],         action: 'add_bookmark' },
   { keys: ['b'],         action: 'open_bookmark_picker' },
   { keys: ['P'],         action: 'toggle_preview' },
+  { keys: ['f', 'f'],   action: 'find_files' },
+  { keys: ['f', 'd'],   action: 'find_dirs' },
   { keys: ['s', 'n'],   action: 'sort_name' },
   { keys: ['s', 'N'],   action: 'sort_name_desc' },
   { keys: ['s', 't'],   action: 'sort_time' },
@@ -137,6 +141,8 @@ export const KEYBINDING_DOCS: Array<{ keys: string; description: string }> = [
   { keys: 'b',               description: 'ブックマーク検索（パスバー）' },
   { keys: 'P',               description: 'プレビューパネルの表示切替' },
   { keys: 'B',               description: '現在のディレクトリをブックマークに追加' },
+  { keys: 'ff',              description: 'fd でファイルを再帰検索' },
+  { keys: 'fd',              description: 'fd でディレクトリを再帰検索' },
   { keys: 'sn',              description: '名前でソート（昇順）' },
   { keys: 'sN',              description: '名前でソート（降順）' },
   { keys: 'st',              description: '更新日時でソート（昇順）' },

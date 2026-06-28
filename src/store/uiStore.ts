@@ -20,6 +20,9 @@ interface UiStore {
   openWithTarget: string | null;
   has7zip: boolean;
   hasZoxide: boolean;
+  hasFd: boolean;
+  showFind: boolean;
+  findType: 'file' | 'dir';
   terminalApp: string;
   terminalCommand: string;
   googleDrivePaths: string[];
@@ -53,6 +56,9 @@ interface UiStore {
   setShowOpenWith: (v: boolean, target?: string) => void;
   setHas7zip: (v: boolean) => void;
   setHasZoxide: (v: boolean) => void;
+  setHasFd: (v: boolean) => void;
+  openFind: (type: 'file' | 'dir') => void;
+  closeFind: () => void;
   setGoogleDrivePaths: (paths: string[]) => void;
   setSidebarWidth: (w: number) => void;
   setColumnWidths: (w: Partial<{ size: number; date: number }>) => void;
@@ -81,6 +87,9 @@ export const useUiStore = create<UiStore>()(
       openWithTarget: null,
       has7zip: false,
       hasZoxide: false,
+      hasFd: false,
+      showFind: false,
+      findType: 'file' as 'file' | 'dir',
       terminalApp: '',
       terminalCommand: '',
       googleDrivePaths: [],
@@ -117,6 +126,9 @@ export const useUiStore = create<UiStore>()(
       setShowOpenWith: (v, target) => set({ showOpenWith: v, openWithTarget: target ?? null }),
       setHas7zip: (v) => set({ has7zip: v }),
       setHasZoxide: (v) => set({ hasZoxide: v }),
+      setHasFd: (v) => set({ hasFd: v }),
+      openFind: (type) => set({ showFind: true, findType: type }),
+      closeFind: () => set({ showFind: false }),
       setGoogleDrivePaths: (paths) => set({ googleDrivePaths: paths }),
       setSidebarWidth: (w) => set({ sidebarWidth: w }),
       setColumnWidths: (w) => set((s) => ({ columnWidths: { ...s.columnWidths, ...w } })),
