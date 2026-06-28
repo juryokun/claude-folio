@@ -367,13 +367,13 @@ export function CommandPalette() {
   const ime = useImeAwareEnter(() => runCommand_(input));
 
   const selectCmdCandidate = useCallback(
-    (cmd: CommandDef) => {
+    (cmd: CommandDef, execute = true) => {
       const suffix = cmd.args ? ' ' : '';
       const newInput = `:${cmd.name}${suffix}`;
       setInput(newInput);
       setCycleIndex(-1);
       inputRef.current?.focus();
-      if (!cmd.args) runCommand_(newInput);
+      if (execute && !cmd.args) runCommand_(newInput);
     },
     [runCommand_],
   );
@@ -440,7 +440,7 @@ export function CommandPalette() {
       e.preventDefault();
       if (cmdCandidates.length > 0) {
         if (cmdCandidates.length === 1) {
-          selectCmdCandidate(cmdCandidates[0]);
+          selectCmdCandidate(cmdCandidates[0], false);
         } else {
           const next = (cycleIndex + 1) % cmdCandidates.length;
           setCycleIndex(next);
