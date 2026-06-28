@@ -300,13 +300,13 @@ body {
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   font-size: 11px;
-  color: var(--text-dim);
+  color: var(--text);
   user-select: none;
 }
 
 .header-col { font-weight: 600; }
 .sortable { cursor: pointer; }
-.sortable:hover { color: var(--text); }
+.sortable:hover { color: var(--text-accent); }
 .sort-indicator { margin-left: 2px; font-size: 10px; }
 .sort-indicator.active { color: var(--text-accent); }
 .sort-indicator.inactive { opacity: 0.3; }
@@ -360,10 +360,10 @@ body {
 .file-icon { width: 20px; text-align: center; font-size: 14px; }
 .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-symlink-target { opacity: 0.5; font-size: 0.9em; }
-.file-size { display: flex; align-items: center; color: var(--text-dim); font-size: 11px; flex-shrink: 0; overflow: hidden; font-family: monospace; }
+.file-size { display: flex; align-items: center; color: var(--text); font-size: 11px; flex-shrink: 0; overflow: hidden; font-family: monospace; }
 .file-size-value { text-align: right; min-width: 4.5em; }
 .file-size-unit { text-align: left; padding-left: 0.3em; min-width: 3em; }
-.file-date { text-align: left; color: var(--text-dim); font-size: 11px; flex-shrink: 0; overflow: hidden; font-family: monospace; }
+.file-date { text-align: left; color: var(--text); font-size: 11px; flex-shrink: 0; overflow: hidden; font-family: monospace; }
 .file-prefix-badge { margin-left: 6px; padding: 1px 5px; background: var(--text-accent); color: var(--bg); font-size: 10px; font-family: monospace; border-radius: 3px; opacity: 0.85; flex-shrink: 0; }
 
 /* Search bar */
