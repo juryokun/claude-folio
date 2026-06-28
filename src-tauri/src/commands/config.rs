@@ -3,15 +3,10 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppearanceConfig {
-    #[serde(default = "default_date_format")]
-    pub date_format: String,
     #[serde(default = "default_size_unit")]
     pub size_unit: String,
 }
 
-fn default_date_format() -> String {
-    "%Y/%m/%d %H:%M:%S".to_string()
-}
 fn default_size_unit() -> String {
     "binary".to_string()
 }
@@ -19,7 +14,6 @@ fn default_size_unit() -> String {
 impl Default for AppearanceConfig {
     fn default() -> Self {
         Self {
-            date_format: "%Y/%m/%d %H:%M:%S".to_string(),
             size_unit: "binary".to_string(),
         }
     }
@@ -212,7 +206,7 @@ mod tests {
 
     #[test]
     fn replace_language_line_appends_if_missing() {
-        let input = "[appearance]\ndate_format = \"%Y/%m/%d\"\n";
+        let input = "[appearance]\nsize_unit = \"binary\"\n";
         let result = replace_language_line(input, "ja");
         assert!(result.contains("language = \"ja\""));
         assert!(result.contains("[appearance]"));

@@ -347,14 +347,14 @@ mod integration_tests {
 
         fs::write(
             &path,
-            "[appearance]\ndate_format = \"%Y-%m-%d\"\nlanguage = \"ja\"\n",
+            "[appearance]\nsize_unit = \"binary\"\nlanguage = \"ja\"\n",
         )
         .unwrap();
         save_language_to(&path, "en").unwrap();
 
         let content = fs::read_to_string(&path).unwrap();
         assert!(
-            content.contains("date_format"),
+            content.contains("size_unit"),
             "appearance セクションが保持されていること"
         );
         assert!(
