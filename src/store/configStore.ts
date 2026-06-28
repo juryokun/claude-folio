@@ -15,7 +15,7 @@ export interface AppearanceConfig {
   dateCreated: DateColumnConfig;
   dateAccessed: DateColumnConfig;
   gitStatus: { show: boolean };
-  sizeUnit: 'binary' | 'decimal';
+  size: { show: boolean; unit: 'binary' | 'decimal' };
 }
 
 /** Config-time shape of a visible date column (no width — that's UI state) */
@@ -62,7 +62,7 @@ const DEFAULT_APPEARANCE: AppearanceConfig = {
   dateCreated: { show: false, format: 'auto' },
   dateAccessed: { show: false, format: 'auto' },
   gitStatus: { show: true },
-  sizeUnit: 'binary',
+  size: { show: true, unit: 'binary' },
 };
 
 function buildVisibleDateCols(appearance: AppearanceConfig): VisibleDateCol[] {
@@ -96,12 +96,13 @@ export const useConfigStore = create<ConfigStore>((set) => ({
         return { show: v?.show ?? defaultShow, format: v?.format ?? 'auto' };
       };
       const gs = ra?.git_status as { show?: boolean } | undefined;
+      const sz = ra?.size as { show?: boolean; unit?: string } | undefined;
       const appearance: AppearanceConfig = {
         dateModified: parseDateCol('date_modified', true),
         dateCreated: parseDateCol('date_created', false),
         dateAccessed: parseDateCol('date_accessed', false),
         gitStatus: { show: gs?.show ?? true },
-        sizeUnit: ((ra?.size_unit as string) ?? 'binary') as 'binary' | 'decimal',
+        size: { show: sz?.show ?? true, unit: (sz?.unit ?? 'binary') as 'binary' | 'decimal' },
       };
       const keymap = buildKeymap(raw.keymap ?? {});
       const favorites = (raw.sidebar?.favorites ?? DEFAULT_FAVORITES) as FavoriteKey[];

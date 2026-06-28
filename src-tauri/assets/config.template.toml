@@ -47,10 +47,12 @@ format = "auto"
 [appearance.git_status]
 show = true
 
-# File size unit
+# File size column
+[appearance.size]
+show = true
 #   "binary"  → KiB / MiB / GiB (1024-based)
 #   "decimal" → KB / MB / GB  (1000-based)
-size_unit = "binary"
+unit = "binary"
 
 # -------------------------
 # Editor

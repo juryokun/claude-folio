@@ -19,7 +19,7 @@ interface Props {
   onDoubleClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
   style?: React.CSSProperties;
-  colSizeWidth: number;
+  colSizeWidth?: number;
   dateCols: DateColDef[];
   dragPaths: string[];
   subLabel?: string;
@@ -149,7 +149,7 @@ export const FileRow = React.memo(function FileRow({
   gitSymbol,
 }: Props) {
   const { t } = useTranslation();
-  const sizeUnit = useConfigStore((s) => s.appearance.sizeUnit);
+  const sizeUnit = useConfigStore((s) => s.appearance.size.unit);
   const rawPendingKey = useUiStore((s) => s.pendingKey);
   const pendingKey = isCursor ? rawPendingKey : null;
   return (
@@ -187,29 +187,31 @@ export const FileRow = React.memo(function FileRow({
         )}
         {subLabel && <span className="file-sub-label">{subLabel}</span>}
       </span>
-      <span className="file-size" style={{ width: colSizeWidth }}>
-        {entry.is_dir ? (
-          <>
-            <span className="file-size-value">—</span>
-            <span className="file-size-unit" />
-          </>
-        ) : (
-          (() => {
-            const s = formatSize(entry.size, sizeUnit);
-            return s ? (
-              <>
-                <span className="file-size-value">{s.value}</span>
-                <span className="file-size-unit">{s.unit}</span>
-              </>
-            ) : (
-              <>
-                <span className="file-size-value">0</span>
-                <span className="file-size-unit">B</span>
-              </>
-            );
-          })()
-        )}
-      </span>
+      {colSizeWidth !== undefined && (
+        <span className="file-size" style={{ width: colSizeWidth }}>
+          {entry.is_dir ? (
+            <>
+              <span className="file-size-value">—</span>
+              <span className="file-size-unit" />
+            </>
+          ) : (
+            (() => {
+              const s = formatSize(entry.size, sizeUnit);
+              return s ? (
+                <>
+                  <span className="file-size-value">{s.value}</span>
+                  <span className="file-size-unit">{s.unit}</span>
+                </>
+              ) : (
+                <>
+                  <span className="file-size-value">0</span>
+                  <span className="file-size-unit">B</span>
+                </>
+              );
+            })()
+          )}
+        </span>
+      )}
       {dateCols.map((col) => {
         const ts =
           col.key === 'created'

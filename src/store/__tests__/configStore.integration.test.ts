@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../lib/tauri', () => ({
   tauriApi: { loadConfig: vi.fn() },
@@ -23,9 +23,9 @@ vi.mock('../uiStore', () => ({
   },
 }));
 
-import { useConfigStore } from '../configStore';
 import { tauriApi } from '../../lib/tauri';
 import { NORMAL_KEYMAP } from '../../lib/vim/keymap';
+import { useConfigStore } from '../configStore';
 
 const mockLoadConfig = vi.mocked(tauriApi.loadConfig);
 
@@ -46,9 +46,12 @@ function resetStore() {
       dateModified: { show: true, format: 'auto' },
       dateCreated: { show: false, format: 'auto' },
       dateAccessed: { show: false, format: 'auto' },
-      sizeUnit: 'binary',
+      gitStatus: { show: true },
+      size: { show: true, unit: 'binary' },
     },
-    visibleDateCols: [{ key: 'modified', format: 'auto', colKey: 'date', labelKey: 'filePane.colDate' }],
+    visibleDateCols: [
+      { key: 'modified', format: 'auto', colKey: 'date', labelKey: 'filePane.colDate' },
+    ],
     keymap: NORMAL_KEYMAP,
     favorites: DEFAULT_FAVORITES as ReturnType<typeof useConfigStore.getState>['favorites'],
     loaded: false,
@@ -73,7 +76,7 @@ describe('configStore 統合テスト', () => {
       await useConfigStore.getState().load();
       const state = useConfigStore.getState();
       expect(state.loaded).toBe(true);
-      expect(state.appearance.sizeUnit).toBe('binary');
+      expect(state.appearance.size.unit).toBe('binary');
     });
 
     it('load 後に loaded フラグが true になる', async () => {
@@ -92,16 +95,22 @@ describe('configStore 統合テスト', () => {
   // ── appearance 設定 ────────────────────────────────────────────────────────
 
   describe('load() — appearance', () => {
-    it('size_unit "decimal" を反映する', async () => {
-      mockLoadConfig.mockResolvedValue({ appearance: { size_unit: 'decimal' } });
+    it('size.unit "decimal" を反映する', async () => {
+      mockLoadConfig.mockResolvedValue({ appearance: { size: { unit: 'decimal' } } });
       await useConfigStore.getState().load();
-      expect(useConfigStore.getState().appearance.sizeUnit).toBe('decimal');
+      expect(useConfigStore.getState().appearance.size.unit).toBe('decimal');
     });
 
-    it('size_unit が未指定の場合は "binary" のまま', async () => {
+    it('size が未指定の場合は unit "binary" のまま', async () => {
       mockLoadConfig.mockResolvedValue({ appearance: {} });
       await useConfigStore.getState().load();
-      expect(useConfigStore.getState().appearance.sizeUnit).toBe('binary');
+      expect(useConfigStore.getState().appearance.size.unit).toBe('binary');
+    });
+
+    it('size.show=false で size 列が非表示になる', async () => {
+      mockLoadConfig.mockResolvedValue({ appearance: { size: { show: false } } });
+      await useConfigStore.getState().load();
+      expect(useConfigStore.getState().appearance.size.show).toBe(false);
     });
 
     it('date_modified.show=true のとき visibleDateCols に modified が含まれる', async () => {

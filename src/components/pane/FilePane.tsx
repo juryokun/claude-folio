@@ -36,6 +36,7 @@ export function FilePane({ tabId }: Props) {
   const { showHidden, columnWidths, setColumnWidths } = useUiStore();
   const visibleDateCols = useConfigStore((s) => s.visibleDateCols);
   const showGitStatus = useConfigStore((s) => s.appearance.gitStatus.show);
+  const showSize = useConfigStore((s) => s.appearance.size.show);
   const fileOps = useFileOps();
   const { terminalApp, terminalCommand, showStatusMessage } = useUiStore();
   const { addBookmark } = useBookmarkStore();
@@ -316,7 +317,10 @@ export function FilePane({ tabId }: Props) {
       onDrop={handleDrop}
     >
       {/* Full-height separator lines */}
-      <div className="col-line" style={{ right: totalDateWidth + columnWidths.size + 17 }} />
+      <div
+        className="col-line"
+        style={{ right: totalDateWidth + (showSize ? columnWidths.size : 0) + 17 }}
+      />
       {dateCols.map((col, i) => (
         <div
           key={col.key}
@@ -346,10 +350,12 @@ export function FilePane({ tabId }: Props) {
           {t('filePane.colName')}{' '}
           <SortIndicator active={pane.sortKey === 'name'} desc={pane.sortDesc} />
         </span>
-        <span className="file-size header-col" style={{ width: columnWidths.size }}>
-          {t('filePane.colSize')}
-          <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'size')} />
-        </span>
+        {showSize && (
+          <span className="file-size header-col" style={{ width: columnWidths.size }}>
+            {t('filePane.colSize')}
+            <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'size')} />
+          </span>
+        )}
         {dateCols.map((col) => (
           <span
             key={col.key}
@@ -384,7 +390,7 @@ export function FilePane({ tabId }: Props) {
                 entry={entry}
                 isCursor={isActive && vItem.index === pane.cursor}
                 isSelected={pane.selected.has(entry.path)}
-                colSizeWidth={columnWidths.size}
+                colSizeWidth={showSize ? columnWidths.size : undefined}
                 dateCols={dateCols}
                 gitSymbol={showGitStatus ? pane.gitStatus[entry.name] : undefined}
                 subLabel={inFindMode ? path.dirname(entry.path) : undefined}
