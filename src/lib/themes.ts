@@ -32,6 +32,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#4fc1ff',
       '--border': '#3c3c3c',
       '--cursor-bg': '#264f78',
+      '--stripe': 'rgba(255, 255, 255, 0.03)',
     },
   },
   {
@@ -48,6 +49,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#0066cc',
       '--border': '#d4d4d4',
       '--cursor-bg': '#b3d4f5',
+      '--stripe': 'rgba(0, 0, 0, 0.04)',
     },
   },
   {
@@ -64,6 +66,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#e6db74',
       '--border': '#3e3d32',
       '--cursor-bg': '#49483e',
+      '--stripe': 'rgba(255, 255, 255, 0.03)',
     },
   },
   {
@@ -80,6 +83,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#88c0d0',
       '--border': '#434c5e',
       '--cursor-bg': '#4c566a',
+      '--stripe': 'rgba(255, 255, 255, 0.03)',
     },
   },
   {
@@ -96,6 +100,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#bd93f9',
       '--border': '#44475a',
       '--cursor-bg': '#44475a',
+      '--stripe': 'rgba(255, 255, 255, 0.03)',
     },
   },
   {
@@ -112,6 +117,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#fabd2f',
       '--border': '#3c3836',
       '--cursor-bg': '#504945',
+      '--stripe': 'rgba(255, 255, 255, 0.03)',
     },
   },
   {
@@ -128,6 +134,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#ff3333',
       '--border': '#1a1f29',
       '--cursor-bg': '#3d1f1f',
+      '--stripe': 'rgba(255, 255, 255, 0.03)',
     },
   },
   {
@@ -144,6 +151,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#268bd2',
       '--border': '#d1cbb8',
       '--cursor-bg': '#b3d4df',
+      '--stripe': 'rgba(0, 0, 0, 0.04)',
     },
   },
   {
@@ -160,6 +168,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#e45649',
       '--border': '#d3d3d3',
       '--cursor-bg': '#f0d0d0',
+      '--stripe': 'rgba(0, 0, 0, 0.04)',
     },
   },
   {
@@ -176,6 +185,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#1e66f5',
       '--border': '#ccd0da',
       '--cursor-bg': '#bcc5e8',
+      '--stripe': 'rgba(0, 0, 0, 0.04)',
     },
   },
   {
@@ -192,6 +202,7 @@ export const THEMES: Theme[] = [
       '--text-accent': '#005f87',
       '--border': '#cccccc',
       '--cursor-bg': '#b0cfe0',
+      '--stripe': 'rgba(0, 0, 0, 0.04)',
     },
   },
 ];

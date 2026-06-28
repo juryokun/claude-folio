@@ -1,15 +1,15 @@
-import { useRef, useEffect, useCallback, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import path from 'path-browserify';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { FileRow } from './FileRow';
-import { ContextMenu } from './ContextMenu';
-import { useTabStore } from '../../store/tabStore';
-import { useFileStore, type SortKey } from '../../store/fileStore';
-import { useUiStore } from '../../store/uiStore';
-import { useBookmarkStore } from '../../store/bookmarkStore';
+import path from 'path-browserify';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFileOps } from '../../hooks/useFileOps';
 import { tauriApi } from '../../lib/tauri';
+import { useBookmarkStore } from '../../store/bookmarkStore';
+import { type SortKey, useFileStore } from '../../store/fileStore';
+import { useTabStore } from '../../store/tabStore';
+import { useUiStore } from '../../store/uiStore';
+import { ContextMenu } from './ContextMenu';
+import { FileRow } from './FileRow';
 
 interface Props {
   tabId: string;
@@ -44,7 +44,8 @@ export function FilePane({ tabId }: Props) {
       const startX = e.clientX;
       const startWidth = columnWidths[col];
       const onMove = (ev: MouseEvent) => {
-        setColumnWidths({ [col]: Math.max(40, startWidth - (ev.clientX - startX)) });
+        const minWidth = col === 'size' ? 80 : 80;
+        setColumnWidths({ [col]: Math.max(minWidth, startWidth - (ev.clientX - startX)) });
       };
       const onUp = () => {
         window.removeEventListener('mousemove', onMove);
@@ -71,7 +72,7 @@ export function FilePane({ tabId }: Props) {
   const virtualizer = useVirtualizer({
     count: entries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 32,
+    estimateSize: () => 22,
     overscan: 10,
   });
 
