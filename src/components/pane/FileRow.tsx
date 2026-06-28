@@ -1,8 +1,8 @@
 import React from 'react';
-import type { FileEntry } from '../../types';
 import { isTauri, tauriApi } from '../../lib/tauri';
 import { useConfigStore } from '../../store/configStore';
 import { useUiStore } from '../../store/uiStore';
+import type { FileEntry } from '../../types';
 
 interface Props {
   entry: FileEntry;
@@ -32,8 +32,7 @@ function formatSize(
 }
 
 /** Minimal strftime-like formatter: %Y %m %d %H %M %S */
-function formatDate(ts: number | undefined, fmt: string): string {
-  if (!ts) return '—';
+function applyDateFormat(ts: number, fmt: string): string {
   const d = new Date(ts * 1000);
   return fmt
     .replace('%Y', String(d.getFullYear()))
@@ -42,6 +41,17 @@ function formatDate(ts: number | undefined, fmt: string): string {
     .replace('%H', String(d.getHours()).padStart(2, '0'))
     .replace('%M', String(d.getMinutes()).padStart(2, '0'))
     .replace('%S', String(d.getSeconds()).padStart(2, '0'));
+}
+
+// Strip time tokens (%H, %M, %S and surrounding separators) to get date-only format
+function dateOnlyFormat(fmt: string): string {
+  return fmt.replace(/\s*[^ ]*%[HMS][^ ]*/g, '').trim();
+}
+
+function formatDate(ts: number | undefined, fmt: string, dateOnly = false): string {
+  if (!ts) return '—';
+  const f = dateOnly ? dateOnlyFormat(fmt) : fmt;
+  return applyDateFormat(ts, f);
 }
 
 function FileIcon({ entry }: { entry: FileEntry }) {
@@ -160,7 +170,7 @@ export const FileRow = React.memo(function FileRow({
         )}
       </span>
       <span className="file-date" style={{ width: colDateWidth }}>
-        {formatDate(entry.modified, dateFormat)}
+        {formatDate(entry.modified, dateFormat, colDateWidth < 120)}
       </span>
       {pendingKey && <span className="file-prefix-badge">{pendingKey} ▸</span>}
     </div>
