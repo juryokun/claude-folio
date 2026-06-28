@@ -31,27 +31,28 @@ function formatSize(
   return { value, unit: units[i] };
 }
 
-/** Minimal strftime-like formatter: %Y %m %d %H %M %S */
-function applyDateFormat(ts: number, fmt: string): string {
+function formatDateParts(ts: number | undefined): { label: string; time: string } {
+  if (!ts) return { label: '—', time: '' };
   const d = new Date(ts * 1000);
-  return fmt
-    .replace('%Y', String(d.getFullYear()))
-    .replace('%m', String(d.getMonth() + 1).padStart(2, '0'))
-    .replace('%d', String(d.getDate()).padStart(2, '0'))
-    .replace('%H', String(d.getHours()).padStart(2, '0'))
-    .replace('%M', String(d.getMinutes()).padStart(2, '0'))
-    .replace('%S', String(d.getSeconds()).padStart(2, '0'));
-}
+  const now = new Date();
+  const hms = [d.getHours(), d.getMinutes(), d.getSeconds()]
+    .map((n) => String(n).padStart(2, '0'))
+    .join(':');
+  const isToday =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday =
+    d.getFullYear() === yesterday.getFullYear() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getDate() === yesterday.getDate();
 
-// Strip time tokens (%H, %M, %S and surrounding separators) to get date-only format
-function dateOnlyFormat(fmt: string): string {
-  return fmt.replace(/\s*[^ ]*%[HMS][^ ]*/g, '').trim();
-}
-
-function formatDate(ts: number | undefined, fmt: string, dateOnly = false): string {
-  if (!ts) return '—';
-  const f = dateOnly ? dateOnlyFormat(fmt) : fmt;
-  return applyDateFormat(ts, f);
+  if (isToday) return { label: '今日', time: hms };
+  if (isYesterday) return { label: '昨日', time: hms };
+  const date = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+  return { label: date, time: hms };
 }
 
 function FileIcon({ entry }: { entry: FileEntry }) {
@@ -116,7 +117,7 @@ export const FileRow = React.memo(function FileRow({
   dragPaths,
   subLabel,
 }: Props) {
-  const { dateFormat, sizeUnit } = useConfigStore((s) => s.appearance);
+  const { sizeUnit } = useConfigStore((s) => s.appearance);
   const pendingKey = useUiStore((s) => (isCursor ? s.pendingKey : null));
   return (
     <div
@@ -170,7 +171,15 @@ export const FileRow = React.memo(function FileRow({
         )}
       </span>
       <span className="file-date" style={{ width: colDateWidth }}>
-        {formatDate(entry.modified, dateFormat, colDateWidth < 120)}
+        {(() => {
+          const { label, time } = formatDateParts(entry.modified);
+          return (
+            <>
+              <span className="file-date-label">{label}</span>
+              {time && <span className="file-date-time">{time}</span>}
+            </>
+          );
+        })()}
       </span>
       {pendingKey && <span className="file-prefix-badge">{pendingKey} ▸</span>}
     </div>

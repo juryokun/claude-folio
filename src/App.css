@@ -570,12 +570,24 @@ body {
   min-width: 3em;
 }
 .file-date {
-  text-align: left;
+  display: flex;
+  align-items: center;
   color: var(--text);
   font-size: 12px;
   flex-shrink: 0;
   overflow: hidden;
   font-family: monospace;
+  gap: 4px;
+}
+.file-date-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-date-time {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .file-prefix-badge {
   margin-left: 6px;
