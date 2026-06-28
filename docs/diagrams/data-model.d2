@@ -1,0 +1,84 @@
+direction: down
+
+# ── コアエンティティ ─────────────────────────────────────────
+
+fileEntry: FileEntry {
+  shape: class
+  name: string
+  path: string
+  is_dir: boolean
+  is_symlink: boolean
+  "link_target?": string
+  size: number
+  "modified?": number
+  "extension?": string
+}
+
+tab: Tab {
+  shape: class
+  id: string
+  path: string
+  history: "string[]"
+  historyIndex: number
+}
+
+bookmark: Bookmark {
+  shape: class
+  id: string
+  label: string
+  path: string
+}
+
+# ── 複合状態型 ──────────────────────────────────────────────
+
+paneState: PaneState {
+  shape: class
+  entries: "FileEntry[]"
+  loading: boolean
+  cursor: number
+  selected: "Set<string>"
+  filterQuery: string
+  "pendingFocusName?": string
+  sortKey: SortKey
+  sortDesc: boolean
+}
+
+clipboardState: ClipboardState {
+  shape: class
+  paths: "string[]"
+  mode: ClipboardMode
+}
+
+keyBinding: KeyBinding {
+  shape: class
+  keys: "string[]"
+  action: VimAction
+}
+
+# ── Union / Enum 型 ─────────────────────────────────────────
+
+clipboardMode: ClipboardMode {
+  shape: class
+  copy: ""
+  cut: ""
+}
+
+vimMode: VimMode {
+  shape: class
+  NORMAL: ""
+  SEARCH: ""
+  COMMAND: ""
+}
+
+sortKey: SortKey {
+  shape: class
+  name: ""
+  time: ""
+}
+
+# ── 関係 ────────────────────────────────────────────────────
+
+paneState -> fileEntry: "entries: FileEntry[]"
+paneState -> sortKey: sortKey
+clipboardState -> clipboardMode: mode
+tab -> paneState: "panes[tab.id]"

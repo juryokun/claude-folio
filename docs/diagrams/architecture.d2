@@ -1,0 +1,12 @@
+direction: down
+
+user: ユーザー {shape: person}
+frontend: "フロントエンド (React / TypeScript)"
+backend: "バックエンド (Rust / Tauri)"
+macos: macOS {shape: cylinder}
+cli: folio CLI {shape: oval}
+
+user -> frontend: 操作
+frontend -> backend: Tauri invoke()
+backend -> macos: read / write / open
+cli -> backend: Unix Socket

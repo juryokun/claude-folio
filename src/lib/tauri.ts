@@ -58,6 +58,9 @@ export const tauriApi = {
   quickLook: (path: string) =>
     invoke<void>('quick_look', { path }),
 
+  listDirCompletions: (partial: string) =>
+    invoke<string[]>('list_dir_completions', { partial }),
+
   detectGoogleDrive: () =>
     invoke<string[]>('detect_google_drive'),
 

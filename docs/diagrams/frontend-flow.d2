@@ -1,0 +1,10 @@
+direction: right
+
+ui: UI コンポーネント
+hooks: Hooks
+stores: Zustand ストア
+ipc: tauriApi
+
+ui -> hooks: イベント
+hooks -> stores: 状態更新
+stores -> ipc: API呼び出し

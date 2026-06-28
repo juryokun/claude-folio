@@ -231,10 +231,12 @@ body {
   overflow-y: auto;
 }
 
-.path-suggestion { padding: 5px 8px; cursor: pointer; font-size: 13px; }
+.path-suggestion { padding: 5px 8px; cursor: pointer; font-size: 13px; display: flex; align-items: baseline; gap: 8px; }
 .path-suggestion:hover, .path-suggestion.active { background: var(--bg-active); }
 .path-suggestion--empty { color: var(--text-dim); cursor: default; }
 .path-suggestion--empty:hover { background: transparent; }
+.path-suggestion-full { font-size: 11px; color: var(--text-dim); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.path-suggestions-header { padding: 3px 8px; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
 
 .path-suggestion--bookmark {
   display: flex;

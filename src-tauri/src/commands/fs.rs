@@ -101,6 +101,50 @@ pub fn list_dir(path: String, show_hidden: bool) -> Result<Vec<FileEntry>, Strin
     Ok(entries)
 }
 
+/// Return directory candidates for path completion.
+/// `partial` is the partial path the user has typed (already tilde-expanded by the caller).
+/// Returns up to 20 full paths ending with `/`, sorted alphabetically.
+#[tauri::command]
+pub fn list_dir_completions(partial: String) -> Vec<String> {
+    let partial = expand_tilde(&partial);
+
+    // Split on the last `/` to get the parent dir and the typed prefix.
+    let slash_idx = partial.rfind('/');
+    let (parent_str, prefix) = match slash_idx {
+        Some(i) => (&partial[..=i], &partial[i + 1..]),
+        None => return vec![],
+    };
+
+    let parent = Path::new(parent_str);
+    if !parent.is_dir() {
+        return vec![];
+    }
+
+    let prefix_lower = prefix.to_lowercase();
+    let show_hidden = prefix_lower.starts_with('.');
+
+    let mut results: Vec<String> = std::fs::read_dir(parent)
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            let name = e.file_name();
+            let name_str = name.to_string_lossy();
+            let is_hidden = name_str.starts_with('.');
+            let matches = name_str.to_lowercase().starts_with(&prefix_lower);
+            let is_dir = e.file_type().map(|ft| ft.is_dir()).unwrap_or(false);
+            is_dir && matches && (!is_hidden || show_hidden)
+        })
+        .map(|e| {
+            format!("{}{}/", parent_str, e.file_name().to_string_lossy())
+        })
+        .collect();
+
+    results.sort();
+    results.truncate(20);
+    results
+}
+
 #[tauri::command]
 pub fn rename_file(from: String, to: String) -> Result<(), String> {
     std::fs::rename(&from, &to).map_err(|e| e.to_string())
@@ -541,5 +585,79 @@ mod tests {
         let content = read_text_file(path.to_string_lossy().to_string(), 5).unwrap();
         assert!(content.starts_with("abcde"));
         assert!(content.contains("[...省略...]"));
+    }
+
+    // ── list_dir_completions ─────────────────────────────────────────────────
+
+    #[test]
+    fn completions_returns_matching_dirs() {
+        let dir = TempDir::new().unwrap();
+        fs::create_dir(dir.path().join("alpha")).unwrap();
+        fs::create_dir(dir.path().join("alpha2")).unwrap();
+        fs::create_dir(dir.path().join("beta")).unwrap();
+        fs::write(dir.path().join("alpha.txt"), b"").unwrap(); // file, should be excluded
+
+        let partial = format!("{}/al", dir.path().to_string_lossy());
+        let results = list_dir_completions(partial);
+        assert_eq!(results.len(), 2);
+        assert!(results.iter().all(|r| r.ends_with('/')));
+        assert!(results.iter().any(|r| r.contains("alpha/")));
+        assert!(results.iter().any(|r| r.contains("alpha2/")));
+    }
+
+    #[test]
+    fn completions_trailing_slash_lists_all_dirs() {
+        let dir = TempDir::new().unwrap();
+        fs::create_dir(dir.path().join("foo")).unwrap();
+        fs::create_dir(dir.path().join("bar")).unwrap();
+        fs::write(dir.path().join("file.txt"), b"").unwrap();
+
+        let partial = format!("{}/", dir.path().to_string_lossy());
+        let results = list_dir_completions(partial);
+        assert_eq!(results.len(), 2);
+        assert!(results.iter().all(|r| r.ends_with('/')));
+    }
+
+    #[test]
+    fn completions_hides_dotdirs_by_default() {
+        let dir = TempDir::new().unwrap();
+        fs::create_dir(dir.path().join(".hidden")).unwrap();
+        fs::create_dir(dir.path().join("visible")).unwrap();
+
+        let partial = format!("{}/", dir.path().to_string_lossy());
+        let results = list_dir_completions(partial);
+        assert_eq!(results.len(), 1);
+        assert!(results[0].contains("visible/"));
+    }
+
+    #[test]
+    fn completions_shows_dotdirs_when_prefix_starts_with_dot() {
+        let dir = TempDir::new().unwrap();
+        fs::create_dir(dir.path().join(".hidden")).unwrap();
+        fs::create_dir(dir.path().join("visible")).unwrap();
+
+        let partial = format!("{}/.hid", dir.path().to_string_lossy());
+        let results = list_dir_completions(partial);
+        assert_eq!(results.len(), 1);
+        assert!(results[0].contains(".hidden/"));
+    }
+
+    #[test]
+    fn completions_returns_empty_for_nonexistent_parent() {
+        let results = list_dir_completions("/nonexistent_path_xyz/foo".to_string());
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn completions_sorted_alphabetically() {
+        let dir = TempDir::new().unwrap();
+        fs::create_dir(dir.path().join("zoo")).unwrap();
+        fs::create_dir(dir.path().join("aaa")).unwrap();
+        fs::create_dir(dir.path().join("mmm")).unwrap();
+
+        let partial = format!("{}/", dir.path().to_string_lossy());
+        let results = list_dir_completions(partial);
+        assert_eq!(results[0].split('/').filter(|s| !s.is_empty()).last().unwrap(), "aaa");
+        assert_eq!(results[2].split('/').filter(|s| !s.is_empty()).last().unwrap(), "zoo");
     }
 }

@@ -53,9 +53,11 @@ const ja = {
   pathBar: {
     bookmarkSearch: '🔖 ブックマークを検索...',
     zoxideSearch: 'zoxide で移動先を検索...',
+    pathOrKeyword: 'パスを入力 または キーワードで zoxide 検索...',
     editHint: 'クリックまたはCtrl+Lで編集',
     noBookmarks: 'ブックマークがありません (B キーで追加)',
     noMatches: '一致するブックマークがありません',
+    directoryCompletion: 'ディレクトリ補完',
   },
   commandPalette: {
     placeholder: ':コマンド  (Tab で補完)',

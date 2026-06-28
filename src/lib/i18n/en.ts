@@ -53,9 +53,11 @@ const en = {
   pathBar: {
     bookmarkSearch: '🔖 Search bookmarks...',
     zoxideSearch: 'Search destinations with zoxide...',
+    pathOrKeyword: 'Enter path or keyword to search with zoxide...',
     editHint: 'Click or Ctrl+L to edit',
     noBookmarks: 'No bookmarks (Add with B key)',
     noMatches: 'No matching bookmarks',
+    directoryCompletion: 'Directory completion',
   },
   commandPalette: {
     placeholder: ':command  (Tab to complete)',

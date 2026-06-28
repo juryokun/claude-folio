@@ -1,0 +1,24 @@
+direction: right
+
+NORMAL: NORMAL {
+  shape: rectangle
+  style.fill: "#dbeafe"
+  style.stroke: "#3b82f6"
+}
+
+SEARCH: SEARCH {
+  shape: rectangle
+  style.fill: "#dcfce7"
+  style.stroke: "#22c55e"
+}
+
+COMMAND: COMMAND {
+  shape: rectangle
+  style.fill: "#fef9c3"
+  style.stroke: "#eab308"
+}
+
+NORMAL -> SEARCH: 「/」キー
+NORMAL -> COMMAND: 「:」キー
+SEARCH -> NORMAL: Escape または Enter
+COMMAND -> NORMAL: Escape または Enter

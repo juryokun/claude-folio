@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTabStore } from '../../store/tabStore';
 import { useUiStore } from '../../store/uiStore';
@@ -6,6 +6,7 @@ import { useBookmarkStore } from '../../store/bookmarkStore';
 import { useConfigStore } from '../../store/configStore';
 import { favoritePath } from '../../lib/favorites';
 import { tauriApi } from '../../lib/tauri';
+import { commonPrefix, expandTilde } from '../../lib/pathCompletion';
 
 interface PickerItem {
   id: string;
@@ -14,7 +15,11 @@ interface PickerItem {
   isFavorite?: boolean;
 }
 
-type PathBarMode = 'path' | 'zoxide' | 'bookmark';
+type PathBarMode = 'path' | 'bookmark';
+
+function getHome(): string {
+  return (window as any).__macFilerHome ?? `/Users/${(window as any).__macFilerUsername ?? 'user'}`;
+}
 
 export function PathBar() {
   const { t } = useTranslation();
@@ -30,13 +35,14 @@ export function PathBar() {
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
+  // 'fs' | 'zoxide' — which backend is currently powering the suggestion list
+  const [completionSource, setCompletionSource] = useState<'fs' | 'zoxide'>('fs');
   const inputRef = useRef<HTMLInputElement>(null);
   const composingRef = useRef(false);
   const imeEndedAtRef = useRef(0);
 
-  // Combined picker items: Favorites first, then Bookmarks
   const allPickerItems = useMemo((): PickerItem[] => {
-    const home = (window as any).__macFilerHome ?? `/Users/${(window as any).__macFilerUsername ?? 'user'}`;
+    const home = getHome();
     const favItems: PickerItem[] = favorites.map((key) => ({
       id: `fav:${key}`,
       label: t(`sidebar.${key}`),
@@ -59,10 +65,9 @@ export function PathBar() {
     );
   }, [mode, inputValue, allPickerItems]);
 
-  // Exposed for Ctrl+L / z / b keys
   useEffect(() => {
     const handler = () => startMode('path', currentPath);
-    const zoxideHandler = () => startMode('zoxide', '');
+    const zoxideHandler = () => startMode('path', '');
     const bookmarkHandler = () => startMode('bookmark', '');
     window.addEventListener('mac-filer:focus-path-bar', handler);
     window.addEventListener('mac-filer:focus-zoxide', zoxideHandler);
@@ -80,6 +85,7 @@ export function PathBar() {
     setEditing(true);
     setSuggestions([]);
     setSuggestionIndex(m === 'bookmark' ? (allPickerItems.length > 0 ? 0 : -1) : -1);
+    setCompletionSource('fs');
     setTimeout(() => {
       if (initialValue) inputRef.current?.select();
       else inputRef.current?.focus();
@@ -96,7 +102,7 @@ export function PathBar() {
   const commitPath = (value: string) => {
     close();
     if (!value) return;
-    navigateTo(value);
+    navigateTo(expandTilde(value, getHome()));
   };
 
   const commitBookmark = (index: number) => {
@@ -106,37 +112,59 @@ export function PathBar() {
     navigateTo(item.path);
   };
 
-  const handleInputChange = async (value: string) => {
-    setInputValue(value);
-
-    if (mode === 'bookmark') {
-      setSuggestionIndex(0);
-      return;
-    }
-
-    if (!value || value.startsWith('/') || value.startsWith('~')) {
+  const fetchCompletions = useCallback(async (value: string) => {
+    if (!value) {
       setSuggestions([]);
       setSuggestionIndex(-1);
       return;
     }
 
-    if (hasZoxide) {
+    const expanded = expandTilde(value, getHome());
+    const isAbsPath = expanded.startsWith('/');
+
+    if (isAbsPath) {
+      // Filesystem completion
+      try {
+        const results = await tauriApi.listDirCompletions(expanded);
+        setSuggestions(results);
+        setSuggestionIndex(results.length > 0 ? 0 : -1);
+        setCompletionSource('fs');
+      } catch {
+        setSuggestions([]);
+        setSuggestionIndex(-1);
+      }
+    } else if (hasZoxide) {
+      // Zoxide keyword search
       try {
         const results = await tauriApi.zoxideQuery(value);
         const trimmed = results.slice(0, 8);
         setSuggestions(trimmed);
         setSuggestionIndex(trimmed.length > 0 ? 0 : -1);
+        setCompletionSource('zoxide');
       } catch {
         setSuggestions([]);
         setSuggestionIndex(-1);
       }
+    } else {
+      setSuggestions([]);
+      setSuggestionIndex(-1);
     }
+  }, [hasZoxide]);
+
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    if (mode === 'bookmark') {
+      setSuggestionIndex(0);
+      return;
+    }
+    fetchCompletions(value);
   };
 
   const listLength = mode === 'bookmark' ? bookmarkSuggestions.length : suggestions.length;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') { close(); return; }
+
     if (e.ctrlKey && e.key === 'u') {
       e.preventDefault();
       setInputValue('');
@@ -144,6 +172,26 @@ export function PathBar() {
       setSuggestionIndex(mode === 'bookmark' ? 0 : -1);
       return;
     }
+
+    // Tab: complete to current suggestion or common prefix
+    if (e.key === 'Tab' && mode === 'path' && suggestions.length > 0) {
+      e.preventDefault();
+      if (suggestionIndex >= 0) {
+        // Fill with the selected suggestion
+        const completed = suggestions[suggestionIndex];
+        setInputValue(completed);
+        fetchCompletions(completed);
+      } else {
+        // Fill with common prefix across all suggestions
+        const prefix = commonPrefix(suggestions);
+        if (prefix.length > expandTilde(inputValue, getHome()).length) {
+          setInputValue(prefix);
+          fetchCompletions(prefix);
+        }
+      }
+      return;
+    }
+
     if (e.key === 'Enter' && !composingRef.current && Date.now() - imeEndedAtRef.current >= 50) {
       e.preventDefault();
       if (mode === 'bookmark') {
@@ -154,6 +202,7 @@ export function PathBar() {
       }
       return;
     }
+
     const isCtrlJ = e.ctrlKey && e.key === 'j';
     const isCtrlK = e.ctrlKey && e.key === 'k';
     if (e.key === 'ArrowDown' || isCtrlJ) {
@@ -171,9 +220,9 @@ export function PathBar() {
   const segments = currentPath.split('/').filter(Boolean);
 
   const placeholder =
-    mode === 'bookmark' ? t('pathBar.bookmarkSearch') :
-    mode === 'zoxide'   ? t('pathBar.zoxideSearch') :
-    '';
+    mode === 'bookmark'
+      ? t('pathBar.bookmarkSearch')
+      : t('pathBar.pathOrKeyword');
 
   return (
     <div className="path-bar">
@@ -181,7 +230,7 @@ export function PathBar() {
         <div className="path-edit-container">
           <input
             ref={inputRef}
-            className={`path-input${mode !== 'path' ? ' path-input--search' : ''}`}
+            className="path-input"
             value={inputValue}
             placeholder={placeholder}
             autoFocus
@@ -201,16 +250,32 @@ export function PathBar() {
               }, 150);
             }}
           />
-          {/* Zoxide suggestions */}
-          {mode !== 'bookmark' && suggestions.length > 0 && (
+          {/* Path / zoxide suggestions */}
+          {mode === 'path' && suggestions.length > 0 && (
             <div className="path-suggestions">
+              {completionSource === 'fs' && (
+                <div className="path-suggestions-header">{t('pathBar.directoryCompletion')}</div>
+              )}
               {suggestions.map((s, i) => (
                 <div
                   key={s}
                   className={`path-suggestion${i === suggestionIndex ? ' active' : ''}`}
-                  onMouseDown={() => commitPath(s)}
+                  onMouseDown={() => {
+                    if (completionSource === 'fs') {
+                      setInputValue(s);
+                      fetchCompletions(s);
+                      inputRef.current?.focus();
+                    } else {
+                      commitPath(s);
+                    }
+                  }}
                 >
-                  {s}
+                  {completionSource === 'fs'
+                    ? (() => { const parts = s.split('/').filter(Boolean); return parts[parts.length - 1] + '/'; })()
+                    : s}
+                  {completionSource === 'fs' && (
+                    <span className="path-suggestion-full">{s}</span>
+                  )}
                 </div>
               ))}
             </div>

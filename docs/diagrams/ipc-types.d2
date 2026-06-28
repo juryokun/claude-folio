@@ -1,0 +1,65 @@
+direction: right
+
+# ── Rust 型 ─────────────────────────────────────────────────
+
+fileEntryRust: "FileEntry (Rust)" {
+  shape: class
+  name: String
+  path: String
+  is_dir: bool
+  is_symlink: bool
+  link_target: "Option<String>"
+  size: u64
+  modified: "Option<u64>"
+  extension: "Option<String>"
+}
+
+bookmarkEntryRust: "BookmarkEntry (Rust)" {
+  shape: class
+  label: String
+  path: String
+}
+
+appConfigRust: "AppConfig (Rust)" {
+  shape: class
+  appearance: AppearanceConfig
+  editor: EditorConfig
+  terminal: TerminalConfig
+  keymap: "HashMap<String, Vec<String>>"
+  sidebar: SidebarConfig
+  language: String
+}
+
+# ── TypeScript 型 ────────────────────────────────────────────
+
+fileEntryTS: "FileEntry (TypeScript)" {
+  shape: class
+  name: string
+  path: string
+  is_dir: boolean
+  is_symlink: boolean
+  "link_target?": string
+  size: number
+  "modified?": number
+  "extension?": string
+}
+
+bookmarkTS: "Bookmark (TypeScript)" {
+  shape: class
+  "+id (UUID)": string
+  label: string
+  path: string
+}
+
+configStoreTS: "ConfigStore (TypeScript)" {
+  shape: class
+  appearance: AppearanceConfig
+  keymap: "KeyBinding[]"
+  favorites: "FavoriteKey[]"
+}
+
+# ── IPC 境界 ────────────────────────────────────────────────
+
+fileEntryRust -> fileEntryTS: "JSON シリアライズ"
+bookmarkEntryRust -> bookmarkTS: "id = UUID を付与"
+appConfigRust -> configStoreTS: load_config()

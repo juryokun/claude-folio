@@ -1,0 +1,44 @@
+direction: down
+
+tabStore: tabStore {
+  shape: rectangle
+  label: "tabStore\ntabs[], activeTabId\nhistory, historyIndex"
+}
+
+fileStore: fileStore {
+  shape: rectangle
+  label: "fileStore\nentries, cursor, selected\nclipboard, sortKey, filter"
+}
+
+uiStore: uiStore {
+  shape: rectangle
+  label: "uiStore  [localStorage 永続化]\nvimMode, showHidden\nsidebarWidth, showPreview, columnWidths"
+}
+
+configStore: configStore {
+  shape: rectangle
+  label: "configStore\nappearance, keymap, favorites"
+}
+
+bookmarkStore: bookmarkStore {
+  shape: rectangle
+  label: "bookmarkStore\nbookmarks[]"
+}
+
+localStorage: localStorage {
+  shape: cylinder
+}
+
+configToml: "~/.config/mac-filer/config.toml" {
+  shape: cylinder
+}
+
+bookmarkJson: "bookmarks.json" {
+  shape: cylinder
+}
+
+fileStore -> tabStore: activeTab().id を参照
+configStore -> uiStore: setEditorCommand / setTerminalApp / setLanguage
+uiStore -> localStorage: 永続化 (zustand/persist)
+configStore -> configToml: load_config / save_language
+bookmarkStore -> bookmarkJson: load / save
