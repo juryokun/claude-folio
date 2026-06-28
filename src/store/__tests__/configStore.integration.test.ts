@@ -42,7 +42,13 @@ const DEFAULT_FAVORITES = [
 
 function resetStore() {
   useConfigStore.setState({
-    appearance: { dateFormat: '%Y/%m/%d', sizeUnit: 'binary' },
+    appearance: {
+      dateModified: { show: true, format: 'auto' },
+      dateCreated: { show: false, format: 'auto' },
+      dateAccessed: { show: false, format: 'auto' },
+      sizeUnit: 'binary',
+    },
+    visibleDateCols: [{ key: 'modified', format: 'auto', colKey: 'date', labelKey: 'filePane.colDate' }],
     keymap: NORMAL_KEYMAP,
     favorites: DEFAULT_FAVORITES as ReturnType<typeof useConfigStore.getState>['favorites'],
     loaded: false,
@@ -86,14 +92,6 @@ describe('configStore 統合テスト', () => {
   // ── appearance 設定 ────────────────────────────────────────────────────────
 
   describe('load() — appearance', () => {
-    it('date_format を反映する', async () => {
-      mockLoadConfig.mockResolvedValue({
-        appearance: { date_format: '%Y-%m-%d', size_unit: 'binary' },
-      });
-      await useConfigStore.getState().load();
-      expect(useConfigStore.getState().appearance.dateFormat).toBe('%Y-%m-%d');
-    });
-
     it('size_unit "decimal" を反映する', async () => {
       mockLoadConfig.mockResolvedValue({ appearance: { size_unit: 'decimal' } });
       await useConfigStore.getState().load();
@@ -104,6 +102,43 @@ describe('configStore 統合テスト', () => {
       mockLoadConfig.mockResolvedValue({ appearance: {} });
       await useConfigStore.getState().load();
       expect(useConfigStore.getState().appearance.sizeUnit).toBe('binary');
+    });
+
+    it('date_modified.show=true のとき visibleDateCols に modified が含まれる', async () => {
+      mockLoadConfig.mockResolvedValue({
+        appearance: { date_modified: { show: true, format: 'auto' } },
+      });
+      await useConfigStore.getState().load();
+      const cols = useConfigStore.getState().visibleDateCols;
+      expect(cols.some((c) => c.key === 'modified')).toBe(true);
+    });
+
+    it('date_modified.show=false のとき visibleDateCols に modified が含まれない', async () => {
+      mockLoadConfig.mockResolvedValue({
+        appearance: { date_modified: { show: false, format: 'auto' } },
+      });
+      await useConfigStore.getState().load();
+      const cols = useConfigStore.getState().visibleDateCols;
+      expect(cols.some((c) => c.key === 'modified')).toBe(false);
+    });
+
+    it('date_created.show=true のとき visibleDateCols に created が含まれる', async () => {
+      mockLoadConfig.mockResolvedValue({
+        appearance: { date_created: { show: true, format: '%Y-%m-%d' } },
+      });
+      await useConfigStore.getState().load();
+      const cols = useConfigStore.getState().visibleDateCols;
+      const col = cols.find((c) => c.key === 'created');
+      expect(col).toBeDefined();
+      expect(col?.format).toBe('%Y-%m-%d');
+    });
+
+    it('デフォルトで date_modified のみ表示される', async () => {
+      mockLoadConfig.mockResolvedValue({});
+      await useConfigStore.getState().load();
+      const cols = useConfigStore.getState().visibleDateCols;
+      expect(cols).toHaveLength(1);
+      expect(cols[0].key).toBe('modified');
     });
   });
 
