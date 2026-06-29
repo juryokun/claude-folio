@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2026-06-29
+
+### Bug Fixes
+
+- **Path bar truncation** — Deep paths with more than 4 segments are now shown as `… / parent / child / current` instead of overflowing the toolbar.
+- **Shell injection prevention** — File paths containing spaces or special characters no longer cause issues when opening a terminal at the current directory.
+- **Watcher stability** — Fixed a potential panic when the file-system watcher encountered a poisoned lock.
+
+### Performance
+
+- **Faster cursor movement** — Applied fine-grained Zustand subscriptions (`useShallow`) to eliminate unnecessary re-renders when moving the cursor in the file pane.
+- **Preview panel debounce** — File preview requests are now debounced by 150 ms, reducing redundant Rust calls during fast cursor movement.
+
 ## [0.2.1] - 2026-06-29
 
 ### Bug Fixes
