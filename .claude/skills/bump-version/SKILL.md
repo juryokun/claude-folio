@@ -1,6 +1,6 @@
 ---
 name: bump-version
-description: バージョン番号を上げる。対象ファイルの更新・Cargo.lock の同期・コミットまで一括対応。
+description: バージョン番号を上げる。対象ファイルの更新・Cargo.lock の同期・CHANGELOG.md の更新・コミットまで一括対応。
 user-invocable: true
 allowed-tools:
   - Bash(grep *)
@@ -8,6 +8,8 @@ allowed-tools:
   - Bash(git add *)
   - Bash(git commit *)
   - Bash(git tag *)
+  - Bash(git log *)
+  - Bash(git show *)
   - Bash(git status *)
   - Edit
   - Read
@@ -44,12 +46,46 @@ grep -n "version" src-tauri/Cargo.toml src-tauri/tauri.conf.json
 cargo check --manifest-path src-tauri/Cargo.toml 2>&1 | tail -5
 ```
 
-### 5. コミット
+### 5. CHANGELOG.md の更新
 
-3ファイルをまとめてコミットする。`Cargo.lock` を忘れないこと。
+`git log <前バージョンタグ>..HEAD` でコミット一覧を取得し、ユーザー向けの変更をまとめて `CHANGELOG.md` の先頭に追記する。
 
 ```bash
-git add src-tauri/Cargo.toml src-tauri/tauri.conf.json src-tauri/Cargo.lock
+git log v<前バージョン>..HEAD --oneline
+```
+
+- `feat:` → `### Features`、`fix:` → `### Bug Fixes`、`perf:` → `### Performance` に分類する
+- `chore:` `docs:` `test:` `refactor:` はユーザー向けでないため原則除外する
+- ただし `chore:` でも UI/UX に影響するものは含める
+- 各項目はユーザー視点の平易な英語で書く（コミットメッセージをそのままコピーしない）
+- バージョンバンプ自体のコミットは除外する
+
+追記フォーマット：
+
+```markdown
+## [<新バージョン>] - <today's date: YYYY-MM-DD>
+
+### Features
+
+- **Feature name** — 説明
+
+### Bug Fixes
+
+- **Fix name** — 説明
+
+### Performance
+
+- **Improvement name** — 説明
+```
+
+該当カテゴリが空の場合はそのセクションを省略する。
+
+### 6. コミット
+
+4ファイルをまとめてコミットする。`Cargo.lock` と `CHANGELOG.md` を忘れないこと。
+
+```bash
+git add src-tauri/Cargo.toml src-tauri/tauri.conf.json src-tauri/Cargo.lock CHANGELOG.md
 git commit -m "$(cat <<'EOF'
 chore: bump version to <新バージョン>
 
@@ -58,7 +94,7 @@ EOF
 )"
 ```
 
-### 6. タグ付け
+### 7. タグ付け
 
 コミット後に annotated tag を打つ。
 
@@ -66,7 +102,7 @@ EOF
 git tag -a v<新バージョン> -m "v<新バージョン>"
 ```
 
-### 7. 確認
+### 8. 確認
 
 ```bash
 git status && git tag --list "v<新バージョン>"
