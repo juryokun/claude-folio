@@ -25,11 +25,13 @@ pub fn watch_dir(path: String, app: AppHandle, state: State<WatcherState>) -> Re
         .map_err(|e| e.to_string())?;
 
     // Replace old watcher (drops it, stopping the previous watch)
-    *state.0.lock().unwrap() = Some(watcher);
+    *state.0.lock().map_err(|e| e.to_string())? = Some(watcher);
     Ok(())
 }
 
 #[tauri::command]
 pub fn unwatch_dir(state: State<WatcherState>) {
-    *state.0.lock().unwrap() = None;
+    if let Ok(mut guard) = state.0.lock() {
+        *guard = None;
+    }
 }

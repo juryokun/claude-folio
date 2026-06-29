@@ -54,27 +54,20 @@ fn resolve_binary(name: &str) -> String {
     name.to_string()
 }
 
-/// Run a shell command string via `/bin/zsh -l -c` with an optional working directory.
-fn spawn_via_zsh(shell_cmd: &str, cwd: Option<&std::path::Path>) -> Result<(), String> {
-    let mut cmd = std::process::Command::new("/bin/zsh");
-    cmd.args(["-l", "-c", shell_cmd]);
-    if let Some(dir) = cwd {
-        cmd.current_dir(dir);
-    }
-    cmd.spawn().map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-/// Expand `{}` placeholder in a command template with the given file path.
-/// If `{}` is not present and a file path is provided, append it at the end.
-fn expand_placeholder(cmd: &str, file_path: Option<&str>) -> String {
+/// Replace `{}` in each token with `file_path`. If no token contains `{}`
+/// and a path is provided, it is appended as a new token. The replacement is
+/// a plain string substitution — no shell expansion occurs.
+fn expand_placeholder_in_args(tokens: &[String], file_path: Option<&str>) -> Vec<String> {
     match file_path {
-        None => cmd.to_string(),
+        None => tokens.to_vec(),
         Some(p) => {
-            if cmd.contains("{}") {
-                cmd.replace("{}", p)
+            let has_placeholder = tokens.iter().any(|t| t.contains("{}"));
+            if has_placeholder {
+                tokens.iter().map(|t| t.replace("{}", p)).collect()
             } else {
-                format!("{} {}", cmd, p)
+                let mut result = tokens.to_vec();
+                result.push(p.to_string());
+                result
             }
         }
     }
@@ -89,18 +82,30 @@ fn spawn_command(
     file_path: Option<&str>,
     cwd: Option<&std::path::Path>,
 ) -> Result<(), String> {
-    let expanded = expand_placeholder(cmd, file_path);
-    let mut parts = expanded.split_whitespace();
-    let binary = parts.next().ok_or("command is empty")?;
+    let tokens = shell_words::split(cmd).map_err(|e| e.to_string())?;
+    if tokens.is_empty() {
+        return Err("command is empty".to_string());
+    }
+    let args = expand_placeholder_in_args(&tokens, file_path);
+    let binary = &args[0];
     let binary_path = resolve_binary(binary);
 
-    if binary_path == binary {
-        // Binary not found in known paths — delegate to zsh
-        return spawn_via_zsh(&expanded, cwd);
+    if binary_path == *binary {
+        // Binary not found in known paths — delegate to zsh login shell.
+        // Use `exec "$@"` so binary and args are passed as positional parameters,
+        // never interpolated into a shell string, avoiding injection via path characters.
+        let mut cmd = std::process::Command::new("/bin/zsh");
+        cmd.args(["-l", "-c", "exec \"$@\"", "--"]);
+        cmd.args(&args);
+        if let Some(dir) = cwd {
+            cmd.current_dir(dir);
+        }
+        cmd.spawn().map_err(|e| e.to_string())?;
+        return Ok(());
     }
 
     let mut command = std::process::Command::new(&binary_path);
-    command.args(parts);
+    command.args(&args[1..]);
     if let Some(dir) = cwd {
         command.current_dir(dir);
     }
@@ -108,6 +113,50 @@ fn spawn_command(
         .spawn()
         .map_err(|e| format!("{}: {}", binary_path, e))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn strs(v: &[&str]) -> Vec<String> {
+        v.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn placeholder_replaced_with_path() {
+        let tokens = strs(&["nvim", "{}"]);
+        let result = expand_placeholder_in_args(&tokens, Some("/tmp/foo.txt"));
+        assert_eq!(result, strs(&["nvim", "/tmp/foo.txt"]));
+    }
+
+    #[test]
+    fn path_with_spaces_stays_single_token() {
+        let tokens = strs(&["nvim", "{}"]);
+        let result = expand_placeholder_in_args(&tokens, Some("/Users/my name/doc.txt"));
+        assert_eq!(result, strs(&["nvim", "/Users/my name/doc.txt"]));
+    }
+
+    #[test]
+    fn no_placeholder_appends_path() {
+        let tokens = strs(&["nvim"]);
+        let result = expand_placeholder_in_args(&tokens, Some("/tmp/foo.txt"));
+        assert_eq!(result, strs(&["nvim", "/tmp/foo.txt"]));
+    }
+
+    #[test]
+    fn no_file_path_leaves_tokens_unchanged() {
+        let tokens = strs(&["nvim", "{}"]);
+        let result = expand_placeholder_in_args(&tokens, None);
+        assert_eq!(result, strs(&["nvim", "{}"]));
+    }
+
+    #[test]
+    fn placeholder_in_middle_of_token() {
+        let tokens = strs(&["echo", "file={}"]);
+        let result = expand_placeholder_in_args(&tokens, Some("foo.txt"));
+        assert_eq!(result, strs(&["echo", "file=foo.txt"]));
+    }
 }
 
 /// List installed .app bundles from /Applications and ~/Applications.
