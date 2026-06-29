@@ -175,6 +175,79 @@ pub fn open_terminal_at(path: String, app: String, command: String) -> Result<()
     }
 }
 
+/// Parse the output of `printf "_ZO_DATA_DIR=%s\nXDG_DATA_HOME=%s\n" ...`
+/// run inside the user's login shell.
+/// Returns only the non-empty variables relevant to zoxide's data directory.
+pub(crate) fn parse_zoxide_shell_env(output: &str) -> std::collections::HashMap<String, String> {
+    output
+        .lines()
+        .filter_map(|l| l.split_once('='))
+        .filter(|(k, v)| matches!(*k, "_ZO_DATA_DIR" | "XDG_DATA_HOME") && !v.is_empty())
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect()
+}
+
+/// Get environment variables needed for zoxide to find the same database as the
+/// user's login shell. Cached after first call.
+///
+/// macOS app bundles launched from the GUI do not inherit the login shell
+/// environment, so variables such as `_ZO_DATA_DIR` and `XDG_DATA_HOME` that
+/// the user sets in `~/.zshrc` / `config.fish` are absent. Without them,
+/// zoxide falls back to `~/Library/Application Support/zoxide` which is a
+/// different database from the one the shell's `z` function uses.
+fn shell_env_for_zoxide() -> &'static std::collections::HashMap<String, String> {
+    use std::sync::OnceLock;
+    static ENV: OnceLock<std::collections::HashMap<String, String>> = OnceLock::new();
+    ENV.get_or_init(|| {
+        // 1. Current process already has _ZO_DATA_DIR (e.g. dev mode from terminal)
+        if let Ok(v) = std::env::var("_ZO_DATA_DIR") {
+            if !v.is_empty() {
+                return [("_ZO_DATA_DIR".to_string(), v)].into();
+            }
+        }
+
+        // 2. Ask the login shell for the two relevant variables (5-second timeout)
+        if let Ok(shell) = std::env::var("SHELL") {
+            let cmd =
+                r#"printf "_ZO_DATA_DIR=%s\nXDG_DATA_HOME=%s\n" "$_ZO_DATA_DIR" "$XDG_DATA_HOME""#;
+            let (tx, rx) = std::sync::mpsc::channel();
+            std::thread::spawn(move || {
+                let result = std::process::Command::new(&shell)
+                    .args(["-l", "-c", cmd])
+                    .output();
+                let _ = tx.send(result);
+            });
+            if let Ok(Ok(out)) = rx.recv_timeout(std::time::Duration::from_secs(5)) {
+                if out.status.success() {
+                    let parsed = parse_zoxide_shell_env(&String::from_utf8_lossy(&out.stdout));
+                    // Prefer _ZO_DATA_DIR; fall back to XDG_DATA_HOME
+                    if let Some(v) = parsed.get("_ZO_DATA_DIR") {
+                        return [("_ZO_DATA_DIR".to_string(), v.clone())].into();
+                    }
+                    if let Some(v) = parsed.get("XDG_DATA_HOME") {
+                        return [("XDG_DATA_HOME".to_string(), v.clone())].into();
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback: check well-known paths for an existing zoxide database.
+        // Check the macOS platform default first (most likely when neither
+        // _ZO_DATA_DIR nor XDG_DATA_HOME is set), then the XDG convention path.
+        let home = std::env::var("HOME").unwrap_or_default();
+        for dir in [
+            format!("{}/Library/Application Support/zoxide", home),
+            format!("{}/.local/share/zoxide", home),
+        ] {
+            if std::path::Path::new(&dir).exists() {
+                return [("_ZO_DATA_DIR".to_string(), dir)].into();
+            }
+        }
+
+        std::collections::HashMap::new()
+    })
+}
+
 fn zoxide_bin() -> Option<&'static std::path::Path> {
     use std::sync::OnceLock;
     static BIN: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
@@ -214,6 +287,7 @@ pub fn zoxide_query(query: String) -> Result<Vec<String>, String> {
     let bin = zoxide_bin().ok_or_else(|| "zoxide not found".to_string())?;
     let output = std::process::Command::new(bin)
         .args(["query", "--list", &query])
+        .envs(shell_env_for_zoxide())
         .output()
         .map_err(|e| e.to_string())?;
 
@@ -234,6 +308,7 @@ pub fn zoxide_add(path: String) -> Result<(), String> {
     let bin = zoxide_bin().ok_or_else(|| "zoxide not found".to_string())?;
     let output = std::process::Command::new(bin)
         .args(["add", &path])
+        .envs(shell_env_for_zoxide())
         .output()
         .map_err(|e| e.to_string())?;
     if !output.status.success() {
