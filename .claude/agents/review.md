@@ -1,5 +1,6 @@
 ---
 name: REVIEW
+model: claude-opus-4-8
 description: |
   このプロジェクト (Folio: Tauri + React ファイルマネージャ) のコードレビュー専門エージェント。
   以下の場面で起動する：
