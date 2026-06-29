@@ -1,3 +1,16 @@
+/** Replace home directory prefix with `~`. */
+export function abbreviatePath(path: string, home: string): string {
+  if (path === home) return '~';
+  if (path.startsWith(`${home}/`)) return `~${path.slice(home.length)}`;
+  return path;
+}
+
+/** Return the last path segment with a trailing slash. */
+export function basename(path: string): string {
+  const parts = path.split('/').filter(Boolean);
+  return parts.length > 0 ? `${parts[parts.length - 1]}/` : '/';
+}
+
 /** Longest common prefix across all strings in the array. */
 export function commonPrefix(strs: string[]): string {
   if (strs.length === 0) return '';

@@ -1,5 +1,39 @@
 import { describe, expect, it } from 'vitest';
-import { commonPrefix, expandTilde } from '../pathCompletion';
+import { abbreviatePath, basename, commonPrefix, expandTilde } from '../pathCompletion';
+
+describe('abbreviatePath', () => {
+  const HOME = '/Users/john';
+
+  it('replaces home prefix with ~', () => {
+    expect(abbreviatePath('/Users/john/Documents', HOME)).toBe('~/Documents');
+  });
+
+  it('returns ~ for home directory itself', () => {
+    expect(abbreviatePath('/Users/john', HOME)).toBe('~');
+  });
+
+  it('does not match a longer username with same prefix', () => {
+    expect(abbreviatePath('/Users/johndoe/projects', HOME)).toBe('/Users/johndoe/projects');
+  });
+
+  it('leaves unrelated paths unchanged', () => {
+    expect(abbreviatePath('/usr/local/bin', HOME)).toBe('/usr/local/bin');
+  });
+});
+
+describe('basename', () => {
+  it('returns last segment with trailing slash', () => {
+    expect(basename('/Users/john/projects')).toBe('projects/');
+  });
+
+  it('returns / for root path', () => {
+    expect(basename('/')).toBe('/');
+  });
+
+  it('returns last segment even with trailing slash in input', () => {
+    expect(basename('/Users/john/projects/')).toBe('projects/');
+  });
+});
 
 describe('commonPrefix', () => {
   it('returns empty string for empty array', () => {

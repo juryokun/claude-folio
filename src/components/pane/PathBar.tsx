@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { buildBreadcrumbItems } from '../../lib/breadcrumb';
 import { favoritePath } from '../../lib/favorites';
-import { commonPrefix, expandTilde } from '../../lib/pathCompletion';
+import { abbreviatePath, basename, commonPrefix, expandTilde } from '../../lib/pathCompletion';
 import { tauriApi } from '../../lib/tauri';
 import { useBookmarkStore } from '../../store/bookmarkStore';
 import { useConfigStore } from '../../store/configStore';
@@ -297,13 +297,10 @@ export function PathBar() {
                     }
                   }}
                 >
-                  {completionSource === 'fs'
-                    ? (() => {
-                        const parts = s.split('/').filter(Boolean);
-                        return `${parts[parts.length - 1]}/`;
-                      })()
-                    : s}
-                  {completionSource === 'fs' && <span className="path-suggestion-full">{s}</span>}
+                  {basename(s)}
+                  <span className="path-suggestion-full">
+                    {completionSource === 'zoxide' ? abbreviatePath(s, getHome()) : s}
+                  </span>
                 </div>
               ))}
             </div>
