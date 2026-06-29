@@ -446,4 +446,84 @@ mod integration_tests {
         let loaded = load_bookmarks_from(&path);
         assert_eq!(loaded, bookmarks);
     }
+
+    // ── parse_zoxide_shell_env ────────────────────────────────────────────────
+
+    use crate::commands::terminal::parse_zoxide_shell_env;
+
+    #[test]
+    fn parse_both_variables_set() {
+        let out =
+            "_ZO_DATA_DIR=/Users/foo/.local/share/zoxide\nXDG_DATA_HOME=/Users/foo/.local/share\n";
+        let env = parse_zoxide_shell_env(out);
+        assert_eq!(
+            env.get("_ZO_DATA_DIR").map(String::as_str),
+            Some("/Users/foo/.local/share/zoxide")
+        );
+        assert_eq!(
+            env.get("XDG_DATA_HOME").map(String::as_str),
+            Some("/Users/foo/.local/share")
+        );
+    }
+
+    #[test]
+    fn parse_only_xdg_set() {
+        let out = "_ZO_DATA_DIR=\nXDG_DATA_HOME=/Users/foo/.local/share\n";
+        let env = parse_zoxide_shell_env(out);
+        assert!(!env.contains_key("_ZO_DATA_DIR"));
+        assert_eq!(
+            env.get("XDG_DATA_HOME").map(String::as_str),
+            Some("/Users/foo/.local/share")
+        );
+    }
+
+    #[test]
+    fn parse_only_zo_data_dir_set() {
+        let out = "_ZO_DATA_DIR=/custom/zoxide\nXDG_DATA_HOME=\n";
+        let env = parse_zoxide_shell_env(out);
+        assert_eq!(
+            env.get("_ZO_DATA_DIR").map(String::as_str),
+            Some("/custom/zoxide")
+        );
+        assert!(!env.contains_key("XDG_DATA_HOME"));
+    }
+
+    #[test]
+    fn parse_both_empty_returns_empty_map() {
+        let out = "_ZO_DATA_DIR=\nXDG_DATA_HOME=\n";
+        let env = parse_zoxide_shell_env(out);
+        assert!(env.is_empty());
+    }
+
+    #[test]
+    fn parse_empty_string_returns_empty_map() {
+        let env = parse_zoxide_shell_env("");
+        assert!(env.is_empty());
+    }
+
+    #[test]
+    fn parse_value_containing_equals_sign() {
+        let out = "_ZO_DATA_DIR=/path/with=equals\nXDG_DATA_HOME=\n";
+        let env = parse_zoxide_shell_env(out);
+        assert_eq!(
+            env.get("_ZO_DATA_DIR").map(String::as_str),
+            Some("/path/with=equals")
+        );
+    }
+
+    #[test]
+    fn parse_ignores_unrelated_keys() {
+        let out = "HOME=/Users/foo\n_ZO_DATA_DIR=/Users/foo/.local/share/zoxide\nPATH=/usr/bin\n";
+        let env = parse_zoxide_shell_env(out);
+        assert_eq!(env.len(), 1);
+        assert!(env.contains_key("_ZO_DATA_DIR"));
+    }
+
+    #[test]
+    fn parse_skips_line_without_equals() {
+        let out = "this line has no equals sign\n_ZO_DATA_DIR=/path/to/zoxide\n";
+        let env = parse_zoxide_shell_env(out);
+        assert_eq!(env.len(), 1);
+        assert!(env.contains_key("_ZO_DATA_DIR"));
+    }
 }

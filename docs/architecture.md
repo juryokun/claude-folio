@@ -2,7 +2,7 @@
 
 ## システム構成
 
-mac-filer（内部名: folio）は **Tauri v2** を使用した macOS 向けデスクトップアプリです。
+folioは **Tauri v2** を使用した macOS 向けデスクトップアプリです。
 フロントエンド（React + TypeScript）とバックエンド（Rust）の二層構造で、両者は Tauri IPC を介して通信します。
 
 ![アーキテクチャ全体図](diagrams/architecture.svg)
@@ -71,7 +71,7 @@ folio /path/to/dir  →  Unix Socket  →  Rust サーバー  →  folio:open-ta
 ## ディレクトリ構成
 
 ```
-mac-filer/
+folio/
 ├── src/                    # フロントエンド (TypeScript / React)
 │   ├── components/         # UI コンポーネント
 │   │   ├── pane/           # ファイルペイン（メイン表示領域）

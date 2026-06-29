@@ -48,7 +48,7 @@ export function Sidebar() {
 
   const handleDropOnBookmarks = (e: React.DragEvent) => {
     e.preventDefault();
-    const dataPath = e.dataTransfer.getData('application/x-mac-filer-paths');
+    const dataPath = e.dataTransfer.getData('application/x-folio-paths');
     if (dataPath) {
       const paths: string[] = JSON.parse(dataPath);
       paths.forEach((p) => {

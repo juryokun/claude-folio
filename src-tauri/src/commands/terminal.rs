@@ -54,27 +54,20 @@ fn resolve_binary(name: &str) -> String {
     name.to_string()
 }
 
-/// Run a shell command string via `/bin/zsh -l -c` with an optional working directory.
-fn spawn_via_zsh(shell_cmd: &str, cwd: Option<&std::path::Path>) -> Result<(), String> {
-    let mut cmd = std::process::Command::new("/bin/zsh");
-    cmd.args(["-l", "-c", shell_cmd]);
-    if let Some(dir) = cwd {
-        cmd.current_dir(dir);
-    }
-    cmd.spawn().map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-/// Expand `{}` placeholder in a command template with the given file path.
-/// If `{}` is not present and a file path is provided, append it at the end.
-fn expand_placeholder(cmd: &str, file_path: Option<&str>) -> String {
+/// Replace `{}` in each token with `file_path`. If no token contains `{}`
+/// and a path is provided, it is appended as a new token. The replacement is
+/// a plain string substitution — no shell expansion occurs.
+fn expand_placeholder_in_args(tokens: &[String], file_path: Option<&str>) -> Vec<String> {
     match file_path {
-        None => cmd.to_string(),
+        None => tokens.to_vec(),
         Some(p) => {
-            if cmd.contains("{}") {
-                cmd.replace("{}", p)
+            let has_placeholder = tokens.iter().any(|t| t.contains("{}"));
+            if has_placeholder {
+                tokens.iter().map(|t| t.replace("{}", p)).collect()
             } else {
-                format!("{} {}", cmd, p)
+                let mut result = tokens.to_vec();
+                result.push(p.to_string());
+                result
             }
         }
     }
@@ -89,18 +82,30 @@ fn spawn_command(
     file_path: Option<&str>,
     cwd: Option<&std::path::Path>,
 ) -> Result<(), String> {
-    let expanded = expand_placeholder(cmd, file_path);
-    let mut parts = expanded.split_whitespace();
-    let binary = parts.next().ok_or("command is empty")?;
+    let tokens = shell_words::split(cmd).map_err(|e| e.to_string())?;
+    if tokens.is_empty() {
+        return Err("command is empty".to_string());
+    }
+    let args = expand_placeholder_in_args(&tokens, file_path);
+    let binary = &args[0];
     let binary_path = resolve_binary(binary);
 
-    if binary_path == binary {
-        // Binary not found in known paths — delegate to zsh
-        return spawn_via_zsh(&expanded, cwd);
+    if binary_path == *binary {
+        // Binary not found in known paths — delegate to zsh login shell.
+        // Use `exec "$@"` so binary and args are passed as positional parameters,
+        // never interpolated into a shell string, avoiding injection via path characters.
+        let mut cmd = std::process::Command::new("/bin/zsh");
+        cmd.args(["-l", "-c", "exec \"$@\"", "--"]);
+        cmd.args(&args);
+        if let Some(dir) = cwd {
+            cmd.current_dir(dir);
+        }
+        cmd.spawn().map_err(|e| e.to_string())?;
+        return Ok(());
     }
 
     let mut command = std::process::Command::new(&binary_path);
-    command.args(parts);
+    command.args(&args[1..]);
     if let Some(dir) = cwd {
         command.current_dir(dir);
     }
@@ -108,6 +113,50 @@ fn spawn_command(
         .spawn()
         .map_err(|e| format!("{}: {}", binary_path, e))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn strs(v: &[&str]) -> Vec<String> {
+        v.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn placeholder_replaced_with_path() {
+        let tokens = strs(&["nvim", "{}"]);
+        let result = expand_placeholder_in_args(&tokens, Some("/tmp/foo.txt"));
+        assert_eq!(result, strs(&["nvim", "/tmp/foo.txt"]));
+    }
+
+    #[test]
+    fn path_with_spaces_stays_single_token() {
+        let tokens = strs(&["nvim", "{}"]);
+        let result = expand_placeholder_in_args(&tokens, Some("/Users/my name/doc.txt"));
+        assert_eq!(result, strs(&["nvim", "/Users/my name/doc.txt"]));
+    }
+
+    #[test]
+    fn no_placeholder_appends_path() {
+        let tokens = strs(&["nvim"]);
+        let result = expand_placeholder_in_args(&tokens, Some("/tmp/foo.txt"));
+        assert_eq!(result, strs(&["nvim", "/tmp/foo.txt"]));
+    }
+
+    #[test]
+    fn no_file_path_leaves_tokens_unchanged() {
+        let tokens = strs(&["nvim", "{}"]);
+        let result = expand_placeholder_in_args(&tokens, None);
+        assert_eq!(result, strs(&["nvim", "{}"]));
+    }
+
+    #[test]
+    fn placeholder_in_middle_of_token() {
+        let tokens = strs(&["echo", "file={}"]);
+        let result = expand_placeholder_in_args(&tokens, Some("foo.txt"));
+        assert_eq!(result, strs(&["echo", "file=foo.txt"]));
+    }
 }
 
 /// List installed .app bundles from /Applications and ~/Applications.
@@ -175,6 +224,79 @@ pub fn open_terminal_at(path: String, app: String, command: String) -> Result<()
     }
 }
 
+/// Parse the output of `printf "_ZO_DATA_DIR=%s\nXDG_DATA_HOME=%s\n" ...`
+/// run inside the user's login shell.
+/// Returns only the non-empty variables relevant to zoxide's data directory.
+pub(crate) fn parse_zoxide_shell_env(output: &str) -> std::collections::HashMap<String, String> {
+    output
+        .lines()
+        .filter_map(|l| l.split_once('='))
+        .filter(|(k, v)| matches!(*k, "_ZO_DATA_DIR" | "XDG_DATA_HOME") && !v.is_empty())
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect()
+}
+
+/// Get environment variables needed for zoxide to find the same database as the
+/// user's login shell. Cached after first call.
+///
+/// macOS app bundles launched from the GUI do not inherit the login shell
+/// environment, so variables such as `_ZO_DATA_DIR` and `XDG_DATA_HOME` that
+/// the user sets in `~/.zshrc` / `config.fish` are absent. Without them,
+/// zoxide falls back to `~/Library/Application Support/zoxide` which is a
+/// different database from the one the shell's `z` function uses.
+fn shell_env_for_zoxide() -> &'static std::collections::HashMap<String, String> {
+    use std::sync::OnceLock;
+    static ENV: OnceLock<std::collections::HashMap<String, String>> = OnceLock::new();
+    ENV.get_or_init(|| {
+        // 1. Current process already has _ZO_DATA_DIR (e.g. dev mode from terminal)
+        if let Ok(v) = std::env::var("_ZO_DATA_DIR") {
+            if !v.is_empty() {
+                return [("_ZO_DATA_DIR".to_string(), v)].into();
+            }
+        }
+
+        // 2. Ask the login shell for the two relevant variables (5-second timeout)
+        if let Ok(shell) = std::env::var("SHELL") {
+            let cmd =
+                r#"printf "_ZO_DATA_DIR=%s\nXDG_DATA_HOME=%s\n" "$_ZO_DATA_DIR" "$XDG_DATA_HOME""#;
+            let (tx, rx) = std::sync::mpsc::channel();
+            std::thread::spawn(move || {
+                let result = std::process::Command::new(&shell)
+                    .args(["-l", "-c", cmd])
+                    .output();
+                let _ = tx.send(result);
+            });
+            if let Ok(Ok(out)) = rx.recv_timeout(std::time::Duration::from_secs(5)) {
+                if out.status.success() {
+                    let parsed = parse_zoxide_shell_env(&String::from_utf8_lossy(&out.stdout));
+                    // Prefer _ZO_DATA_DIR; fall back to XDG_DATA_HOME
+                    if let Some(v) = parsed.get("_ZO_DATA_DIR") {
+                        return [("_ZO_DATA_DIR".to_string(), v.clone())].into();
+                    }
+                    if let Some(v) = parsed.get("XDG_DATA_HOME") {
+                        return [("XDG_DATA_HOME".to_string(), v.clone())].into();
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback: check well-known paths for an existing zoxide database.
+        // Check the macOS platform default first (most likely when neither
+        // _ZO_DATA_DIR nor XDG_DATA_HOME is set), then the XDG convention path.
+        let home = std::env::var("HOME").unwrap_or_default();
+        for dir in [
+            format!("{}/Library/Application Support/zoxide", home),
+            format!("{}/.local/share/zoxide", home),
+        ] {
+            if std::path::Path::new(&dir).exists() {
+                return [("_ZO_DATA_DIR".to_string(), dir)].into();
+            }
+        }
+
+        std::collections::HashMap::new()
+    })
+}
+
 fn zoxide_bin() -> Option<&'static std::path::Path> {
     use std::sync::OnceLock;
     static BIN: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
@@ -214,6 +336,7 @@ pub fn zoxide_query(query: String) -> Result<Vec<String>, String> {
     let bin = zoxide_bin().ok_or_else(|| "zoxide not found".to_string())?;
     let output = std::process::Command::new(bin)
         .args(["query", "--list", &query])
+        .envs(shell_env_for_zoxide())
         .output()
         .map_err(|e| e.to_string())?;
 
@@ -234,6 +357,7 @@ pub fn zoxide_add(path: String) -> Result<(), String> {
     let bin = zoxide_bin().ok_or_else(|| "zoxide not found".to_string())?;
     let output = std::process::Command::new(bin)
         .args(["add", &path])
+        .envs(shell_env_for_zoxide())
         .output()
         .map_err(|e| e.to_string())?;
     if !output.status.success() {

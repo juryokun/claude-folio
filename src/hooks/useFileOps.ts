@@ -1,6 +1,7 @@
 import path from 'path-browserify';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
 import { tauriApi } from '../lib/tauri';
 import { useBookmarkStore } from '../store/bookmarkStore';
 import { useFileStore } from '../store/fileStore';
@@ -9,7 +10,9 @@ import { useUiStore } from '../store/uiStore';
 
 export function useFileOps() {
   const { t } = useTranslation();
-  const { activeTab, navigateTo } = useTabStore();
+  const { activeTab, navigateTo } = useTabStore(
+    useShallow((s) => ({ activeTab: s.activeTab, navigateTo: s.navigateTo })),
+  );
   const {
     getPane,
     filteredEntries,
@@ -20,7 +23,19 @@ export function useFileOps() {
     toggleSelect,
     setPendingFocusName,
     clearFind,
-  } = useFileStore();
+  } = useFileStore(
+    useShallow((s) => ({
+      getPane: s.getPane,
+      filteredEntries: s.filteredEntries,
+      setClipboard: s.setClipboard,
+      clipboard: s.clipboard,
+      loadDir: s.loadDir,
+      setCursor: s.setCursor,
+      toggleSelect: s.toggleSelect,
+      setPendingFocusName: s.setPendingFocusName,
+      clearFind: s.clearFind,
+    })),
+  );
   const {
     showHidden,
     terminalApp,
@@ -34,8 +49,23 @@ export function useFileOps() {
     showStatusMessage,
     setShowOpenWith,
     showCopyConflict,
-  } = useUiStore();
-  const { addBookmark } = useBookmarkStore();
+  } = useUiStore(
+    useShallow((s) => ({
+      showHidden: s.showHidden,
+      terminalApp: s.terminalApp,
+      terminalCommand: s.terminalCommand,
+      setShowRename: s.setShowRename,
+      setShowNewDir: s.setShowNewDir,
+      setShowNewFile: s.setShowNewFile,
+      showConfirmDialog: s.showConfirmDialog,
+      setShowCommandPalette: s.setShowCommandPalette,
+      setVimMode: s.setVimMode,
+      showStatusMessage: s.showStatusMessage,
+      setShowOpenWith: s.setShowOpenWith,
+      showCopyConflict: s.showCopyConflict,
+    })),
+  );
+  const { addBookmark } = useBookmarkStore(useShallow((s) => ({ addBookmark: s.addBookmark })));
 
   const tab = activeTab();
   const tabId = tab.id;

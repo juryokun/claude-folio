@@ -2,6 +2,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import path from 'path-browserify';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
 import { useFileOps } from '../../hooks/useFileOps';
 import { tauriApi } from '../../lib/tauri';
 import { useBookmarkStore } from '../../store/bookmarkStore';
@@ -30,16 +31,43 @@ interface ContextMenuState {
 
 export function FilePane({ tabId }: Props) {
   const { t } = useTranslation();
-  const { tabs, activeTabId, navigateTo } = useTabStore();
+  const { tabs, activeTabId, navigateTo } = useTabStore(
+    useShallow((s) => ({ tabs: s.tabs, activeTabId: s.activeTabId, navigateTo: s.navigateTo })),
+  );
   const { getPane, filteredEntries, setCursor, loadDir, setSort, clipboard, loadGitStatus } =
-    useFileStore();
-  const { showHidden, columnWidths, setColumnWidths } = useUiStore();
+    useFileStore(
+      useShallow((s) => ({
+        getPane: s.getPane,
+        filteredEntries: s.filteredEntries,
+        setCursor: s.setCursor,
+        loadDir: s.loadDir,
+        setSort: s.setSort,
+        clipboard: s.clipboard,
+        loadGitStatus: s.loadGitStatus,
+      })),
+    );
+  const {
+    showHidden,
+    columnWidths,
+    setColumnWidths,
+    terminalApp,
+    terminalCommand,
+    showStatusMessage,
+  } = useUiStore(
+    useShallow((s) => ({
+      showHidden: s.showHidden,
+      columnWidths: s.columnWidths,
+      setColumnWidths: s.setColumnWidths,
+      terminalApp: s.terminalApp,
+      terminalCommand: s.terminalCommand,
+      showStatusMessage: s.showStatusMessage,
+    })),
+  );
   const visibleDateCols = useConfigStore((s) => s.visibleDateCols);
   const showGitStatus = useConfigStore((s) => s.appearance.gitStatus.show);
   const showSize = useConfigStore((s) => s.appearance.size.show);
   const fileOps = useFileOps();
-  const { terminalApp, terminalCommand, showStatusMessage } = useUiStore();
-  const { addBookmark } = useBookmarkStore();
+  const { addBookmark } = useBookmarkStore(useShallow((s) => ({ addBookmark: s.addBookmark })));
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
   const startColResize = useCallback(
     (e: React.MouseEvent, col: 'size' | 'date' | 'dateCreated' | 'dateAccessed') => {
@@ -125,7 +153,7 @@ export function FilePane({ tabId }: Props) {
   // Drop target handler
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
-    const paths = e.dataTransfer.getData('application/x-mac-filer-paths');
+    const paths = e.dataTransfer.getData('application/x-folio-paths');
     if (paths) {
       const srcPaths: string[] = JSON.parse(paths);
       const dest = tab.path;

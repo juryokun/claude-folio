@@ -274,7 +274,26 @@ body {
   align-items: center;
   cursor: text;
   flex: 1;
+  min-width: 0;
   overflow: hidden;
+  white-space: nowrap;
+}
+.path-breadcrumb > * {
+  flex-shrink: 0;
+}
+.path-crumb-last {
+  display: flex;
+  align-items: center;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.path-crumb-last .path-segment {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .path-segment {
@@ -289,6 +308,11 @@ body {
 .path-sep {
   color: var(--text-dim);
   padding: 0 1px;
+}
+.path-ellipsis {
+  color: var(--text-dim);
+  padding: 2px 3px;
+  flex-shrink: 0;
 }
 .path-edit-hint {
   color: var(--text-dim);

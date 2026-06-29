@@ -13,6 +13,7 @@ allowed-tools:
   - Bash(git add *)
   - Bash(git commit *)
   - Bash(git log *)
+  - Bash(git branch *)
 ---
 
 # /commit
@@ -22,7 +23,20 @@ allowed-tools:
 
 ## 実行手順
 
-### 1. 変更内容の確認
+### 1. ブランチ確認
+
+```bash
+git branch --show-current
+```
+
+現在のブランチが `main` の場合は、コミットを中断してユーザーに警告する。
+
+> ⚠️ 現在のブランチは `main` です。`main` への直接コミットは推奨されません。
+> このままコミットしてよいですか？
+
+ユーザーが続行を明示的に承認した場合のみ次のステップに進む。
+
+### 2. 変更内容の確認
 ```bash
 git diff && git status
 ```

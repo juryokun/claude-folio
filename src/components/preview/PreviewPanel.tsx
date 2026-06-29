@@ -162,62 +162,69 @@ export function PreviewPanel() {
   useEffect(() => {
     if (!entry) {
       setPreview({ kind: 'none' });
+      prevPathRef.current = null;
       return;
     }
     if (entry.path === prevPathRef.current) return;
-    prevPathRef.current = entry.path;
 
-    if (entry.is_dir) {
-      setPreview({ kind: 'loading' });
-      tauriApi
-        .listDir(entry.path, false)
-        .then((entries) => {
-          if (entry.path !== prevPathRef.current) return;
-          const sorted = [...entries].sort((a, b) => {
-            if (a.is_dir !== b.is_dir) return a.is_dir ? -1 : 1;
-            return a.name.localeCompare(b.name, 'ja');
+    // Debounce IO calls to avoid flooding Rust with requests during fast cursor movement
+    const timer = setTimeout(() => {
+      prevPathRef.current = entry.path;
+
+      if (entry.is_dir) {
+        setPreview({ kind: 'loading' });
+        tauriApi
+          .listDir(entry.path, false)
+          .then((entries) => {
+            if (entry.path !== prevPathRef.current) return;
+            const sorted = [...entries].sort((a, b) => {
+              if (a.is_dir !== b.is_dir) return a.is_dir ? -1 : 1;
+              return a.name.localeCompare(b.name, 'ja');
+            });
+            setPreview({ kind: 'dir', entries: sorted });
+          })
+          .catch(() => {
+            if (entry.path !== prevPathRef.current) return;
+            setPreview({ kind: 'dir', entries: [] });
           });
-          setPreview({ kind: 'dir', entries: sorted });
-        })
-        .catch(() => {
-          if (entry.path !== prevPathRef.current) return;
-          setPreview({ kind: 'dir', entries: [] });
-        });
-      return;
-    }
+        return;
+      }
 
-    const ext = getExt(entry.name);
+      const ext = getExt(entry.name);
 
-    if (IMAGE_EXTS.has(ext)) {
-      setPreview({ kind: 'image', src: convertFileSrc(entry.path) });
-      return;
-    }
-    if (VIDEO_EXTS.has(ext)) {
-      setPreview({ kind: 'video', src: convertFileSrc(entry.path) });
-      return;
-    }
-    if (AUDIO_EXTS.has(ext)) {
-      setPreview({ kind: 'audio', src: convertFileSrc(entry.path) });
-      return;
-    }
-    if (TEXT_EXTS.has(ext) || ext === '') {
-      setPreview({ kind: 'loading' });
-      tauriApi
-        .readTextFile(entry.path)
-        .then((content) => {
-          if (entry.path !== prevPathRef.current) return;
-          setPreview({ kind: 'text', content, language: guessLanguage(ext) });
-        })
-        .catch((e) => {
-          if (entry.path !== prevPathRef.current) return;
-          const msg = String(e);
-          if (msg === 'binary') setPreview({ kind: 'binary' });
-          else setPreview({ kind: 'error', message: msg });
-        });
-      return;
-    }
+      if (IMAGE_EXTS.has(ext)) {
+        setPreview({ kind: 'image', src: convertFileSrc(entry.path) });
+        return;
+      }
+      if (VIDEO_EXTS.has(ext)) {
+        setPreview({ kind: 'video', src: convertFileSrc(entry.path) });
+        return;
+      }
+      if (AUDIO_EXTS.has(ext)) {
+        setPreview({ kind: 'audio', src: convertFileSrc(entry.path) });
+        return;
+      }
+      if (TEXT_EXTS.has(ext) || ext === '') {
+        setPreview({ kind: 'loading' });
+        tauriApi
+          .readTextFile(entry.path)
+          .then((content) => {
+            if (entry.path !== prevPathRef.current) return;
+            setPreview({ kind: 'text', content, language: guessLanguage(ext) });
+          })
+          .catch((e) => {
+            if (entry.path !== prevPathRef.current) return;
+            const msg = String(e);
+            if (msg === 'binary') setPreview({ kind: 'binary' });
+            else setPreview({ kind: 'error', message: msg });
+          });
+        return;
+      }
 
-    setPreview({ kind: 'binary' });
+      setPreview({ kind: 'binary' });
+    }, 150);
+
+    return () => clearTimeout(timer);
   }, [entry]);
 
   const startResize = (e: React.MouseEvent) => {

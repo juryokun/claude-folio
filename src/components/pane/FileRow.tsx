@@ -180,7 +180,7 @@ export const FileRow = React.memo(function FileRow({
       onDragStart={(e) => {
         // HTML5 data for internal drops within this app
         e.dataTransfer.setData('text/plain', dragPaths[0]);
-        e.dataTransfer.setData('application/x-mac-filer-paths', JSON.stringify(dragPaths));
+        e.dataTransfer.setData('application/x-folio-paths', JSON.stringify(dragPaths));
         // Native OS drag so external apps (Chrome, Finder, etc.) can receive real files
         if (isTauri()) {
           const label = dragPaths.length === 1 ? entry.name : `${dragPaths.length} items`;

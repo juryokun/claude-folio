@@ -1,12 +1,12 @@
 [package]
 name = "folio"
-version = "0.2.1"
+version = "0.2.2"
 description = "Claude Folio - A Vim-like file manager for macOS"
 authors = []
 edition = "2021"
 
 [lib]
-name = "mac_filer_lib"
+name = "folio_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -24,6 +24,7 @@ toml = "0.8"
 trash = "3"
 walkdir = "2"
 notify = "6"
+shell-words = "1"
 
 [dev-dependencies]
 tempfile = "3"
