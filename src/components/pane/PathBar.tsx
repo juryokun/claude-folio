@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { buildBreadcrumbItems } from '../../lib/breadcrumb';
 import { favoritePath } from '../../lib/favorites';
 import { commonPrefix, expandTilde } from '../../lib/pathCompletion';
 import { tauriApi } from '../../lib/tauri';
@@ -236,7 +237,11 @@ export function PathBar() {
     }
   };
 
-  const segments = currentPath.split('/').filter(Boolean);
+  const {
+    items: breadcrumbItems,
+    truncated,
+    hiddenPath,
+  } = useMemo(() => buildBreadcrumbItems(currentPath), [currentPath]);
 
   const placeholder =
     mode === 'bookmark' ? t('pathBar.bookmarkSearch') : t('pathBar.pathOrKeyword');
@@ -330,28 +335,34 @@ export function PathBar() {
         </div>
       ) : (
         <div className="path-breadcrumb" onClick={() => startMode('path', currentPath)}>
-          <span
-            className="path-segment"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigateTo('/');
-            }}
-          >
-            /
-          </span>
-          {segments.map((seg, i) => {
-            const segPath = `/${segments.slice(0, i + 1).join('/')}`;
+          {truncated ? (
+            <span className="path-ellipsis" title={hiddenPath}>
+              ...
+            </span>
+          ) : (
+            <span
+              className="path-segment"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateTo('/');
+              }}
+            >
+              /
+            </span>
+          )}
+          {breadcrumbItems.map((item, i) => {
+            const isLast = i === breadcrumbItems.length - 1;
             return (
-              <span key={segPath}>
-                {i > 0 && <span className="path-sep">/</span>}
+              <span key={item.path} className={isLast ? 'path-crumb-last' : undefined}>
+                <span className="path-sep">/</span>
                 <span
                   className="path-segment"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigateTo(segPath);
+                    navigateTo(item.path);
                   }}
                 >
-                  {seg}
+                  {item.seg}
                 </span>
               </span>
             );
