@@ -124,6 +124,15 @@ export default function App() {
     loadDir(currentTabId, currentTabPath, showHidden);
   }, [currentTabId, currentTabPath, showHidden, loadDir]);
 
+  // Record directory to zoxide and recent history after 4s dwell to avoid logging intermediate dirs
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      tauriApi.zoxideAdd(currentTabPath).catch(() => {});
+      tauriApi.pushRecentEntry(currentTabPath, 'dir').catch(() => {});
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [currentTabPath]);
+
   // Watch active directory for external changes; debounce to avoid rapid reloads
   const reloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showHiddenRef = useRef(showHidden);

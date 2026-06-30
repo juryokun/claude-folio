@@ -208,6 +208,7 @@ export function useFileOps() {
 
   const handleOpenEditor = useCallback(() => {
     if (!cursorEntry || cursorEntry.is_dir) return;
+    tauriApi.pushRecentEntry(cursorEntry.path, 'file').catch(() => {});
     const editorCmd = useUiStore.getState().editorCommand;
     if (editorCmd) {
       tauriApi.openWithEditor(cursorEntry.path, editorCmd).catch(console.error);
@@ -219,6 +220,7 @@ export function useFileOps() {
 
   const handleOpenWith = useCallback(() => {
     if (!cursorEntry) return;
+    if (!cursorEntry.is_dir) tauriApi.pushRecentEntry(cursorEntry.path, 'file').catch(() => {});
     setShowOpenWith(true, cursorEntry.path);
   }, [cursorEntry, setShowOpenWith]);
 

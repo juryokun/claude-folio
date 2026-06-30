@@ -3,7 +3,7 @@ import path from 'path-browserify';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RecentMode } from '../../lib/recentHistory';
 import { filterAndSortRecent, formatAccessedAt } from '../../lib/recentHistory';
-import { tauriApi } from '../../lib/tauri';
+import { useFileStore } from '../../store/fileStore';
 import { useRecentStore } from '../../store/recentStore';
 import { useTabStore } from '../../store/tabStore';
 import { useUiStore } from '../../store/uiStore';
@@ -12,7 +12,8 @@ const ROW_HEIGHT = 36;
 
 export function RecentPane() {
   const { entries, loadEntries } = useRecentStore();
-  const { navigateTo } = useTabStore();
+  const { navigateTo, activeTab } = useTabStore();
+  const { setPendingFocusName } = useFileStore();
   const { closeRecent } = useUiStore();
 
   const [cursor, setCursor] = useState(0);
@@ -59,8 +60,9 @@ export function RecentPane() {
     if (entry.kind === 'dir') {
       navigateTo(entry.path);
     } else {
-      tauriApi.openFile(entry.path).catch(() => {});
-      tauriApi.pushRecentEntry(entry.path, 'file').catch(() => {});
+      const tabId = activeTab().id;
+      setPendingFocusName(tabId, path.basename(entry.path));
+      navigateTo(path.dirname(entry.path));
     }
     closeRecent();
   };
