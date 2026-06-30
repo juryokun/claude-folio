@@ -16,6 +16,7 @@ export const useRecentStore = create<RecentStore>((set) => ({
       path: e.path,
       kind: e.kind === 'file' || e.kind === 'dir' ? e.kind : 'file',
       accessed_at: e.accessed_at,
+      modified: e.modified,
     }));
     set({ entries });
   },

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RecentEntry } from '../recentHistory';
-import { filterAndSortRecent, formatAccessedAt } from '../recentHistory';
+import { filterAndSortRecent, formatRecentDate } from '../recentHistory';
 
 function entry(p: string, kind: 'file' | 'dir', accessed_at: number): RecentEntry {
   return { path: p, kind, accessed_at };
@@ -48,25 +48,32 @@ describe('filterAndSortRecent', () => {
   });
 });
 
-describe('formatAccessedAt', () => {
-  it('returns 今日 HH:mm for a timestamp from today', () => {
+describe('formatRecentDate', () => {
+  it('returns today label and HH:MM:SS for a timestamp from today', () => {
     const now = new Date();
-    now.setHours(14, 30, 0, 0);
-    const result = formatAccessedAt(now.getTime());
-    expect(result).toBe('今日 14:30');
+    now.setHours(14, 30, 45, 0);
+    const result = formatRecentDate(now.getTime(), 'Today', 'Yesterday');
+    expect(result).toEqual({ label: 'Today', time: '14:30:45' });
   });
 
-  it('returns 昨日 HH:mm for a timestamp from yesterday', () => {
+  it('uses provided today/yesterday labels', () => {
+    const now = new Date();
+    now.setHours(9, 5, 0, 0);
+    const result = formatRecentDate(now.getTime(), '今日', '昨日');
+    expect(result.label).toBe('今日');
+  });
+
+  it('returns yesterday label and HH:MM:SS for yesterday', () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     yesterday.setHours(9, 5, 0, 0);
-    const result = formatAccessedAt(yesterday.getTime());
-    expect(result).toBe('昨日 09:05');
+    const result = formatRecentDate(yesterday.getTime(), 'Today', 'Yesterday');
+    expect(result).toEqual({ label: 'Yesterday', time: '09:05:00' });
   });
 
-  it('returns M/D HH:mm for older timestamps', () => {
+  it('returns YYYY/MM/DD and HH:MM:SS for older timestamps', () => {
     const old = new Date(2025, 2, 15, 8, 0, 0, 0); // March 15, 2025
-    const result = formatAccessedAt(old.getTime());
-    expect(result).toBe('3/15 08:00');
+    const result = formatRecentDate(old.getTime(), 'Today', 'Yesterday');
+    expect(result).toEqual({ label: '2025/03/15', time: '08:00:00' });
   });
 });

@@ -5,6 +5,8 @@ pub struct RecentEntry {
     pub path: String,
     pub kind: String,
     pub accessed_at: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub modified: Option<u64>,
 }
 
 fn recent_path() -> Option<std::path::PathBuf> {
@@ -14,6 +16,14 @@ fn recent_path() -> Option<std::path::PathBuf> {
             .join("folio")
             .join("history.json")
     })
+}
+
+fn read_mtime(path: &str) -> Option<u64> {
+    std::fs::metadata(path)
+        .ok()
+        .and_then(|m| m.modified().ok())
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as u64)
 }
 
 pub(crate) fn load_recent_from(path: &std::path::Path) -> Vec<RecentEntry> {
@@ -54,7 +64,11 @@ pub fn load_recent_entries() -> Vec<RecentEntry> {
     let Some(path) = recent_path() else {
         return vec![];
     };
-    load_recent_from(&path)
+    let mut entries = load_recent_from(&path);
+    for entry in &mut entries {
+        entry.modified = read_mtime(&entry.path);
+    }
+    entries
 }
 
 #[tauri::command]
@@ -65,6 +79,7 @@ pub fn push_recent_entry(path: String, kind: String) -> Result<(), String> {
     let Some(history_path) = recent_path() else {
         return Err("could not determine config path".to_string());
     };
+    let modified = read_mtime(&path);
     let entry = RecentEntry {
         accessed_at: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -72,6 +87,7 @@ pub fn push_recent_entry(path: String, kind: String) -> Result<(), String> {
             .as_millis() as u64,
         path,
         kind,
+        modified,
     };
     push_entry_to(&history_path, entry, 500)
 }
@@ -86,6 +102,7 @@ mod tests {
             path: path.to_string(),
             kind: kind.to_string(),
             accessed_at: 1000,
+            modified: None,
         }
     }
 
@@ -142,5 +159,25 @@ mod tests {
         let entries = load_recent_from(&path);
         assert_eq!(entries[0].path, e2.path);
         assert_eq!(entries[1].path, e1.path);
+    }
+
+    #[test]
+    fn modified_is_none_for_nonexistent_path() {
+        let entry_obj = RecentEntry {
+            path: "/nonexistent/path/file.txt".to_string(),
+            kind: "file".to_string(),
+            accessed_at: 1000,
+            modified: read_mtime("/nonexistent/path/file.txt"),
+        };
+        assert!(entry_obj.modified.is_none());
+    }
+
+    #[test]
+    fn modified_is_some_for_existing_file() {
+        let dir = TempDir::new().unwrap();
+        let file = dir.path().join("test.txt");
+        std::fs::write(&file, b"hello").unwrap();
+        let mtime = read_mtime(file.to_str().unwrap());
+        assert!(mtime.is_some());
     }
 }

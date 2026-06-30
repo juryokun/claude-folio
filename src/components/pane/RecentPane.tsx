@@ -1,16 +1,19 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import path from 'path-browserify';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { RecentMode } from '../../lib/recentHistory';
-import { filterAndSortRecent, formatAccessedAt } from '../../lib/recentHistory';
+import { filterAndSortRecent, formatRecentDate } from '../../lib/recentHistory';
 import { useFileStore } from '../../store/fileStore';
 import { useRecentStore } from '../../store/recentStore';
 import { useTabStore } from '../../store/tabStore';
 import { useUiStore } from '../../store/uiStore';
 
 const ROW_HEIGHT = 36;
+const DATE_COL_WIDTH = 150;
 
 export function RecentPane() {
+  const { t } = useTranslation();
   const { entries, loadEntries } = useRecentStore();
   const { navigateTo, activeTab } = useTabStore();
   const { setPendingFocusName } = useFileStore();
@@ -23,6 +26,9 @@ export function RecentPane() {
 
   const parentRef = useRef<HTMLDivElement>(null);
   const filterInputRef = useRef<HTMLInputElement>(null);
+
+  const todayLabel = t('fileDate.today');
+  const yesterdayLabel = t('fileDate.yesterday');
 
   useEffect(() => {
     loadEntries().catch(() => {});
@@ -56,16 +62,19 @@ export function RecentPane() {
     }
   }, [cursor, visible.length, virtualizer]);
 
-  const openEntry = (entry: (typeof visible)[number]) => {
-    if (entry.kind === 'dir') {
-      navigateTo(entry.path);
-    } else {
-      const tabId = activeTab().id;
-      setPendingFocusName(tabId, path.basename(entry.path));
-      navigateTo(path.dirname(entry.path));
-    }
-    closeRecent();
-  };
+  const openEntry = useCallback(
+    (entry: (typeof visible)[number]) => {
+      if (entry.kind === 'dir') {
+        navigateTo(entry.path);
+      } else {
+        const tabId = activeTab().id;
+        setPendingFocusName(tabId, path.basename(entry.path));
+        navigateTo(path.dirname(entry.path));
+      }
+      closeRecent();
+    },
+    [navigateTo, activeTab, setPendingFocusName, closeRecent],
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -118,7 +127,7 @@ export function RecentPane() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [filterActive, visible, cursor, closeRecent, navigateTo]);
+  }, [filterActive, visible, cursor, openEntry, closeRecent]);
 
   return (
     <div
@@ -142,9 +151,7 @@ export function RecentPane() {
         }}
       >
         <span className="find-bar-badge">fr</span>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-          最近使ったファイル・ディレクトリ
-        </span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('recentPane.title')}</span>
         <button
           style={{
             marginLeft: 8,
@@ -159,7 +166,7 @@ export function RecentPane() {
           onClick={() => setMode((m) => (m === 'all' ? 'files' : 'all'))}
           tabIndex={-1}
         >
-          files only
+          {t('recentPane.filesOnly')}
         </button>
         {filterActive ? (
           <input
@@ -177,7 +184,7 @@ export function RecentPane() {
             }}
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.target.value)}
-            placeholder="絞り込み..."
+            placeholder={t('recentPane.filterPlaceholder')}
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
@@ -191,13 +198,25 @@ export function RecentPane() {
             }}
           >
             {filterQuery ? `/${filterQuery}` : ''}
-            <span style={{ marginLeft: 8, opacity: 0.6 }}>
-              j/k 移動 · / 絞り込み · f 切替 · Enter 開く · Esc 閉じる
-            </span>
+            <span style={{ marginLeft: 8, opacity: 0.6 }}>{t('recentPane.navigate')}</span>
           </span>
         )}
         <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
-          {visible.length}件
+          {t('recentPane.count', { count: visible.length })}
+        </span>
+      </div>
+
+      {/* Column header */}
+      <div className="file-list-header">
+        <span style={{ width: 20, flexShrink: 0 }} />
+        <span className="file-name header-col" style={{ flex: 1, minWidth: 0 }}>
+          {t('filePane.colName')}
+        </span>
+        <span className="file-date header-col" style={{ width: DATE_COL_WIDTH, flexShrink: 0 }}>
+          {t('filePane.colDateAccessed')}
+        </span>
+        <span className="file-date header-col" style={{ width: DATE_COL_WIDTH, flexShrink: 0 }}>
+          {t('filePane.colDate')}
         </span>
       </div>
 
@@ -215,6 +234,11 @@ export function RecentPane() {
             const isCursor = vItem.index === cursor;
             const base = path.basename(entry.path);
             const dir = path.dirname(entry.path);
+            const accFmt = formatRecentDate(entry.accessed_at, todayLabel, yesterdayLabel);
+            const modFmt =
+              entry.modified != null
+                ? formatRecentDate(entry.modified, todayLabel, yesterdayLabel)
+                : { label: '—', time: '' };
 
             return (
               <div
@@ -231,14 +255,14 @@ export function RecentPane() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
-                  padding: '0 10px',
+                  padding: '0 8px',
                   boxSizing: 'border-box',
                   cursor: 'pointer',
                   background: isCursor ? 'var(--cursor-bg)' : 'transparent',
                   color: isCursor ? 'var(--cursor-fg)' : 'var(--text-primary)',
                 }}
               >
-                <span style={{ fontSize: 14, flexShrink: 0 }}>
+                <span style={{ fontSize: 14, flexShrink: 0, width: 20, textAlign: 'center' }}>
                   {entry.kind === 'dir' ? '📁' : '📄'}
                 </span>
                 <span style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
@@ -267,15 +291,13 @@ export function RecentPane() {
                     {dir}
                   </span>
                 </span>
-                <span
-                  style={{
-                    fontSize: 11,
-                    opacity: 0.55,
-                    flexShrink: 0,
-                    marginLeft: 8,
-                  }}
-                >
-                  {formatAccessedAt(entry.accessed_at)}
+                <span className="file-date" style={{ width: DATE_COL_WIDTH, flexShrink: 0 }}>
+                  <span className="file-date-label">{accFmt.label}</span>
+                  {accFmt.time && <span className="file-date-time">{accFmt.time}</span>}
+                </span>
+                <span className="file-date" style={{ width: DATE_COL_WIDTH, flexShrink: 0 }}>
+                  <span className="file-date-label">{modFmt.label}</span>
+                  {modFmt.time && <span className="file-date-time">{modFmt.time}</span>}
                 </span>
               </div>
             );
@@ -290,7 +312,7 @@ export function RecentPane() {
               fontSize: 13,
             }}
           >
-            {entries.length === 0 ? '履歴がありません' : '一致する項目がありません'}
+            {entries.length === 0 ? t('recentPane.empty') : t('recentPane.noMatches')}
           </div>
         )}
       </div>

@@ -4,6 +4,7 @@ export interface RecentEntry {
   path: string;
   kind: 'file' | 'dir';
   accessed_at: number;
+  modified?: number;
 }
 
 export type RecentMode = 'files' | 'all';
@@ -27,28 +28,28 @@ export function filterAndSortRecent(
   return [...result].sort((a, b) => b.accessed_at - a.accessed_at);
 }
 
-export function formatAccessedAt(timestamp: number): string {
-  const date = new Date(timestamp);
+function sameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+export function formatRecentDate(
+  timestamp: number,
+  todayLabel: string,
+  yesterdayLabel: string,
+): { label: string; time: string } {
+  const d = new Date(timestamp);
   const now = new Date();
-
-  const isToday =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate();
-
+  const hms = [d.getHours(), d.getMinutes(), d.getSeconds()]
+    .map((n) => String(n).padStart(2, '0'))
+    .join(':');
+  if (sameDay(d, now)) return { label: todayLabel, time: hms };
   const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const isYesterday =
-    date.getFullYear() === yesterday.getFullYear() &&
-    date.getMonth() === yesterday.getMonth() &&
-    date.getDate() === yesterday.getDate();
-
-  const hhmm = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-
-  if (isToday) return `今日 ${hhmm}`;
-  if (isYesterday) return `昨日 ${hhmm}`;
-
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-  return `${m}/${d} ${hhmm}`;
+  yesterday.setDate(now.getDate() - 1);
+  if (sameDay(d, yesterday)) return { label: yesterdayLabel, time: hms };
+  const label = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+  return { label, time: hms };
 }

@@ -111,7 +111,9 @@ export const tauriApi = {
   getGitStatus: (path: string) => invoke<Record<string, string>>('get_git_status', { path }),
 
   loadRecentEntries: () =>
-    invoke<{ path: string; kind: string; accessed_at: number }[]>('load_recent_entries'),
+    invoke<{ path: string; kind: string; accessed_at: number; modified?: number }[]>(
+      'load_recent_entries',
+    ),
 
   pushRecentEntry: (path: string, kind: 'file' | 'dir') =>
     invoke<void>('push_recent_entry', { path, kind }),
