@@ -28,3 +28,4 @@ test-results/
 # Claude Code (personal/local files only)
 .claude/settings.local.json
 .claude/agent-memory/
+.claude/worktrees/
