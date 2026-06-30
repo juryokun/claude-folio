@@ -13,6 +13,11 @@ import { useUiStore } from '../../store/uiStore';
 import { ContextMenu } from './ContextMenu';
 import { FileRow } from './FileRow';
 
+// Normal rows are single-line; find-mode rows show filename + parent path (2 lines).
+// Keep in sync with App.css .file-row min-height.
+const ROW_HEIGHT = 22;
+const ROW_HEIGHT_FIND = 36;
+
 interface Props {
   tabId: string;
 }
@@ -134,7 +139,7 @@ export function FilePane({ tabId }: Props) {
   const virtualizer = useVirtualizer({
     count: entries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 22,
+    estimateSize: () => (inFindMode ? ROW_HEIGHT_FIND : ROW_HEIGHT),
     overscan: 10,
   });
 
@@ -454,6 +459,7 @@ export function FilePane({ tabId }: Props) {
                   position: 'absolute',
                   top: `${vItem.start}px`,
                   width: '100%',
+                  height: inFindMode ? ROW_HEIGHT_FIND : ROW_HEIGHT,
                 }}
               />
             );
