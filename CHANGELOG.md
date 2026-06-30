@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.3] - 2026-06-30
+
+### Features
+
+- **Zoxide path display** — Zoxide jump candidates now show the directory basename with an abbreviated parent path, making it easier to distinguish similar directories at a glance.
+
 ## [0.2.2] - 2026-06-29
 
 ### Bug Fixes
