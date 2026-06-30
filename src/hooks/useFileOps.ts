@@ -194,6 +194,7 @@ export function useFileOps() {
   const handleOpenDefault = useCallback(() => {
     if (!cursorEntry) return;
     tauriApi.openFile(cursorEntry.path).catch(console.error);
+    tauriApi.pushRecentEntry(cursorEntry.path, 'file').catch(() => {});
   }, [cursorEntry]);
 
   const handleOpenTerminalHere = useCallback(() => {

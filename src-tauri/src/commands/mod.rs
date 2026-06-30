@@ -5,6 +5,7 @@ pub mod config;
 pub mod custom_commands;
 pub mod fs;
 pub mod git;
+pub mod recent;
 pub mod search;
 pub mod system;
 pub mod terminal;

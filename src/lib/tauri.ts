@@ -110,6 +110,12 @@ export const tauriApi = {
 
   getGitStatus: (path: string) => invoke<Record<string, string>>('get_git_status', { path }),
 
+  loadRecentEntries: () =>
+    invoke<{ path: string; kind: string; accessed_at: number }[]>('load_recent_entries'),
+
+  pushRecentEntry: (path: string, kind: 'file' | 'dir') =>
+    invoke<void>('push_recent_entry', { path, kind }),
+
   startNativeDrag: (paths: string[], label: string): Promise<void> => {
     // Build a simple PNG drag image via canvas
     const canvas = document.createElement('canvas');

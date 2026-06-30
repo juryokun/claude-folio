@@ -15,6 +15,7 @@ use commands::{
         list_dir_completions, move_files, read_text_file, rename_file,
     },
     git::get_git_status,
+    recent::{load_recent_entries, push_recent_entry},
     search::{
         check_7zip_installed, check_fd_installed, compress_7zip, extract_7zip, search_files,
         search_with_fd,
@@ -117,6 +118,8 @@ pub fn run() {
             unwatch_dir,
             load_bookmarks,
             save_bookmarks,
+            load_recent_entries,
+            push_recent_entry,
             load_custom_commands,
             run_shell_command,
             get_git_status,

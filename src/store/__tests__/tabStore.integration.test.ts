@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../lib/tauri', () => ({
-  tauriApi: { zoxideAdd: vi.fn().mockResolvedValue(undefined) },
+  tauriApi: {
+    zoxideAdd: vi.fn().mockResolvedValue(undefined),
+    pushRecentEntry: vi.fn().mockResolvedValue(undefined),
+  },
   isTauri: vi.fn().mockReturnValue(true),
 }));
 

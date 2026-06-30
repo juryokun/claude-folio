@@ -441,7 +441,10 @@ export function FilePane({ tabId }: Props) {
                 }}
                 onDoubleClick={() => {
                   if (entry.is_dir) navigateTo(entry.path);
-                  else tauriApi.openFile(entry.path).catch(console.error);
+                  else {
+                    tauriApi.openFile(entry.path).catch(console.error);
+                    tauriApi.pushRecentEntry(entry.path, 'file').catch(() => {});
+                  }
                 }}
                 onContextMenu={(e) => {
                   e.preventDefault();

@@ -11,6 +11,7 @@ import { OpenWithModal } from './components/modals/OpenWithModal';
 import { RenameModal } from './components/modals/RenameModal';
 import { FilePane } from './components/pane/FilePane';
 import { PathBar } from './components/pane/PathBar';
+import { RecentPane } from './components/pane/RecentPane';
 import { StatusBar } from './components/pane/StatusBar';
 import { PreviewPanel } from './components/preview/PreviewPanel';
 import { FindBar } from './components/search/FindBar';
@@ -63,6 +64,9 @@ export default function App() {
     showPreview,
     togglePreview,
     openFind,
+    showRecent,
+    openRecent,
+    closeRecent,
   } = useUiStore();
 
   const fileOps = useFileOps();
@@ -287,6 +291,9 @@ export default function App() {
         case 'find_all':
           openFind('all');
           break;
+        case 'find_recent':
+          openRecent();
+          break;
         case 'sort_name':
           setSort(activeTabId, 'name', false);
           break;
@@ -323,6 +330,7 @@ export default function App() {
       togglePreview,
       setShowHelp,
       openFind,
+      openRecent,
       setSort,
     ],
   );
@@ -335,6 +343,7 @@ export default function App() {
       if (e.key === 'Escape' && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
         setVimMode('NORMAL');
         setShowHelp(false);
+        closeRecent();
         const tab = useTabStore.getState().activeTab();
         clearFind(tab.id);
         useFileStore.getState().setClipboard(null);
@@ -342,7 +351,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [setVimMode, setShowHelp, clearFind]);
+  }, [setVimMode, setShowHelp, closeRecent, clearFind]);
 
   return (
     <div className="app">
@@ -357,7 +366,7 @@ export default function App() {
                 key={t.id}
                 className="tab-content"
                 style={{
-                  display: t.id === activeTabId ? 'flex' : 'none',
+                  display: !showRecent && t.id === activeTabId ? 'flex' : 'none',
                   flex: 1,
                   minHeight: 0,
                   overflow: 'hidden',
@@ -366,6 +375,7 @@ export default function App() {
                 <FilePane tabId={t.id} />
               </div>
             ))}
+            {showRecent && <RecentPane />}
           </div>
           <SearchBar />
           <FindBar />

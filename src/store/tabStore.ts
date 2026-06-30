@@ -88,6 +88,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
   navigateTo: (path) => {
     const resolved = expandTilde(path);
     tauriApi.zoxideAdd(resolved).catch(() => {});
+    tauriApi.pushRecentEntry(resolved, 'dir').catch(() => {});
     set((s) => ({
       tabs: s.tabs.map((t) => {
         if (t.id !== s.activeTabId) return t;
