@@ -554,6 +554,20 @@ body {
 .file-row.hidden.cursor {
   opacity: 0.9;
 }
+.file-row.clipboard-copy,
+.file-row.clipboard-cut {
+  outline: 1px dashed var(--text-accent);
+  outline-offset: -1px;
+}
+.file-row.clipboard-cut {
+  opacity: 0.6;
+}
+.file-row.clipboard-cut.hidden {
+  opacity: 0.4;
+}
+.file-row.clipboard-cut.hidden.cursor {
+  opacity: 0.9;
+}
 
 .file-select-indicator {
   width: 14px;

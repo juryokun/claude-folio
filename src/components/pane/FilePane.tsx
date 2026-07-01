@@ -71,6 +71,7 @@ export function FilePane({ tabId }: Props) {
   const visibleDateCols = useConfigStore((s) => s.visibleDateCols);
   const showGitStatus = useConfigStore((s) => s.appearance.gitStatus.show);
   const showSize = useConfigStore((s) => s.appearance.size.show);
+  const clipboardPaths = useMemo(() => new Set(clipboard?.paths ?? []), [clipboard]);
   const fileOps = useFileOps();
   const { addBookmark } = useBookmarkStore(useShallow((s) => ({ addBookmark: s.addBookmark })));
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
@@ -453,6 +454,7 @@ export function FilePane({ tabId }: Props) {
                     entry={entry}
                     isCursor={isActive && vItem.index === pane.cursor}
                     isSelected={pane.selected.has(entry.path)}
+                    clipboardMode={clipboardPaths.has(entry.path) ? clipboard?.mode : undefined}
                     colSizeWidth={showSize ? columnWidths.size : undefined}
                     dateCols={dateCols}
                     gitSymbol={showGitStatus ? pane.gitStatus[entry.name] : undefined}

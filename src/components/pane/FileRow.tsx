@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { isTauri, tauriApi } from '../../lib/tauri';
 import { useConfigStore } from '../../store/configStore';
 import { useUiStore } from '../../store/uiStore';
-import type { FileEntry } from '../../types';
+import type { ClipboardMode, FileEntry } from '../../types';
 
 export interface DateColDef {
   key: 'modified' | 'created' | 'accessed';
@@ -15,6 +15,7 @@ interface Props {
   entry: FileEntry;
   isCursor: boolean;
   isSelected: boolean;
+  clipboardMode?: ClipboardMode;
   onClick: () => void;
   onDoubleClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
@@ -155,6 +156,7 @@ export const FileRow = React.memo(function FileRow({
   entry,
   isCursor,
   isSelected,
+  clipboardMode,
   onClick,
   onDoubleClick,
   onContextMenu,
@@ -171,7 +173,7 @@ export const FileRow = React.memo(function FileRow({
   const pendingKey = isCursor ? rawPendingKey : null;
   return (
     <div
-      className={`file-row${isCursor ? ' cursor' : ''}${isSelected ? ' selected' : ''}${entry.name.startsWith('.') ? ' hidden' : ''}`}
+      className={`file-row${isCursor ? ' cursor' : ''}${isSelected ? ' selected' : ''}${entry.name.startsWith('.') ? ' hidden' : ''}${clipboardMode ? ` clipboard-${clipboardMode}` : ''}`}
       style={style}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
