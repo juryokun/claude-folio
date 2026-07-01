@@ -20,6 +20,7 @@ import { Sidebar } from './components/sidebar/Sidebar';
 import { TabBar } from './components/tabs/TabBar';
 import { useFileOps } from './hooks/useFileOps';
 import { useVimKeys } from './hooks/useVimKeys';
+import { shouldPreserveCursor } from './lib/tabSwitch';
 import { tauriApi } from './lib/tauri';
 import { applyTheme } from './lib/themes';
 import type { VimAction } from './lib/vim/keymap';
@@ -120,8 +121,19 @@ export default function App() {
   const currentTab = activeTab();
   const currentTabPath = currentTab.path;
   const currentTabId = currentTab.id;
+  const prevTabIdRef = useRef(currentTabId);
   useEffect(() => {
-    loadDir(currentTabId, currentTabPath, showHidden);
+    // Switching to a different, already-loaded tab (same path) should just
+    // refresh entries, preserving that tab's find mode / selection / filter
+    // state. A brand-new tab (no pane yet) or navigating within the same tab
+    // to a new path should reset that state as before.
+    const isTabSwitch = shouldPreserveCursor(
+      prevTabIdRef.current,
+      currentTabId,
+      useFileStore.getState().panes[currentTabId] !== undefined,
+    );
+    prevTabIdRef.current = currentTabId;
+    loadDir(currentTabId, currentTabPath, showHidden, isTabSwitch);
   }, [currentTabId, currentTabPath, showHidden, loadDir]);
 
   // Record directory to zoxide and recent history after 4s dwell to avoid logging intermediate dirs
