@@ -143,6 +143,14 @@ export function FilePane({ tabId }: Props) {
     overscan: 10,
   });
 
+  // When loading starts, reset scroll so the virtualizer doesn't restore a stale offset
+  // from the previous directory onto the new scroll container.
+  useEffect(() => {
+    if (pane.loading && parentRef.current) {
+      parentRef.current.scrollTop = 0;
+    }
+  }, [pane.loading]);
+
   // Scroll cursor into view
   useEffect(() => {
     if (isActive && entries.length > 0) {
@@ -337,12 +345,7 @@ export function FilePane({ tabId }: Props) {
             ]
           : [];
 
-  if (pane.loading) {
-    return <div className="file-pane loading">{t('filePane.loading')}</div>;
-  }
-  if (pane.error) {
-    return <div className="file-pane error">{pane.error}</div>;
-  }
+  const showContent = !pane.loading && !pane.error;
 
   return (
     <div
@@ -358,14 +361,22 @@ export function FilePane({ tabId }: Props) {
       onDrop={handleDrop}
     >
       {/* Full-height separator lines */}
-      <div
-        className="col-line"
-        style={{ right: totalDateWidth + (showSize ? columnWidths.size : 0) + 17 }}
-      />
-      {dateCols.map((col, i) => (
-        <div key={col.key} className="col-line" style={{ right: dateColSuffixWidths[i] + 11 }} />
-      ))}
-      {pane.findMode && (
+      {showContent && (
+        <>
+          <div
+            className="col-line"
+            style={{ right: totalDateWidth + (showSize ? columnWidths.size : 0) + 17 }}
+          />
+          {dateCols.map((col, i) => (
+            <div
+              key={col.key}
+              className="col-line"
+              style={{ right: dateColSuffixWidths[i] + 11 }}
+            />
+          ))}
+        </>
+      )}
+      {pane.findMode && !pane.loading && (
         <div className="find-mode-banner">
           <span className="find-bar-badge">
             {pane.findMode.type === 'file' ? 'ff' : pane.findMode.type === 'dir' ? 'fd' : 'fa'}
@@ -379,97 +390,113 @@ export function FilePane({ tabId }: Props) {
           <span className="find-mode-hint">Enter で移動 / Esc でクリア</span>
         </div>
       )}
-      <div className="file-list-header">
-        <span className="file-select-indicator" />
-        <span className="file-icon" />
-        <span className="file-name header-col sortable" onClick={() => handleSortClick('name')}>
-          {t('filePane.colName')}{' '}
-          <SortIndicator active={pane.sortKey === 'name'} desc={pane.sortDesc} />
-        </span>
-        {showSize && (
-          <span className="file-size header-col" style={{ width: columnWidths.size }}>
-            {t('filePane.colSize')}
-            <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'size')} />
+      {showContent && (
+        <div className="file-list-header">
+          <span className="file-select-indicator" />
+          <span className="file-icon" />
+          <span className="file-name header-col sortable" onClick={() => handleSortClick('name')}>
+            {t('filePane.colName')}{' '}
+            <SortIndicator active={pane.sortKey === 'name'} desc={pane.sortDesc} />
           </span>
-        )}
-        {dateCols.map((col) => (
-          <span
-            key={col.key}
-            className="file-date header-col sortable"
-            onClick={() => handleSortClick('time')}
-            style={{ width: col.width }}
-          >
-            {col.label} <SortIndicator active={pane.sortKey === 'time'} desc={pane.sortDesc} />
-            <span className="col-resizer" onMouseDown={(e) => startColResize(e, col.colKey)} />
-          </span>
-        ))}
-      </div>
+          {showSize && (
+            <span className="file-size header-col" style={{ width: columnWidths.size }}>
+              {t('filePane.colSize')}
+              <span className="col-resizer" onMouseDown={(e) => startColResize(e, 'size')} />
+            </span>
+          )}
+          {dateCols.map((col) => (
+            <span
+              key={col.key}
+              className="file-date header-col sortable"
+              onClick={() => handleSortClick('time')}
+              style={{ width: col.width }}
+            >
+              {col.label} <SortIndicator active={pane.sortKey === 'time'} desc={pane.sortDesc} />
+              <span className="col-resizer" onMouseDown={(e) => startColResize(e, col.colKey)} />
+            </span>
+          ))}
+        </div>
+      )}
+      {/* Keep this div always mounted so the virtualizer never re-attaches to a new scroll
+          element and restores a stale scrollOffset from the previous directory. */}
       <div
         className="file-pane"
         ref={parentRef}
         style={{ overflow: 'auto', flex: 1, minHeight: 0 }}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
-          setCtxMenu({ x: e.clientX, y: e.clientY, kind: 'blank', entryIndex: -1 });
-        }}
+        onContextMenu={
+          showContent
+            ? (e) => {
+                e.preventDefault();
+                if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
+                setCtxMenu({ x: e.clientX, y: e.clientY, kind: 'blank', entryIndex: -1 });
+              }
+            : undefined
+        }
       >
-        <div
-          style={{ height: `${virtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}
-        >
-          {virtualizer.getVirtualItems().map((vItem) => {
-            const entry = entries[vItem.index];
-            if (!entry) return null;
-            return (
-              <FileRow
-                key={entry.path}
-                entry={entry}
-                isCursor={isActive && vItem.index === pane.cursor}
-                isSelected={pane.selected.has(entry.path)}
-                colSizeWidth={showSize ? columnWidths.size : undefined}
-                dateCols={dateCols}
-                gitSymbol={showGitStatus ? pane.gitStatus[entry.name] : undefined}
-                subLabel={inFindMode ? path.dirname(entry.path) : undefined}
-                dragPaths={
-                  pane.selected.size > 0 && pane.selected.has(entry.path)
-                    ? [...pane.selected]
-                    : [entry.path]
-                }
-                onClick={() => {
-                  if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
-                  setCursor(tabId, vItem.index);
-                }}
-                onDoubleClick={() => {
-                  if (entry.is_dir) navigateTo(entry.path);
-                  else {
-                    tauriApi.openFile(entry.path).catch(console.error);
-                    tauriApi.pushRecentEntry(entry.path, 'file').catch(() => {});
-                  }
-                }}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
-                  setCursor(tabId, vItem.index);
-                  setCtxMenu({
-                    x: e.clientX,
-                    y: e.clientY,
-                    kind: 'entry',
-                    entryIndex: vItem.index,
-                  });
-                }}
-                style={{
-                  position: 'absolute',
-                  top: `${vItem.start}px`,
-                  width: '100%',
-                  height: inFindMode ? ROW_HEIGHT_FIND : ROW_HEIGHT,
-                }}
-              />
-            );
-          })}
-        </div>
-        {entries.length === 0 && !pane.loading && (
-          <div className="empty-dir">{t('filePane.emptyFolder')}</div>
+        {pane.loading && <div className="file-pane-status">{t('filePane.loading')}</div>}
+        {pane.error && <div className="file-pane-status error">{pane.error}</div>}
+        {showContent && (
+          <>
+            <div
+              style={{
+                height: `${virtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {virtualizer.getVirtualItems().map((vItem) => {
+                const entry = entries[vItem.index];
+                if (!entry) return null;
+                return (
+                  <FileRow
+                    key={entry.path}
+                    entry={entry}
+                    isCursor={isActive && vItem.index === pane.cursor}
+                    isSelected={pane.selected.has(entry.path)}
+                    colSizeWidth={showSize ? columnWidths.size : undefined}
+                    dateCols={dateCols}
+                    gitSymbol={showGitStatus ? pane.gitStatus[entry.name] : undefined}
+                    subLabel={inFindMode ? path.dirname(entry.path) : undefined}
+                    dragPaths={
+                      pane.selected.size > 0 && pane.selected.has(entry.path)
+                        ? [...pane.selected]
+                        : [entry.path]
+                    }
+                    onClick={() => {
+                      if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
+                      setCursor(tabId, vItem.index);
+                    }}
+                    onDoubleClick={() => {
+                      if (entry.is_dir) navigateTo(entry.path);
+                      else {
+                        tauriApi.openFile(entry.path).catch(console.error);
+                        tauriApi.pushRecentEntry(entry.path, 'file').catch(() => {});
+                      }
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
+                      setCursor(tabId, vItem.index);
+                      setCtxMenu({
+                        x: e.clientX,
+                        y: e.clientY,
+                        kind: 'entry',
+                        entryIndex: vItem.index,
+                      });
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: `${vItem.start}px`,
+                      width: '100%',
+                      height: inFindMode ? ROW_HEIGHT_FIND : ROW_HEIGHT,
+                    }}
+                  />
+                );
+              })}
+            </div>
+            {entries.length === 0 && <div className="empty-dir">{t('filePane.emptyFolder')}</div>}
+          </>
         )}
       </div>
       {ctxMenu && ctxMenuItems.length > 0 && (
