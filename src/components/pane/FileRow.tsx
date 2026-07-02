@@ -102,6 +102,12 @@ const FILE_ICONS: Record<string, string> = {
   flac: '🎵',
   aac: '🎵',
   pdf: '📄',
+  doc: '📝',
+  docx: '📝',
+  xls: '📊',
+  xlsx: '📊',
+  ppt: '📊',
+  pptx: '📊',
   zip: '🗜️',
   tar: '🗜️',
   gz: '🗜️',
@@ -124,49 +130,6 @@ const FILE_ICONS: Record<string, string> = {
   bash: '⚙️',
 };
 
-function OfficeFileIcon({
-  fill,
-  foldFill,
-  label,
-}: {
-  fill: string;
-  foldFill: string;
-  label: string;
-}) {
-  return (
-    <span className="file-icon">
-      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-        <path d="M4 2h11l5 5v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" fill={fill} />
-        <path d="M15 2v5h5z" fill={foldFill} />
-        <text
-          x="11.5"
-          y="19"
-          textAnchor="middle"
-          fontSize="9"
-          fontWeight="700"
-          fill="#fff"
-          fontFamily="Arial, sans-serif"
-        >
-          {label}
-        </text>
-      </svg>
-    </span>
-  );
-}
-
-const WordIcon = () => <OfficeFileIcon fill="#2B579A" foldFill="#17365D" label="W" />;
-const ExcelIcon = () => <OfficeFileIcon fill="#217346" foldFill="#185C37" label="X" />;
-const PowerPointIcon = () => <OfficeFileIcon fill="#B7472A" foldFill="#8C3521" label="P" />;
-
-const OFFICE_ICONS: Record<string, () => React.JSX.Element> = {
-  doc: WordIcon,
-  docx: WordIcon,
-  xls: ExcelIcon,
-  xlsx: ExcelIcon,
-  ppt: PowerPointIcon,
-  pptx: PowerPointIcon,
-};
-
 const GIT_BADGE_CLASS: Record<string, string> = {
   '=': 'clean',
   M: 'modified',
@@ -186,8 +149,6 @@ const GIT_BADGE_SYMBOL: Record<string, string> = {
 function FileIcon({ entry }: { entry: FileEntry }) {
   if (entry.is_dir) return <span className="file-icon dir">📁</span>;
   const ext = entry.extension?.toLowerCase();
-  const OfficeIcon = ext && OFFICE_ICONS[ext];
-  if (OfficeIcon) return <OfficeIcon />;
   return <span className="file-icon">{(ext && FILE_ICONS[ext]) || '📄'}</span>;
 }
 
