@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { tauriApi } from '../lib/tauri';
 import type { Tab } from '../types';
 
 // Resolved home directory. Updated by App.tsx on mount via setHomeDir().
@@ -87,7 +86,6 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
   navigateTo: (path) => {
     const resolved = expandTilde(path);
-    tauriApi.zoxideAdd(resolved).catch(() => {});
     set((s) => ({
       tabs: s.tabs.map((t) => {
         if (t.id !== s.activeTabId) return t;

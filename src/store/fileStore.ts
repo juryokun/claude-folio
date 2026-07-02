@@ -137,7 +137,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
               sorted.findIndex((e) => e.name === focusName),
             )
           : 0;
-        // filter is reset on navigation, so displayEntries = sorted
+        // filter and find mode are reset on navigation, so displayEntries = sorted
         return {
           panes: {
             ...s.panes,
@@ -151,6 +151,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
               selected: new Set(),
               filterQuery: '',
               pendingFocusName: null,
+              findMode: null,
             },
           },
         };

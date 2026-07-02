@@ -161,6 +161,15 @@ const en = {
     title: 'Keybindings',
     close: 'Close (Esc)',
   },
+  recentPane: {
+    title: 'Recent Files & Directories',
+    filesOnly: 'Files Only',
+    filterPlaceholder: 'Filter...',
+    navigate: 'j/k nav · / filter · f toggle · Enter open · Esc close',
+    empty: 'No history',
+    noMatches: 'No matches',
+    count: '{{count}} items',
+  },
   fileOps: {
     confirmDelete: 'Move {{count}} item(s) to trash?',
     deleted: '🗑️ Moved {{count}} item(s) to trash',

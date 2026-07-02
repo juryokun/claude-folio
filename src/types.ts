@@ -31,6 +31,6 @@ export interface ClipboardState {
   mode: ClipboardMode;
 }
 
-export type VimMode = 'NORMAL' | 'SEARCH' | 'COMMAND';
+export type VimMode = 'NORMAL' | 'SEARCH' | 'COMMAND' | 'RECENT';
 
 export type TerminalEmulator = 'terminal' | 'iterm2' | 'warp';

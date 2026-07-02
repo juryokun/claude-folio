@@ -436,14 +436,14 @@ body {
   min-height: 0;
   outline: none;
 }
-.file-pane.loading,
-.file-pane.error {
+.file-pane-status {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 100%;
   color: var(--text-dim);
 }
-.file-pane.error {
+.file-pane-status.error {
   color: #f48771;
 }
 .empty-dir {
@@ -522,12 +522,12 @@ body {
   width: 2px;
 }
 
-/* File row */
+/* File row — min-height matches ROW_HEIGHT (22) in FilePane.tsx; find mode overrides via inline style (ROW_HEIGHT_FIND=36) */
 .file-row {
   display: flex;
   align-items: center;
   padding: 0 8px;
-  height: 22px;
+  min-height: 22px;
   cursor: pointer;
   gap: 6px;
 }
@@ -552,6 +552,20 @@ body {
 }
 .file-row.hidden:hover,
 .file-row.hidden.cursor {
+  opacity: 0.9;
+}
+.file-row.clipboard-copy,
+.file-row.clipboard-cut {
+  outline: 1px dashed var(--text-accent);
+  outline-offset: -1px;
+}
+.file-row.clipboard-cut {
+  opacity: 0.6;
+}
+.file-row.clipboard-cut.hidden {
+  opacity: 0.4;
+}
+.file-row.clipboard-cut.hidden.cursor {
   opacity: 0.9;
 }
 
@@ -788,6 +802,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-top: 1px;
 }
 .search-bar--error .search-input {
   color: #f66;

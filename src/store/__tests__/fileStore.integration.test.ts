@@ -4,6 +4,7 @@ vi.mock('../../lib/tauri', () => ({
   tauriApi: {
     listDir: vi.fn(),
     zoxideAdd: vi.fn().mockResolvedValue(undefined),
+    searchWithFd: vi.fn(),
   },
   isTauri: vi.fn().mockReturnValue(true),
 }));
@@ -13,6 +14,7 @@ import type { FileEntry } from '../../types';
 import { useFileStore } from '../fileStore';
 
 const mockListDir = vi.mocked(tauriApi.listDir);
+const mockSearchWithFd = vi.mocked(tauriApi.searchWithFd);
 
 function entry(name: string, isDir = false, modified = 1000): FileEntry {
   return { name, path: `/test/${name}`, is_dir: isDir, is_symlink: false, size: 100, modified };
@@ -47,6 +49,7 @@ describe('fileStore 統合テスト', () => {
   beforeEach(() => {
     resetPane();
     mockListDir.mockReset();
+    mockSearchWithFd.mockReset();
   });
 
   // ── loadDir → filteredEntries ───────────────────────────────────────────────
@@ -325,6 +328,42 @@ describe('fileStore 統合テスト', () => {
       await useFileStore.getState().loadDir(TAB, '/test', false, true);
 
       expect(useFileStore.getState().getPane(TAB).cursor).toBe(0);
+    });
+
+    it('findMode 中に loadDir しても検索結果を維持する（タブ切り替え相当）', async () => {
+      mockSearchWithFd.mockResolvedValue([entry('found.txt')]);
+      await useFileStore.getState().startFind(TAB, 'found', 'file', '/test');
+
+      mockListDir.mockResolvedValue([entry('a.txt'), entry('b.txt')]);
+      await useFileStore.getState().loadDir(TAB, '/test', false, true);
+
+      const pane = useFileStore.getState().getPane(TAB);
+      expect(pane.findMode?.query).toBe('found');
+      expect(
+        useFileStore
+          .getState()
+          .filteredEntries(TAB)
+          .map((e) => e.name),
+      ).toEqual(['found.txt']);
+    });
+  });
+
+  describe('loadDir with preserveCursor=false（通常のナビゲーション）', () => {
+    it('findMode 中に通常ナビゲーションすると検索結果がクリアされる', async () => {
+      mockSearchWithFd.mockResolvedValue([entry('found.txt')]);
+      await useFileStore.getState().startFind(TAB, 'found', 'file', '/test');
+
+      mockListDir.mockResolvedValue([entry('a.txt'), entry('b.txt')]);
+      await useFileStore.getState().loadDir(TAB, '/test', false);
+
+      const pane = useFileStore.getState().getPane(TAB);
+      expect(pane.findMode).toBeNull();
+      expect(
+        useFileStore
+          .getState()
+          .filteredEntries(TAB)
+          .map((e) => e.name),
+      ).toEqual(['a.txt', 'b.txt']);
     });
   });
 

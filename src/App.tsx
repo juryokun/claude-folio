@@ -11,6 +11,7 @@ import { OpenWithModal } from './components/modals/OpenWithModal';
 import { RenameModal } from './components/modals/RenameModal';
 import { FilePane } from './components/pane/FilePane';
 import { PathBar } from './components/pane/PathBar';
+import { RecentPane } from './components/pane/RecentPane';
 import { StatusBar } from './components/pane/StatusBar';
 import { PreviewPanel } from './components/preview/PreviewPanel';
 import { FindBar } from './components/search/FindBar';
@@ -19,6 +20,7 @@ import { Sidebar } from './components/sidebar/Sidebar';
 import { TabBar } from './components/tabs/TabBar';
 import { useFileOps } from './hooks/useFileOps';
 import { useVimKeys } from './hooks/useVimKeys';
+import { shouldPreserveCursor } from './lib/tabSwitch';
 import { tauriApi } from './lib/tauri';
 import { applyTheme } from './lib/themes';
 import type { VimAction } from './lib/vim/keymap';
@@ -63,6 +65,9 @@ export default function App() {
     showPreview,
     togglePreview,
     openFind,
+    showRecent,
+    openRecent,
+    closeRecent,
   } = useUiStore();
 
   const fileOps = useFileOps();
@@ -116,9 +121,29 @@ export default function App() {
   const currentTab = activeTab();
   const currentTabPath = currentTab.path;
   const currentTabId = currentTab.id;
+  const prevTabIdRef = useRef(currentTabId);
   useEffect(() => {
-    loadDir(currentTabId, currentTabPath, showHidden);
+    // Switching to a different, already-loaded tab (same path) should just
+    // refresh entries, preserving that tab's find mode / selection / filter
+    // state. A brand-new tab (no pane yet) or navigating within the same tab
+    // to a new path should reset that state as before.
+    const isTabSwitch = shouldPreserveCursor(
+      prevTabIdRef.current,
+      currentTabId,
+      useFileStore.getState().panes[currentTabId] !== undefined,
+    );
+    prevTabIdRef.current = currentTabId;
+    loadDir(currentTabId, currentTabPath, showHidden, isTabSwitch);
   }, [currentTabId, currentTabPath, showHidden, loadDir]);
+
+  // Record directory to zoxide and recent history after 4s dwell to avoid logging intermediate dirs
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      tauriApi.zoxideAdd(currentTabPath).catch(() => {});
+      tauriApi.pushRecentEntry(currentTabPath, 'dir').catch(() => {});
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [currentTabPath]);
 
   // Watch active directory for external changes; debounce to avoid rapid reloads
   const reloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -287,6 +312,9 @@ export default function App() {
         case 'find_all':
           openFind('all');
           break;
+        case 'find_recent':
+          openRecent();
+          break;
         case 'sort_name':
           setSort(activeTabId, 'name', false);
           break;
@@ -323,6 +351,7 @@ export default function App() {
       togglePreview,
       setShowHelp,
       openFind,
+      openRecent,
       setSort,
     ],
   );
@@ -335,6 +364,7 @@ export default function App() {
       if (e.key === 'Escape' && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
         setVimMode('NORMAL');
         setShowHelp(false);
+        closeRecent();
         const tab = useTabStore.getState().activeTab();
         clearFind(tab.id);
         useFileStore.getState().setClipboard(null);
@@ -342,7 +372,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [setVimMode, setShowHelp, clearFind]);
+  }, [setVimMode, setShowHelp, closeRecent, clearFind]);
 
   return (
     <div className="app">
@@ -357,7 +387,7 @@ export default function App() {
                 key={t.id}
                 className="tab-content"
                 style={{
-                  display: t.id === activeTabId ? 'flex' : 'none',
+                  display: !showRecent && t.id === activeTabId ? 'flex' : 'none',
                   flex: 1,
                   minHeight: 0,
                   overflow: 'hidden',
@@ -366,6 +396,7 @@ export default function App() {
                 <FilePane tabId={t.id} />
               </div>
             ))}
+            {showRecent && <RecentPane />}
           </div>
           <SearchBar />
           <FindBar />

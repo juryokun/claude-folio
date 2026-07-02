@@ -161,6 +161,15 @@ const ja = {
     title: 'キーバインド一覧',
     close: '閉じる (Esc)',
   },
+  recentPane: {
+    title: '最近使ったファイル・ディレクトリ',
+    filesOnly: 'ファイルのみ',
+    filterPlaceholder: '絞り込み...',
+    navigate: 'j/k 移動 · / 絞り込み · f 切替 · Enter 開く · Esc 閉じる',
+    empty: '履歴がありません',
+    noMatches: '一致する項目がありません',
+    count: '{{count}}件',
+  },
   fileOps: {
     confirmDelete: '{{count}}件をゴミ箱に移動しますか?',
     deleted: '🗑️ {{count}}件をゴミ箱に移動しました',

@@ -41,8 +41,11 @@ interface UiStore {
   language: Language;
   theme: ThemeId;
   pendingKey: string | null;
+  showRecent: boolean;
 
   setVimMode: (mode: VimMode) => void;
+  openRecent: () => void;
+  closeRecent: () => void;
   setPendingKey: (key: string | null) => void;
   setLanguage: (lang: Language) => void;
   setTheme: (id: ThemeId) => void;
@@ -84,6 +87,7 @@ export const useUiStore = create<UiStore>()(
     (set) => ({
       vimMode: 'NORMAL',
       pendingKey: null,
+      showRecent: false,
       showHidden: false,
       showHelp: false,
       showRename: false,
@@ -116,6 +120,8 @@ export const useUiStore = create<UiStore>()(
       theme: 'dark' as ThemeId,
 
       setVimMode: (mode) => set({ vimMode: mode }),
+      openRecent: () => set({ showRecent: true, vimMode: 'RECENT' }),
+      closeRecent: () => set({ showRecent: false, vimMode: 'NORMAL' }),
       setPendingKey: (key) => set({ pendingKey: key }),
       setLanguage: (lang) => {
         setLanguage(lang);
