@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-07-02
+
+### Features
+
+- **Recent files/directories history** — Press `fr` to open a searchable history of recently opened files and directories, showing access time and modification date. Selecting a file jumps to its parent directory and focuses it; selecting a directory navigates there directly.
+- **Highlight staged files** — Files staged for copy or cut now get a dashed outline in the file list, with cut files additionally dimmed, so it's clear at a glance what's queued for a paste.
+
+### Bug Fixes
+
+- **Find mode results across tabs** — Switching tabs no longer clears active find-mode search results; they now persist until you navigate within the tab.
+- **Blank file list after navigation** — Fixed the file list occasionally rendering blank at the top after navigating, caused by a stale scroll position carried over from the previous directory.
+- **Find mode row overlap** — Increased row height in find mode so the filename and parent path lines no longer overlap.
+
+### Performance
+
+- **Faster git status** — Git status now runs its underlying git calls in parallel and avoids an extra process spawn per directory, speeding up directory loads in git repos. This also fixes an issue where opening a symlinked path (e.g. under /tmp) would silently show no git status.
+
 ## [0.2.3] - 2026-06-30
 
 ### Features
