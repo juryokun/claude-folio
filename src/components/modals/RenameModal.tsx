@@ -2,6 +2,7 @@ import path from 'path-browserify';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useImeAwareEnter } from '../../hooks/useImeAwareEnter';
+import { getRenameSelectionRange } from '../../lib/renameSelection';
 import { tauriApi } from '../../lib/tauri';
 import { useFileStore } from '../../store/fileStore';
 import { useTabStore } from '../../store/tabStore';
@@ -9,7 +10,7 @@ import { useUiStore } from '../../store/uiStore';
 
 export function RenameModal() {
   const { t } = useTranslation();
-  const { showRename, renameTarget, setShowRename } = useUiStore();
+  const { showRename, renameTarget, renameTargetIsDir, setShowRename } = useUiStore();
   const { activeTab } = useTabStore();
   const { loadDir } = useFileStore();
   const { showHidden } = useUiStore();
@@ -20,13 +21,15 @@ export function RenameModal() {
 
   useEffect(() => {
     if (showRename && renameTarget) {
-      setName(path.basename(renameTarget));
+      const baseName = path.basename(renameTarget);
+      setName(baseName);
+      const { start, end } = getRenameSelectionRange(baseName, renameTargetIsDir);
       setTimeout(() => {
         inputRef.current?.focus();
-        inputRef.current?.select();
+        inputRef.current?.setSelectionRange(start, end);
       }, 0);
     }
-  }, [showRename, renameTarget]);
+  }, [showRename, renameTarget, renameTargetIsDir]);
 
   if (!showRename || !renameTarget) return null;
 

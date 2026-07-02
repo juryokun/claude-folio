@@ -18,6 +18,7 @@ interface UiStore {
   confirmCallback: (() => void) | null;
   showCommandPalette: boolean;
   renameTarget: string | null;
+  renameTargetIsDir: boolean;
   showOpenWith: boolean;
   openWithTarget: string | null;
   has7zip: boolean;
@@ -57,7 +58,7 @@ interface UiStore {
   showStatusMessage: (msg: string, durationMs?: number) => void;
   toggleHidden: () => void;
   setShowHelp: (v: boolean) => void;
-  setShowRename: (v: boolean, target?: string) => void;
+  setShowRename: (v: boolean, target?: string, isDir?: boolean) => void;
   setShowBulkRename: (v: boolean) => void;
   setShowNewDir: (v: boolean) => void;
   setShowNewFile: (v: boolean) => void;
@@ -101,6 +102,7 @@ export const useUiStore = create<UiStore>()(
       confirmCallback: null,
       showCommandPalette: false,
       renameTarget: null,
+      renameTargetIsDir: false,
       showOpenWith: false,
       openWithTarget: null,
       has7zip: false,
@@ -145,7 +147,8 @@ export const useUiStore = create<UiStore>()(
       },
       toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
       setShowHelp: (v) => set({ showHelp: v }),
-      setShowRename: (v, target) => set({ showRename: v, renameTarget: target ?? null }),
+      setShowRename: (v, target, isDir) =>
+        set({ showRename: v, renameTarget: target ?? null, renameTargetIsDir: isDir ?? false }),
       setShowBulkRename: (v) => set({ showBulkRename: v }),
       setShowNewDir: (v) => set({ showNewDir: v }),
       setShowNewFile: (v) => set({ showNewFile: v }),

@@ -231,10 +231,13 @@ export function useFileOps() {
       setShowBulkRename(true);
       return;
     }
-    const target = pane.selected.size === 1 ? Array.from(pane.selected)[0] : cursorEntry?.path;
-    if (!target) return;
-    setShowRename(true, target);
-  }, [pane.selected, cursorEntry, setShowRename, setShowBulkRename]);
+    const targetEntry =
+      pane.selected.size === 1
+        ? (entries.find((e) => e.path === Array.from(pane.selected)[0]) ?? null)
+        : cursorEntry;
+    if (!targetEntry) return;
+    setShowRename(true, targetEntry.path, targetEntry.is_dir);
+  }, [pane.selected, cursorEntry, entries, setShowRename, setShowBulkRename]);
 
   const handleNewDir = useCallback(() => {
     setShowNewDir(true);
