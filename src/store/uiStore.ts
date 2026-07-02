@@ -10,6 +10,7 @@ interface UiStore {
   showHidden: boolean;
   showHelp: boolean;
   showRename: boolean;
+  showBulkRename: boolean;
   showNewDir: boolean;
   showNewFile: boolean;
   showConfirm: boolean;
@@ -57,6 +58,7 @@ interface UiStore {
   toggleHidden: () => void;
   setShowHelp: (v: boolean) => void;
   setShowRename: (v: boolean, target?: string) => void;
+  setShowBulkRename: (v: boolean) => void;
   setShowNewDir: (v: boolean) => void;
   setShowNewFile: (v: boolean) => void;
   showConfirmDialog: (message: string, onConfirm: () => void) => void;
@@ -91,6 +93,7 @@ export const useUiStore = create<UiStore>()(
       showHidden: false,
       showHelp: false,
       showRename: false,
+      showBulkRename: false,
       showNewDir: false,
       showNewFile: false,
       showConfirm: false,
@@ -143,6 +146,7 @@ export const useUiStore = create<UiStore>()(
       toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
       setShowHelp: (v) => set({ showHelp: v }),
       setShowRename: (v, target) => set({ showRename: v, renameTarget: target ?? null }),
+      setShowBulkRename: (v) => set({ showBulkRename: v }),
       setShowNewDir: (v) => set({ showNewDir: v }),
       setShowNewFile: (v) => set({ showNewFile: v }),
       showConfirmDialog: (message, onConfirm) =>

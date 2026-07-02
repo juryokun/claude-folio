@@ -1,6 +1,7 @@
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useRef } from 'react';
 import { KeybindingsHelp } from './components/help/KeybindingsHelp';
+import { BulkRenameModal } from './components/modals/BulkRenameModal';
 import { CommandOutputModal } from './components/modals/CommandOutputModal';
 import { CommandPalette } from './components/modals/CommandPalette';
 import { ConfirmModal } from './components/modals/ConfirmModal';
@@ -54,7 +55,8 @@ export default function App() {
     goBack,
     goForward,
   } = useTabStore();
-  const { loadDir, setCursor, getPane, filteredEntries, setSort, clearFind } = useFileStore();
+  const { loadDir, setCursor, getPane, filteredEntries, setSort, clearFind, enterVisualMode } =
+    useFileStore();
   const {
     showHidden,
     toggleHidden,
@@ -209,6 +211,21 @@ export default function App() {
         case 'toggle_select':
           ops.handleToggleSelect();
           break;
+        case 'toggle_visual_mode':
+          useFileStore.getState().toggleVisualMode(tab.id);
+          break;
+        case 'visual_extend_down': {
+          if (pane.visualAnchor === null) enterVisualMode(tab.id);
+          const p = getPane(tab.id);
+          setCursor(tab.id, Math.min(p.cursor + 1, maxIdx));
+          break;
+        }
+        case 'visual_extend_up': {
+          if (pane.visualAnchor === null) enterVisualMode(tab.id);
+          const p = getPane(tab.id);
+          setCursor(tab.id, Math.max(p.cursor - 1, 0));
+          break;
+        }
         case 'delete_selected':
           ops.handleDelete();
           break;
@@ -353,6 +370,7 @@ export default function App() {
       openFind,
       openRecent,
       setSort,
+      enterVisualMode,
     ],
   );
 
@@ -368,6 +386,8 @@ export default function App() {
         const tab = useTabStore.getState().activeTab();
         clearFind(tab.id);
         useFileStore.getState().setClipboard(null);
+        useFileStore.getState().exitVisualMode(tab.id);
+        useFileStore.getState().clearSelection(tab.id);
       }
     };
     window.addEventListener('keydown', handleEsc);
@@ -406,6 +426,7 @@ export default function App() {
       </div>
 
       <RenameModal />
+      <BulkRenameModal />
       <NewDirModal />
       <NewFileModal />
       <ConfirmModal />

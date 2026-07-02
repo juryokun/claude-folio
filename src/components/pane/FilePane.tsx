@@ -39,18 +39,27 @@ export function FilePane({ tabId }: Props) {
   const { tabs, activeTabId, navigateTo } = useTabStore(
     useShallow((s) => ({ tabs: s.tabs, activeTabId: s.activeTabId, navigateTo: s.navigateTo })),
   );
-  const { getPane, filteredEntries, setCursor, loadDir, setSort, clipboard, loadGitStatus } =
-    useFileStore(
-      useShallow((s) => ({
-        getPane: s.getPane,
-        filteredEntries: s.filteredEntries,
-        setCursor: s.setCursor,
-        loadDir: s.loadDir,
-        setSort: s.setSort,
-        clipboard: s.clipboard,
-        loadGitStatus: s.loadGitStatus,
-      })),
-    );
+  const {
+    getPane,
+    filteredEntries,
+    setCursor,
+    loadDir,
+    setSort,
+    clipboard,
+    loadGitStatus,
+    exitVisualMode,
+  } = useFileStore(
+    useShallow((s) => ({
+      getPane: s.getPane,
+      filteredEntries: s.filteredEntries,
+      setCursor: s.setCursor,
+      loadDir: s.loadDir,
+      setSort: s.setSort,
+      clipboard: s.clipboard,
+      loadGitStatus: s.loadGitStatus,
+      exitVisualMode: s.exitVisualMode,
+    })),
+  );
   const {
     showHidden,
     columnWidths,
@@ -466,6 +475,7 @@ export function FilePane({ tabId }: Props) {
                     }
                     onClick={() => {
                       if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
+                      if (pane.visualAnchor !== null) exitVisualMode(tabId);
                       setCursor(tabId, vItem.index);
                     }}
                     onDoubleClick={() => {
@@ -479,6 +489,7 @@ export function FilePane({ tabId }: Props) {
                       e.preventDefault();
                       e.stopPropagation();
                       if (activeTabId !== tabId) useTabStore.getState().setActiveTab(tabId);
+                      if (pane.visualAnchor !== null) exitVisualMode(tabId);
                       setCursor(tabId, vItem.index);
                       setCtxMenu({
                         x: e.clientX,

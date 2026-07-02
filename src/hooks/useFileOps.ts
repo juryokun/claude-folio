@@ -41,6 +41,7 @@ export function useFileOps() {
     terminalApp,
     terminalCommand,
     setShowRename,
+    setShowBulkRename,
     setShowNewDir,
     setShowNewFile,
     showConfirmDialog,
@@ -55,6 +56,7 @@ export function useFileOps() {
       terminalApp: s.terminalApp,
       terminalCommand: s.terminalCommand,
       setShowRename: s.setShowRename,
+      setShowBulkRename: s.setShowBulkRename,
       setShowNewDir: s.setShowNewDir,
       setShowNewFile: s.setShowNewFile,
       showConfirmDialog: s.showConfirmDialog,
@@ -225,9 +227,14 @@ export function useFileOps() {
   }, [cursorEntry, setShowOpenWith]);
 
   const handleRename = useCallback(() => {
-    if (!cursorEntry) return;
-    setShowRename(true, cursorEntry.path);
-  }, [cursorEntry, setShowRename]);
+    if (pane.selected.size > 1) {
+      setShowBulkRename(true);
+      return;
+    }
+    const target = pane.selected.size === 1 ? Array.from(pane.selected)[0] : cursorEntry?.path;
+    if (!target) return;
+    setShowRename(true, target);
+  }, [pane.selected, cursorEntry, setShowRename, setShowBulkRename]);
 
   const handleNewDir = useCallback(() => {
     setShowNewDir(true);
@@ -238,11 +245,11 @@ export function useFileOps() {
   }, [setShowNewFile]);
 
   const handleToggleSelect = useCallback(() => {
-    if (!cursorEntry) return;
+    if (!cursorEntry || pane.visualAnchor !== null) return;
     toggleSelect(tabId, cursorEntry.path);
     // Move cursor down after selecting
     setCursor(tabId, Math.min(pane.cursor + 1, entries.length - 1));
-  }, [cursorEntry, tabId, toggleSelect, setCursor, pane.cursor, entries.length]);
+  }, [cursorEntry, tabId, toggleSelect, setCursor, pane.cursor, pane.visualAnchor, entries.length]);
 
   const handleEnterSearch = useCallback(() => {
     setVimMode('SEARCH');

@@ -19,7 +19,7 @@ export function StatusBar() {
 
   return (
     <div className="status-bar">
-      <span className="status-mode">[{vimMode}]</span>
+      <span className="status-mode">[{pane.visualAnchor !== null ? 'VISUAL' : vimMode}]</span>
       <span className="status-count">
         {cursor}/{totalCount}
         {selectedCount > 0 && ` ${t('statusBar.selected', { count: selectedCount })}`}

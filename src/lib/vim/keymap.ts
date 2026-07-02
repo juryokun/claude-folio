@@ -6,6 +6,9 @@ export type VimAction =
   | 'navigate_up'
   | 'navigate_into'
   | 'toggle_select'
+  | 'toggle_visual_mode'
+  | 'visual_extend_down'
+  | 'visual_extend_up'
   | 'delete_selected'
   | 'cut_selected'
   | 'yank_selected'
@@ -66,6 +69,9 @@ export const NORMAL_KEYMAP: KeyBinding[] = [
   // Option+ArrowUp is handled separately as altKey+ArrowUp
   { keys: ['Enter'], action: 'navigate_into' },
   { keys: [' '], action: 'toggle_select' },
+  { keys: ['V'], action: 'toggle_visual_mode' },
+  { keys: ['J'], action: 'visual_extend_down' },
+  { keys: ['K'], action: 'visual_extend_up' },
   { keys: ['d', 'd'], action: 'delete_selected' },
   { keys: ['x', 'x'], action: 'cut_selected' },
   { keys: ['y', 'y'], action: 'yank_selected' },
@@ -118,6 +124,9 @@ export const KEYBINDING_DOCS: Array<{ keys: string; description: string }> = [
   { keys: 'gg', description: '先頭へ' },
   { keys: 'G', description: '末尾へ' },
   { keys: 'Space', description: 'ファイル/フォルダを選択' },
+  { keys: 'V', description: '範囲選択モードの開始/終了' },
+  { keys: 'J / K', description: '範囲選択を下/上に拡張' },
+  { keys: 'Esc', description: '選択・範囲選択・検索などをすべて解除' },
   { keys: 'dd / ⌘⌫', description: 'ゴミ箱へ移動' },
   { keys: 'xx / ⌘X', description: '切り取り' },
   { keys: 'yy / ⌘C', description: 'コピー' },

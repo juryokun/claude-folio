@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { matchesFilter, parseFilterQuery } from '../lib/searchFilter';
 import { isTauri, tauriApi } from '../lib/tauri';
+import { computeVisualSelection } from '../lib/visualSelection';
 import type { ClipboardState, FileEntry } from '../types';
 import { useTabStore } from './tabStore';
 
@@ -21,6 +22,8 @@ interface PaneState {
   error: string | null;
   cursor: number;
   selected: Set<string>; // selected paths
+  visualAnchor: number | null; // display index where visual mode started, or null if inactive
+  visualBaseSelection: Set<string> | null; // selection snapshot taken when visual mode started
   filterQuery: string;
   pendingFocusName: string | null; // entry name to focus after next load
   sortKey: SortKey;
@@ -43,6 +46,9 @@ interface FileStore {
   setCursor: (tabId: string, index: number) => void;
   toggleSelect: (tabId: string, path: string) => void;
   clearSelection: (tabId: string) => void;
+  enterVisualMode: (tabId: string) => void;
+  exitVisualMode: (tabId: string) => void;
+  toggleVisualMode: (tabId: string) => void;
   setFilter: (tabId: string, query: string) => void;
   setSort: (tabId: string, key: SortKey, desc: boolean) => void;
   setClipboard: (state: ClipboardState | null) => void;
@@ -85,6 +91,8 @@ const defaultPane = (): PaneState => ({
   error: null,
   cursor: 0,
   selected: new Set(),
+  visualAnchor: null,
+  visualBaseSelection: null,
   filterQuery: '',
   pendingFocusName: null,
   sortKey: 'name',
@@ -149,6 +157,8 @@ export const useFileStore = create<FileStore>((set, get) => ({
               error: null,
               cursor,
               selected: new Set(),
+              visualAnchor: null,
+              visualBaseSelection: null,
               filterQuery: '',
               pendingFocusName: null,
               findMode: null,
@@ -194,9 +204,17 @@ export const useFileStore = create<FileStore>((set, get) => ({
   setCursor: (tabId, index) => {
     set((s) => {
       const pane = s.panes[tabId] ?? defaultPane();
-      return {
-        panes: { ...s.panes, [tabId]: { ...pane, cursor: Math.max(0, index) } },
-      };
+      const cursor = Math.max(0, index);
+      if (pane.visualAnchor === null) {
+        return { panes: { ...s.panes, [tabId]: { ...pane, cursor } } };
+      }
+      const selected = computeVisualSelection(
+        pane.displayEntries,
+        pane.visualAnchor,
+        cursor,
+        pane.visualBaseSelection ?? new Set(),
+      );
+      return { panes: { ...s.panes, [tabId]: { ...pane, cursor, selected } } };
     });
   },
 
@@ -217,10 +235,48 @@ export const useFileStore = create<FileStore>((set, get) => ({
     });
   },
 
+  enterVisualMode: (tabId) => {
+    set((s) => {
+      const pane = s.panes[tabId] ?? defaultPane();
+      const base = new Set(pane.selected);
+      const selected = computeVisualSelection(pane.displayEntries, pane.cursor, pane.cursor, base);
+      return {
+        panes: {
+          ...s.panes,
+          [tabId]: { ...pane, visualAnchor: pane.cursor, visualBaseSelection: base, selected },
+        },
+      };
+    });
+  },
+
+  exitVisualMode: (tabId) => {
+    set((s) => {
+      const pane = s.panes[tabId] ?? defaultPane();
+      return {
+        panes: {
+          ...s.panes,
+          [tabId]: { ...pane, visualAnchor: null, visualBaseSelection: null },
+        },
+      };
+    });
+  },
+
+  toggleVisualMode: (tabId) => {
+    const pane = get().panes[tabId] ?? defaultPane();
+    if (pane.visualAnchor === null) get().enterVisualMode(tabId);
+    else get().exitVisualMode(tabId);
+  },
+
   setFilter: (tabId, query) => {
     set((s) => {
       const pane = s.panes[tabId] ?? defaultPane();
-      const newPane: PaneState = { ...pane, filterQuery: query, cursor: 0 };
+      const newPane: PaneState = {
+        ...pane,
+        filterQuery: query,
+        cursor: 0,
+        visualAnchor: null,
+        visualBaseSelection: null,
+      };
       return {
         panes: {
           ...s.panes,
@@ -240,7 +296,14 @@ export const useFileStore = create<FileStore>((set, get) => ({
   setSort: (tabId, key, desc) => {
     set((s) => {
       const pane = s.panes[tabId] ?? defaultPane();
-      const newPane: PaneState = { ...pane, sortKey: key, sortDesc: desc, cursor: 0 };
+      const newPane: PaneState = {
+        ...pane,
+        sortKey: key,
+        sortDesc: desc,
+        cursor: 0,
+        visualAnchor: null,
+        visualBaseSelection: null,
+      };
       return {
         panes: {
           ...s.panes,
@@ -275,7 +338,14 @@ export const useFileStore = create<FileStore>((set, get) => ({
       return {
         panes: {
           ...s.panes,
-          [tabId]: { ...pane, findMode, displayEntries: [], cursor: 0 },
+          [tabId]: {
+            ...pane,
+            findMode,
+            displayEntries: [],
+            cursor: 0,
+            visualAnchor: null,
+            visualBaseSelection: null,
+          },
         },
       };
     });
@@ -308,7 +378,13 @@ export const useFileStore = create<FileStore>((set, get) => ({
   clearFind: (tabId) => {
     set((s) => {
       const pane = s.panes[tabId] ?? defaultPane();
-      const newPane: PaneState = { ...pane, findMode: null, cursor: 0 };
+      const newPane: PaneState = {
+        ...pane,
+        findMode: null,
+        cursor: 0,
+        visualAnchor: null,
+        visualBaseSelection: null,
+      };
       return {
         panes: {
           ...s.panes,

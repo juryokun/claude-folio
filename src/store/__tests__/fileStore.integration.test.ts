@@ -32,6 +32,8 @@ function resetPane() {
         error: null,
         cursor: 0,
         selected: new Set(),
+        visualAnchor: null,
+        visualBaseSelection: null,
         filterQuery: '',
         pendingFocusName: null,
         sortKey: 'name',
@@ -200,6 +202,114 @@ describe('fileStore 統合テスト', () => {
       useFileStore.getState().toggleSelect(TAB, '/test/b.txt');
       useFileStore.getState().clearSelection(TAB);
       expect(useFileStore.getState().getPane(TAB).selected.size).toBe(0);
+    });
+  });
+
+  // ── Visual mode（範囲選択） ────────────────────────────────────────────────
+
+  describe('enterVisualMode / exitVisualMode / toggleVisualMode', () => {
+    beforeEach(async () => {
+      mockListDir.mockResolvedValue([
+        entry('a.txt'),
+        entry('b.txt'),
+        entry('c.txt'),
+        entry('d.txt'),
+      ]);
+      await useFileStore.getState().loadDir(TAB, '/test', false);
+    });
+
+    it('enterVisualMode で anchor がカーソル位置にセットされる', () => {
+      useFileStore.getState().setCursor(TAB, 1);
+      useFileStore.getState().enterVisualMode(TAB);
+      const pane = useFileStore.getState().getPane(TAB);
+      expect(pane.visualAnchor).toBe(1);
+      expect(pane.selected.has('/test/b.txt')).toBe(true);
+    });
+
+    it('setCursor を繰り返すと選択範囲が伸縮する（下方向）', () => {
+      useFileStore.getState().setCursor(TAB, 0);
+      useFileStore.getState().enterVisualMode(TAB);
+      useFileStore.getState().setCursor(TAB, 2);
+      const selected = useFileStore.getState().getPane(TAB).selected;
+      expect(selected).toEqual(new Set(['/test/a.txt', '/test/b.txt', '/test/c.txt']));
+    });
+
+    it('setCursor を繰り返すと選択範囲が伸縮する（上方向）', () => {
+      useFileStore.getState().setCursor(TAB, 3);
+      useFileStore.getState().enterVisualMode(TAB);
+      useFileStore.getState().setCursor(TAB, 1);
+      const selected = useFileStore.getState().getPane(TAB).selected;
+      expect(selected).toEqual(new Set(['/test/b.txt', '/test/c.txt', '/test/d.txt']));
+    });
+
+    it('既存の選択（トグル選択）は visualBaseSelection として引き継がれる', () => {
+      useFileStore.getState().toggleSelect(TAB, '/test/d.txt');
+      useFileStore.getState().setCursor(TAB, 0);
+      useFileStore.getState().enterVisualMode(TAB);
+      useFileStore.getState().setCursor(TAB, 1);
+      const selected = useFileStore.getState().getPane(TAB).selected;
+      expect(selected).toEqual(new Set(['/test/a.txt', '/test/b.txt', '/test/d.txt']));
+    });
+
+    it('exitVisualMode で anchor は消えるが selected は保持される', () => {
+      useFileStore.getState().setCursor(TAB, 0);
+      useFileStore.getState().enterVisualMode(TAB);
+      useFileStore.getState().setCursor(TAB, 2);
+      useFileStore.getState().exitVisualMode(TAB);
+      const pane = useFileStore.getState().getPane(TAB);
+      expect(pane.visualAnchor).toBeNull();
+      expect(pane.selected.size).toBe(3);
+    });
+
+    it('toggleVisualMode で開始・終了をトグルできる', () => {
+      useFileStore.getState().toggleVisualMode(TAB);
+      expect(useFileStore.getState().getPane(TAB).visualAnchor).not.toBeNull();
+      useFileStore.getState().toggleVisualMode(TAB);
+      expect(useFileStore.getState().getPane(TAB).visualAnchor).toBeNull();
+    });
+
+    it('loadDir（通常ナビゲーション）で visual mode がリセットされる', async () => {
+      useFileStore.getState().enterVisualMode(TAB);
+      mockListDir.mockResolvedValue([entry('a.txt'), entry('b.txt')]);
+      await useFileStore.getState().loadDir(TAB, '/test', false);
+      const pane = useFileStore.getState().getPane(TAB);
+      expect(pane.visualAnchor).toBeNull();
+      expect(pane.visualBaseSelection).toBeNull();
+    });
+
+    it('setFilter で displayEntries が変わると visual mode がリセットされる', () => {
+      useFileStore.getState().enterVisualMode(TAB);
+      useFileStore.getState().setFilter(TAB, 'a');
+      const pane = useFileStore.getState().getPane(TAB);
+      expect(pane.visualAnchor).toBeNull();
+      expect(pane.visualBaseSelection).toBeNull();
+    });
+
+    it('setSort で displayEntries の並びが変わると visual mode がリセットされる', () => {
+      useFileStore.getState().enterVisualMode(TAB);
+      useFileStore.getState().setSort(TAB, 'name', true);
+      const pane = useFileStore.getState().getPane(TAB);
+      expect(pane.visualAnchor).toBeNull();
+      expect(pane.visualBaseSelection).toBeNull();
+    });
+
+    it('startFind で visual mode がリセットされる', async () => {
+      useFileStore.getState().enterVisualMode(TAB);
+      mockSearchWithFd.mockResolvedValue([entry('found.txt')]);
+      await useFileStore.getState().startFind(TAB, 'found', 'file', '/test');
+      const pane = useFileStore.getState().getPane(TAB);
+      expect(pane.visualAnchor).toBeNull();
+      expect(pane.visualBaseSelection).toBeNull();
+    });
+
+    it('clearFind で visual mode がリセットされる', async () => {
+      mockSearchWithFd.mockResolvedValue([entry('found.txt')]);
+      await useFileStore.getState().startFind(TAB, 'found', 'file', '/test');
+      useFileStore.getState().enterVisualMode(TAB);
+      useFileStore.getState().clearFind(TAB);
+      const pane = useFileStore.getState().getPane(TAB);
+      expect(pane.visualAnchor).toBeNull();
+      expect(pane.visualBaseSelection).toBeNull();
     });
   });
 
