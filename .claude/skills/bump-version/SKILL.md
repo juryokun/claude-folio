@@ -7,7 +7,6 @@ allowed-tools:
   - Bash(cargo check *)
   - Bash(git add *)
   - Bash(git commit *)
-  - Bash(git tag *)
   - Bash(git log *)
   - Bash(git show *)
   - Bash(git status *)
@@ -94,18 +93,10 @@ EOF
 )"
 ```
 
-### 7. タグ付け
-
-コミット後に annotated tag を打つ。
+### 7. 確認
 
 ```bash
-git tag -a v<新バージョン> -m "v<新バージョン>"
+git status
 ```
 
-### 8. 確認
-
-```bash
-git status && git tag --list "v<新バージョン>"
-```
-
-未コミットのファイルが残っておらず、タグが存在することを確認して完了を報告する。
+未コミットのファイルが残っていないことを確認して完了を報告する。
